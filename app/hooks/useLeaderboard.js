@@ -6,10 +6,6 @@ import {
   getTopScores 
 } from "../services/leaderboardService";
 
-/**
- * Custom hook for managing leaderboard
- * @returns {Object} Leaderboard state and methods
- */
 export function useLeaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [filter, setFilter] = useState("all");

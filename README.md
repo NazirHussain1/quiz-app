@@ -1,35 +1,43 @@
 # Quiz App 🎯
 
-A modern, interactive quiz application built with Next.js 16 and React 19. Test your knowledge with questions from the Open Trivia Database.
+A modern, feature-rich quiz application built with Next.js 16 and React 19. Test your knowledge with trivia questions from the Open Trivia Database.
 
-## Features
+![Next.js](https://img.shields.io/badge/Next.js-16.0.4-black)
+![React](https://img.shields.io/badge/React-19.2.0-blue)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.8-purple)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-- Sound effects for correct/wrong answers and quiz completion
-- Sound toggle button with localStorage persistence
-- Dark mode support with toggle button and localStorage persistence
-- Player name input and tracking
-- Leaderboard system with top 10 scores
-- Category selection from 20+ quiz categories
-- Difficulty level selection (Easy, Medium, Hard)
-- 10 random multiple-choice trivia questions per quiz
-- Enhanced question progress indicator with percentage completion
-- Animated progress bar showing quiz completion
-- 15-second countdown timer for each question with visual alerts
-- Real-time score tracking with dynamic calculation
-- LocalStorage support - automatically saves and restores quiz progress
-- Visual feedback (green for correct, red for incorrect answers)
-- Navigate between questions (Previous/Next buttons)
-- Auto-advance to next question when timer expires
-- Restart quiz feature with new questions
-- Performance evaluation with grading system
-- Leaderboard filtering by difficulty level
-- Responsive design with Bootstrap 5
-- Accessibility features (ARIA labels, keyboard navigation, screen reader support)
-- Comprehensive error handling and loading states
-- Fisher-Yates shuffle algorithm for proper randomization
-- Answer locking (cannot change after selection)
+## ✨ Features
 
-## Getting Started
+### Core Functionality
+- 🎮 10 multiple-choice trivia questions per quiz
+- 📚 20+ quiz categories to choose from
+- 🎯 Three difficulty levels (Easy, Medium, Hard)
+- ⏱️ 15-second countdown timer per question
+- 📊 Real-time score tracking
+- 🏆 Leaderboard system with top 10 scores
+- 💾 Auto-save progress with localStorage
+- 🔄 Restart quiz with new questions
+
+### User Experience
+- 🎨 Dark mode support with toggle
+- 🔊 Sound effects (correct/wrong/complete)
+- ✨ Smooth animations with Framer Motion
+- 📱 Fully responsive design
+- ♿ Accessibility features (ARIA labels, keyboard navigation)
+- 🎭 Visual feedback (green for correct, red for incorrect)
+- 📈 Progress bar with percentage completion
+- 🏅 Performance evaluation system
+
+### Technical Features
+- 🏗️ Scalable architecture with services and hooks
+- 🧩 Reusable component library
+- 🎯 Custom React hooks for state management
+- 💨 Fast page transitions
+- 🔐 Client-side data persistence
+- 🎪 Animated UI transitions
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -39,32 +47,46 @@ A modern, interactive quiz application built with Next.js 16 and React 19. Test 
 ### Installation
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd quiz-app
+
+# Install dependencies
 npm install
 ```
 
-### Run Development Server
+### Development
 
 ```bash
+# Start development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-### Build for Production
+### Production
 
 ```bash
+# Build for production
 npm run build
+
+# Start production server
 npm start
 ```
 
-## Project Structure
+### Linting
+
+```bash
+npm run lint
+```
+
+## 📁 Project Structure
 
 ```
 quiz-app/
 ├── app/
 │   ├── components/          # Reusable UI components
 │   │   ├── CategoryBadge.js
-│   │   ├── QuestionCard.js
 │   │   ├── QuestionDisplay.js
 │   │   ├── QuizProgress.js
 │   │   ├── QuizResults.js
@@ -77,141 +99,168 @@ quiz-app/
 │   ├── leaderboard/
 │   │   └── page.js          # Leaderboard page
 │   ├── quiz/
-│   │   └── page.js          # Quiz page with game logic
+│   │   └── page.js          # Quiz page
 │   ├── services/            # API and storage services
 │   │   ├── leaderboardService.js
 │   │   ├── quizService.js
 │   │   └── storageService.js
 │   ├── utils/               # Utility functions
-│   │   ├── shuffle.js       # Fisher-Yates shuffle algorithm
-│   │   └── useSound.js      # Sound effects hook
+│   │   ├── shuffle.js
+│   │   └── useSound.js
 │   ├── favicon.ico
-│   ├── globals.css          # Global styles (Tailwind + dark mode)
-│   ├── layout.js            # Root layout with dark mode toggle
-│   └── page.js              # Home/landing page with name input
+│   ├── globals.css
+│   ├── layout.js
+│   └── page.js              # Home page
 ├── public/
 │   └── sounds/              # Sound effect files
 │       ├── correct.mp3
 │       ├── wrong.mp3
 │       └── complete.mp3
-├── next.config.ts           # Next.js configuration
-├── package.json             # Dependencies and scripts
-└── README.md                # Project documentation
+├── next.config.ts
+├── package.json
+└── README.md
 ```
 
-## Technologies Used
-
-- Next.js 16.0.4 (App Router)
-- React 19.2.0
-- Bootstrap 5.3.8 (with dark mode support)
-- Framer Motion (animations)
-- Tailwind CSS 4
-- Open Trivia Database API
-
-## Architecture
-
-The application follows a scalable, modular architecture:
+## 🏗️ Architecture
 
 ### Services Layer
-- **quizService.js**: Handles all API calls to Open Trivia Database
-- **storageService.js**: Manages localStorage operations (progress, preferences)
-- **leaderboardService.js**: Handles leaderboard CRUD operations
+Handles all external interactions and data persistence:
+- **quizService**: API calls to Open Trivia Database
+- **storageService**: localStorage operations
+- **leaderboardService**: Leaderboard CRUD operations
 
 ### Custom Hooks
-- **useQuizState**: Manages quiz state, questions, answers, and progress
-- **useTimer**: Handles countdown timer logic
-- **useLeaderboard**: Manages leaderboard state and operations
-- **useSound**: Controls sound effects playback
+Encapsulates business logic and state management:
+- **useQuizState**: Quiz state, questions, answers, progress
+- **useTimer**: Countdown timer with callbacks
+- **useLeaderboard**: Leaderboard state and operations
+- **useSound**: Sound effects playback
 
 ### Components
-- **QuizProgress**: Displays score and progress bar
-- **Timer**: Countdown timer with animations
-- **QuestionDisplay**: Question and answer options with animations
-- **QuizResults**: Results screen with performance evaluation
+Reusable, presentational UI components:
+- **QuizProgress**: Score and progress display
+- **Timer**: Animated countdown timer
+- **QuestionDisplay**: Question and answer options
+- **QuizResults**: Results screen with evaluation
 - **CategoryBadge**: Category and difficulty badges
-- **SoundToggle**: Sound on/off toggle button
+- **SoundToggle**: Sound control button
 
 ### Benefits
-- **Separation of Concerns**: Logic separated from UI
-- **Reusability**: Components and hooks can be reused
-- **Testability**: Services and hooks are easy to unit test
-- **Maintainability**: Clear structure makes updates easier
-- **Scalability**: Easy to add new features
+- ✅ Separation of concerns
+- ✅ Reusable components and hooks
+- ✅ Easy to test and maintain
+- ✅ Scalable architecture
+- ✅ Clear code organization
 
-## API
+## 🎮 How to Play
 
-The app uses two Open Trivia Database API endpoints:
+1. **Enter Your Name**: Required to track your score
+2. **Select Category**: Choose from 20+ categories or "Any Category"
+3. **Choose Difficulty**: Easy, Medium, or Hard
+4. **Start Quiz**: Answer 10 multiple-choice questions
+5. **Beat the Timer**: 15 seconds per question
+6. **View Results**: See your score and performance grade
+7. **Check Leaderboard**: Compare with other players
 
-1. Categories: `https://opentdb.com/api_category.php`
-   - Fetches all available quiz categories
-   - Returns category ID and name
+## 🎯 Performance Grading
 
-2. Questions: `https://opentdb.com/api.php?amount=10&type=multiple&category={id}&difficulty={level}`
-   - Fetches 10 multiple-choice questions
-   - Optional category parameter for filtered questions
-   - Optional difficulty parameter (easy, medium, hard)
-   - Returns questions with correct and incorrect answers
+- **Below 40%**: Fail
+- **40-59%**: Average - Need More Improvement
+- **60-74%**: Good
+- **75%+**: Excellent 🎉
 
-## Performance Grading
+## 🔊 Sound Effects
 
-- Below 40%: Fail
-- 40-59%: Average - Need More Improvement
-- 60-74%: Good
-- 75%+: Excellent 🎉
+The app includes sound effects for enhanced experience:
+- ✅ Correct answer sound
+- ❌ Wrong answer sound
+- 🎉 Quiz completion sound
 
-## Scripts
+Toggle sounds on/off using the button in the quiz page. Preference is saved automatically.
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-
-## Sound Effects
-
-The app includes sound effects for enhanced user experience:
-- **Correct Answer**: Plays when user selects the correct answer
-- **Wrong Answer**: Plays when user selects an incorrect answer
-- **Quiz Complete**: Plays when the quiz is finished
-
-Sound effects can be toggled on/off using the sound button in the quiz page. The preference is saved to localStorage.
-
-**Note**: Placeholder MP3 files are included. For the best experience, replace them with actual sound files from free resources like:
+**Note**: Placeholder MP3 files are included. For best experience, replace with actual sound files from:
 - [Freesound.org](https://freesound.org/)
 - [Zapsplat](https://www.zapsplat.com/)
 - [Mixkit](https://mixkit.co/free-sound-effects/)
 
-See `public/sounds/README.md` for more details.
+## 🌐 API
 
-## How It Works
+Uses Open Trivia Database API:
 
-1. User enters their name on the home page (saved to localStorage)
-2. Categories are fetched from Open Trivia Database API on home page load
-3. User selects a category or chooses "Any Category" for random questions
-4. User selects difficulty level (Easy, Medium, or Hard) - defaults to Medium
-5. Category ID and difficulty are passed to quiz page via URL parameters
-6. App checks localStorage for saved progress and restores if available
-7. Questions are fetched based on selected category and difficulty (if no saved progress)
-8. Answers are shuffled using Fisher-Yates algorithm for randomization
-9. Each question has a 15-second countdown timer
-10. Progress is automatically saved to localStorage after each answer
-11. Timer resets when moving to a new question
-12. When timer reaches zero, automatically moves to next question
-13. Users select an answer, which locks the question and stops the timer
-14. Visual feedback shows correct (green) and incorrect (red) answers
-15. Navigate through questions using Previous/Next buttons
-16. Score is calculated dynamically from all answers
-17. Final results show score, category, difficulty, and performance grade
-18. Score is automatically saved to leaderboard with player name, date, and details
-19. LocalStorage is cleared when quiz finishes or restarts
-20. Users can view leaderboard, restart quiz, or choose new category
-21. Leaderboard displays top 10 scores with filtering by difficulty
+1. **Categories**: `https://opentdb.com/api_category.php`
+2. **Questions**: `https://opentdb.com/api.php?amount=10&type=multiple&category={id}&difficulty={level}`
 
-## Deploy on Vercel
+## 🛠️ Technologies
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/quiz-app)
+- **Framework**: Next.js 16.0.4 (App Router)
+- **UI Library**: React 19.2.0
+- **Styling**: Bootstrap 5.3.8 + Tailwind CSS 4
+- **Animations**: Framer Motion
+- **API**: Open Trivia Database
+- **Storage**: localStorage
+
+## 🎨 Features in Detail
+
+### Dark Mode
+- Toggle between light and dark themes
+- Preference saved to localStorage
+- Smooth transitions
+- All components styled for both themes
+
+### Leaderboard
+- Top 10 scores displayed
+- Filter by difficulty level
+- Shows player name, score, category, date
+- Medal system for top 3 (🥇🥈🥉)
+- Statistics dashboard
+
+### Progress Tracking
+- Auto-save after each answer
+- Resume quiz after page refresh
+- Separate progress per category/difficulty
+- Cleared automatically on completion
+
+### Animations
+- Question transitions
+- Answer selection feedback
+- Result screen entrance
+- Timer pulsing when low
+- Button hover effects
+
+## 📱 Responsive Design
+
+Works perfectly on:
+- 📱 Mobile phones
+- 📱 Tablets
+- 💻 Laptops
+- 🖥️ Desktop monitors
+
+## ♿ Accessibility
+
+- ARIA labels for screen readers
+- Keyboard navigation support
+- High contrast colors
+- Focus indicators
+- Semantic HTML
+
+## 🚀 Deploy on Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 
 The easiest way to deploy is using the [Vercel Platform](https://vercel.com/new).
 
-## License
+## 📝 License
 
 MIT
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
+
+## 👨‍💻 Author
+
+Built with ❤️ using Next.js and React
+
+---
+
+**Powered by Open Trivia Database**

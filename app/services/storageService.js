@@ -1,12 +1,3 @@
-/**
- * Storage Service - Handles all localStorage operations
- */
-
-/**
- * Save quiz progress to localStorage
- * @param {string} key - Storage key
- * @param {Object} data - Progress data to save
- */
 export function saveProgress(key, data) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
@@ -15,11 +6,6 @@ export function saveProgress(key, data) {
   }
 }
 
-/**
- * Load quiz progress from localStorage
- * @param {string} key - Storage key
- * @returns {Object|null} Saved progress or null
- */
 export function loadProgress(key) {
   try {
     const data = localStorage.getItem(key);
@@ -30,10 +16,6 @@ export function loadProgress(key) {
   }
 }
 
-/**
- * Remove quiz progress from localStorage
- * @param {string} key - Storage key
- */
 export function removeProgress(key) {
   try {
     localStorage.removeItem(key);
@@ -42,10 +24,6 @@ export function removeProgress(key) {
   }
 }
 
-/**
- * Save player name to localStorage
- * @param {string} name - Player name
- */
 export function savePlayerName(name) {
   try {
     localStorage.setItem("playerName", name);
@@ -54,10 +32,6 @@ export function savePlayerName(name) {
   }
 }
 
-/**
- * Load player name from localStorage
- * @returns {string|null} Player name or null
- */
 export function loadPlayerName() {
   try {
     return localStorage.getItem("playerName");
@@ -67,10 +41,6 @@ export function loadPlayerName() {
   }
 }
 
-/**
- * Save theme preference to localStorage
- * @param {string} theme - Theme name (light or dark)
- */
 export function saveTheme(theme) {
   try {
     localStorage.setItem("theme", theme);
@@ -79,10 +49,6 @@ export function saveTheme(theme) {
   }
 }
 
-/**
- * Load theme preference from localStorage
- * @returns {string|null} Theme name or null
- */
 export function loadTheme() {
   try {
     return localStorage.getItem("theme");
@@ -92,10 +58,6 @@ export function loadTheme() {
   }
 }
 
-/**
- * Save sound preference to localStorage
- * @param {boolean} enabled - Sound enabled state
- */
 export function saveSoundPreference(enabled) {
   try {
     localStorage.setItem("soundEnabled", enabled.toString());
@@ -104,10 +66,6 @@ export function saveSoundPreference(enabled) {
   }
 }
 
-/**
- * Load sound preference from localStorage
- * @returns {boolean} Sound enabled state
- */
 export function loadSoundPreference() {
   try {
     const saved = localStorage.getItem("soundEnabled");

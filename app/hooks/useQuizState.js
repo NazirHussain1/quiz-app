@@ -3,12 +3,6 @@ import { shuffleArray } from "../utils/shuffle";
 import { fetchQuestions } from "../services/quizService";
 import { saveProgress, loadProgress, removeProgress } from "../services/storageService";
 
-/**
- * Custom hook for managing quiz state
- * @param {string} categoryId - Category ID
- * @param {string} difficulty - Difficulty level
- * @returns {Object} Quiz state and methods
- */
 export function useQuizState(categoryId, difficulty) {
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);

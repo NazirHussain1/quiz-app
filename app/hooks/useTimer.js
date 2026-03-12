@@ -1,12 +1,5 @@
 import { useState, useEffect } from "react";
 
-/**
- * Custom hook for managing quiz timer
- * @param {number} initialTime - Initial time in seconds
- * @param {boolean} isActive - Whether timer is active
- * @param {Function} onTimeUp - Callback when time runs out
- * @returns {Object} Timer state
- */
 export function useTimer(initialTime = 15, isActive = true, onTimeUp) {
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
