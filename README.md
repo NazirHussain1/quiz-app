@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiz App 🎯
+
+A modern, interactive quiz application built with Next.js 16 and React 19. Test your knowledge with questions from the Open Trivia Database.
+
+## Features
+
+- 10 random multiple-choice trivia questions per quiz
+- Real-time score tracking with dynamic calculation
+- Visual feedback (green for correct, red for incorrect answers)
+- Progress bar showing quiz completion
+- Navigate between questions (Previous/Next buttons)
+- Performance evaluation with grading system
+- Responsive design with Bootstrap 5
+- Accessibility features (ARIA labels, keyboard navigation, screen reader support)
+- Comprehensive error handling and loading states
+- Fisher-Yates shuffle algorithm for proper randomization
+- Answer locking (cannot change after selection)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+ installed
+- npm, yarn, pnpm, or bun package manager
+
+### Installation
+
+```bash
+npm install
+```
+
+### Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+quiz-app/
+├── app/
+│   ├── components/
+│   │   └── QuestionCard.js    # Question card component
+│   ├── quiz/
+│   │   └── page.js            # Quiz page with game logic
+│   ├── utils/
+│   │   └── shuffle.js         # Fisher-Yates shuffle algorithm
+│   ├── favicon.ico            # App icon
+│   ├── globals.css            # Global styles (Tailwind)
+│   ├── layout.js              # Root layout with Bootstrap
+│   └── page.js                # Home/landing page
+├── public/                    # Static assets (SVG icons)
+├── next.config.ts             # Next.js configuration
+├── package.json               # Dependencies and scripts
+└── README.md                  # Project documentation
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technologies Used
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Next.js 16.0.4 (App Router)
+- React 19.2.0
+- Bootstrap 5.3.8
+- Tailwind CSS 4
+- Open Trivia Database API
+
+## API
+
+Questions are fetched from [Open Trivia Database](https://opentdb.com/api_config.php):
+- Endpoint: `https://opentdb.com/api.php?amount=10&type=multiple`
+- Returns 10 multiple-choice questions
+
+## Performance Grading
+
+- Below 40%: Fail
+- 40-59%: Average - Need More Improvement
+- 60-74%: Good
+- 75%+: Excellent 🎉
+
+## Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+
+## How It Works
+
+1. Questions are fetched from Open Trivia Database API on page load
+2. Answers are shuffled using Fisher-Yates algorithm for randomization
+3. Users select an answer, which locks the question
+4. Visual feedback shows correct (green) and incorrect (red) answers
+5. Navigate through questions using Previous/Next buttons
+6. Score is calculated dynamically from all answers
+7. Final results show score and performance grade
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/quiz-app)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The easiest way to deploy is using the [Vercel Platform](https://vercel.com/new).
+
+## License
+
+MIT
