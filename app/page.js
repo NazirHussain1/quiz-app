@@ -56,7 +56,7 @@ export default function HomePage() {
           <>
             <select
               id="category-select"
-              className="form-select mb-3"
+              className="form-select mb-4"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               aria-label="Select quiz category"
@@ -69,8 +69,58 @@ export default function HomePage() {
               ))}
             </select>
 
+            <div className="mb-4">
+              <label className="form-label fw-bold d-block text-start">
+                Select Difficulty Level
+              </label>
+              <div className="d-flex justify-content-around">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="difficulty"
+                    id="difficulty-easy"
+                    value="easy"
+                    checked={selectedDifficulty === "easy"}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="difficulty-easy">
+                    😊 Easy
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="difficulty"
+                    id="difficulty-medium"
+                    value="medium"
+                    checked={selectedDifficulty === "medium"}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="difficulty-medium">
+                    🤔 Medium
+                  </label>
+                </div>
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="difficulty"
+                    id="difficulty-hard"
+                    value="hard"
+                    checked={selectedDifficulty === "hard"}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                  />
+                  <label className="form-check-label" htmlFor="difficulty-hard">
+                    🔥 Hard
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <Link 
-              href={selectedCategory ? `/quiz?category=${selectedCategory}` : "/quiz"}
+              href={`/quiz?${selectedCategory ? `category=${selectedCategory}&` : ""}difficulty=${selectedDifficulty}`}
               className="btn btn-success btn-lg w-100"
               aria-label="Start the quiz"
             >

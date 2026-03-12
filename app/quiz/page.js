@@ -8,6 +8,7 @@ import { shuffleArray } from "../utils/shuffle";
 export default function QuizPage() {
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("category");
+  const difficulty = searchParams.get("difficulty") || "medium";
   
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
@@ -17,6 +18,35 @@ export default function QuizPage() {
   const [error, setError] = useState(null);
   const [timeLeft, setTimeLeft] = useState(15);
   const [categoryName, setCategoryName] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Generate unique storage key based on category and difficulty
+  const storageKey = `quiz_progress_${categoryId || 'any'}_${difficulty}`;
+
+  // Load saved progress from localStorage on mount
+  useEffect(() => {
+    const savedProgress = localStorage.getItem(storageKey);
+    if (savedProgress) {
+      try {
+        const { savedIndex, savedAnswers, savedQuestions } = JSON.parse(savedProgress);
+        if (savedQuestions && savedQuestions.length > 0) {
+          setQuestions(savedQuestions);
+          setIndex(savedIndex || 0);
+          setAnswers(savedAnswers || []);
+          setLoading(false);
+          
+          // Set category name from saved questions
+          if (savedQuestions[0]?.category) {
+            setCategoryName(savedQuestions[0].category);
+          }
+          return; // Skip fetching new questions
+        }
+      } catch (err) {
+        console.error("Failed to restore progress:", err);
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -24,10 +54,13 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
         
-        // Build API URL with optional category
+        // Build API URL with optional category and difficulty
         let apiUrl = "https://opentdb.com/api.php?amount=10&type=multiple";
         if (categoryId) {
           apiUrl += `&category=${categoryId}`;
+        }
+        if (difficulty) {
+          apiUrl += `&difficulty=${difficulty}`;
         }
         
         const res = await fetch(apiUrl);
@@ -64,7 +97,7 @@ export default function QuizPage() {
     }
 
     fetchQuestions();
-  }, [categoryId]);
+  }, [categoryId, difficulty, refreshKey]);
 
   // Timer effect - resets when question changes
   useEffect(() => {
@@ -131,6 +164,16 @@ export default function QuizPage() {
     setIndex(index - 1);
   };
 
+  const handleRestartQuiz = () => {
+    // Reset all state
+    setIndex(0);
+    setAnswers([]);
+    setFinished(false);
+    setTimeLeft(15);
+    // Trigger re-fetch of questions by updating refreshKey
+    setRefreshKey(prev => prev + 1);
+  };
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
@@ -177,7 +220,9 @@ export default function QuizPage() {
           
           {categoryName && (
             <p className="text-center text-muted mb-2">
-              <small>Category: {categoryName}</small>
+              <small>
+                Category: {categoryName} | Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+              </small>
             </p>
           )}
 
@@ -194,16 +239,29 @@ export default function QuizPage() {
             else return <p className="text-success text-center fs-6">Excellent 🎉</p>;
           })()}
 
-          <div className="d-flex gap-2 mt-3">
+          <div className="d-grid gap-2 mt-3">
             <button
-              className="btn btn-success w-50"
-              onClick={() => window.location.reload()}
+              className="btn btn-success btn-lg"
+              onClick={handleRestartQuiz}
+              aria-label="Restart quiz with new questions"
             >
-              Retry
+              🔄 Restart Quiz
             </button>
-            <Link href="/" className="btn btn-secondary w-50">
-              New Category
-            </Link>
+            <div className="d-flex gap-2">
+              <Link href="/" className="btn btn-secondary w-100">
+                🏠 New Category
+              </Link>
+              <Link 
+                href={`/quiz?${categoryId ? `category=${categoryId}&` : ""}difficulty=${difficulty}`}
+                className="btn btn-outline-success w-100"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleRestartQuiz();
+                }}
+              >
+                ↻ Try Again
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -211,54 +269,85 @@ export default function QuizPage() {
 
   const current = questions[index];
   const isLocked = !!answers[index];
+  const progressPercent = ((index + 1) / questions.length) * 100;
 
   return (
     <div className="container mt-4" style={{ maxWidth: 600 }}>
-      {/* CATEGORY & SCORE + PROGRESS */}
+      {/* SCORE */}
       <div className="d-flex justify-content-between align-items-center mb-2">
-        <h5 aria-live="polite">Score: {score}</h5>
-        <h6 aria-live="polite">
-          Question {index + 1} / {questions.length}
-        </h6>
+        <h5 aria-live="polite" className="mb-0">Score: {score}</h5>
+        <h5 aria-live="polite" className="mb-0 text-success">
+          {score}/{questions.length}
+        </h5>
       </div>
       
       {categoryName && (
         <div className="text-center mb-3">
-          <span className="badge bg-info text-dark">
+          <span className="badge bg-info text-dark me-2">
             📚 {categoryName}
+          </span>
+          <span className={`badge ${
+            difficulty === "easy" ? "bg-success" : 
+            difficulty === "hard" ? "bg-danger" : 
+            "bg-warning text-dark"
+          }`}>
+            {difficulty === "easy" ? "😊 Easy" : 
+             difficulty === "hard" ? "🔥 Hard" : 
+             "🤔 Medium"}
           </span>
         </div>
       )}
 
-      {/* PROGRESS BAR */}
-      <div className="progress mb-3" style={{ height: "8px" }}>
-        <div
-          className="progress-bar bg-success"
-          role="progressbar"
-          style={{ width: `${((index + 1) / questions.length) * 100}%` }}
-          aria-valuenow={index + 1}
-          aria-valuemin="0"
-          aria-valuemax={questions.length}
+      {/* QUESTION PROGRESS INDICATOR */}
+      <div className="card mb-3 p-3 shadow-sm bg-light">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <span className="fw-bold text-muted">
+            Question {index + 1} of {questions.length}
+          </span>
+          <span className="badge bg-primary">
+            {Math.round(progressPercent)}% Complete
+          </span>
+        </div>
+        
+        {/* PROGRESS BAR */}
+        <div className="progress" style={{ height: "12px" }}>
+          <div
+            className="progress-bar bg-success progress-bar-striped progress-bar-animated"
+            role="progressbar"
+            style={{ width: `${progressPercent}%` }}
+            aria-valuenow={index + 1}
+            aria-valuemin="0"
+            aria-valuemax={questions.length}
+            aria-label={`Question ${index + 1} of ${questions.length}`}
+          ></div>
+        </div>
+      </div>
         ></div>
       </div>
 
       {/* COUNTDOWN TIMER */}
-      <div className="card mb-3 p-3 text-center shadow-sm">
+      <div className="card mb-3 p-3 text-center shadow-sm border-2" style={{ 
+        borderColor: timeLeft <= 5 ? '#dc3545' : '#198754' 
+      }}>
         <div className="d-flex align-items-center justify-content-center">
-          <span className="me-2">⏱️</span>
+          <span className="me-2 fs-5">⏱️</span>
           <span 
-            className={`fs-4 fw-bold ${timeLeft <= 5 ? 'text-danger' : 'text-success'}`}
+            className={`fs-3 fw-bold ${timeLeft <= 5 ? 'text-danger' : 'text-success'}`}
             aria-live="polite"
             aria-atomic="true"
           >
             {timeLeft}s
           </span>
+          <span className="ms-2 text-muted small">remaining</span>
         </div>
-        <div className="progress mt-2" style={{ height: "6px" }}>
+        <div className="progress mt-2" style={{ height: "8px" }}>
           <div
             className={`progress-bar ${timeLeft <= 5 ? 'bg-danger' : 'bg-success'}`}
             role="progressbar"
-            style={{ width: `${(timeLeft / 15) * 100}%` }}
+            style={{ 
+              width: `${(timeLeft / 15) * 100}%`,
+              transition: 'width 1s linear'
+            }}
             aria-valuenow={timeLeft}
             aria-valuemin="0"
             aria-valuemax="15"

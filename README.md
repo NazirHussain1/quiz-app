@@ -5,13 +5,16 @@ A modern, interactive quiz application built with Next.js 16 and React 19. Test 
 ## Features
 
 - Category selection from 20+ quiz categories
+- Difficulty level selection (Easy, Medium, Hard)
 - 10 random multiple-choice trivia questions per quiz
-- 15-second countdown timer for each question
+- Enhanced question progress indicator with percentage completion
+- Animated progress bar showing quiz completion
+- 15-second countdown timer for each question with visual alerts
 - Real-time score tracking with dynamic calculation
 - Visual feedback (green for correct, red for incorrect answers)
-- Progress bar showing quiz completion
 - Navigate between questions (Previous/Next buttons)
 - Auto-advance to next question when timer expires
+- Restart quiz feature with new questions
 - Performance evaluation with grading system
 - Responsive design with Bootstrap 5
 - Accessibility features (ARIA labels, keyboard navigation, screen reader support)
@@ -84,9 +87,10 @@ The app uses two Open Trivia Database API endpoints:
    - Fetches all available quiz categories
    - Returns category ID and name
 
-2. Questions: `https://opentdb.com/api.php?amount=10&type=multiple&category={id}`
+2. Questions: `https://opentdb.com/api.php?amount=10&type=multiple&category={id}&difficulty={level}`
    - Fetches 10 multiple-choice questions
    - Optional category parameter for filtered questions
+   - Optional difficulty parameter (easy, medium, hard)
    - Returns questions with correct and incorrect answers
 
 ## Performance Grading
@@ -107,17 +111,19 @@ The app uses two Open Trivia Database API endpoints:
 
 1. Categories are fetched from Open Trivia Database API on home page load
 2. User selects a category or chooses "Any Category" for random questions
-3. Category ID is passed to quiz page via URL parameters
-4. Questions are fetched based on selected category
-5. Answers are shuffled using Fisher-Yates algorithm for randomization
-6. Each question has a 15-second countdown timer
-7. Timer resets when moving to a new question
-8. When timer reaches zero, automatically moves to next question
-9. Users select an answer, which locks the question and stops the timer
-10. Visual feedback shows correct (green) and incorrect (red) answers
-11. Navigate through questions using Previous/Next buttons
-12. Score is calculated dynamically from all answers
-13. Final results show score, category, and performance grade
+3. User selects difficulty level (Easy, Medium, or Hard) - defaults to Medium
+4. Category ID and difficulty are passed to quiz page via URL parameters
+5. Questions are fetched based on selected category and difficulty
+6. Answers are shuffled using Fisher-Yates algorithm for randomization
+7. Each question has a 15-second countdown timer
+8. Timer resets when moving to a new question
+9. When timer reaches zero, automatically moves to next question
+10. Users select an answer, which locks the question and stops the timer
+11. Visual feedback shows correct (green) and incorrect (red) answers
+12. Navigate through questions using Previous/Next buttons
+13. Score is calculated dynamically from all answers
+14. Final results show score, category, difficulty, and performance grade
+15. Users can restart quiz (fetches new questions), try again (same settings), or choose new category
 
 ## Deploy on Vercel
 
