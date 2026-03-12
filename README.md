@@ -4,11 +4,14 @@ A modern, interactive quiz application built with Next.js 16 and React 19. Test 
 
 ## Features
 
+- Category selection from 20+ quiz categories
 - 10 random multiple-choice trivia questions per quiz
+- 15-second countdown timer for each question
 - Real-time score tracking with dynamic calculation
 - Visual feedback (green for correct, red for incorrect answers)
 - Progress bar showing quiz completion
 - Navigate between questions (Previous/Next buttons)
+- Auto-advance to next question when timer expires
 - Performance evaluation with grading system
 - Responsive design with Bootstrap 5
 - Accessibility features (ARIA labels, keyboard navigation, screen reader support)
@@ -75,9 +78,16 @@ quiz-app/
 
 ## API
 
-Questions are fetched from [Open Trivia Database](https://opentdb.com/api_config.php):
-- Endpoint: `https://opentdb.com/api.php?amount=10&type=multiple`
-- Returns 10 multiple-choice questions
+The app uses two Open Trivia Database API endpoints:
+
+1. Categories: `https://opentdb.com/api_category.php`
+   - Fetches all available quiz categories
+   - Returns category ID and name
+
+2. Questions: `https://opentdb.com/api.php?amount=10&type=multiple&category={id}`
+   - Fetches 10 multiple-choice questions
+   - Optional category parameter for filtered questions
+   - Returns questions with correct and incorrect answers
 
 ## Performance Grading
 
@@ -95,13 +105,19 @@ Questions are fetched from [Open Trivia Database](https://opentdb.com/api_config
 
 ## How It Works
 
-1. Questions are fetched from Open Trivia Database API on page load
-2. Answers are shuffled using Fisher-Yates algorithm for randomization
-3. Users select an answer, which locks the question
-4. Visual feedback shows correct (green) and incorrect (red) answers
-5. Navigate through questions using Previous/Next buttons
-6. Score is calculated dynamically from all answers
-7. Final results show score and performance grade
+1. Categories are fetched from Open Trivia Database API on home page load
+2. User selects a category or chooses "Any Category" for random questions
+3. Category ID is passed to quiz page via URL parameters
+4. Questions are fetched based on selected category
+5. Answers are shuffled using Fisher-Yates algorithm for randomization
+6. Each question has a 15-second countdown timer
+7. Timer resets when moving to a new question
+8. When timer reaches zero, automatically moves to next question
+9. Users select an answer, which locks the question and stops the timer
+10. Visual feedback shows correct (green) and incorrect (red) answers
+11. Navigate through questions using Previous/Next buttons
+12. Score is calculated dynamically from all answers
+13. Final results show score, category, and performance grade
 
 ## Deploy on Vercel
 
