@@ -11,6 +11,7 @@ A modern, interactive quiz application built with Next.js 16 and React 19. Test 
 - Animated progress bar showing quiz completion
 - 15-second countdown timer for each question with visual alerts
 - Real-time score tracking with dynamic calculation
+- LocalStorage support - automatically saves and restores quiz progress
 - Visual feedback (green for correct, red for incorrect answers)
 - Navigate between questions (Previous/Next buttons)
 - Auto-advance to next question when timer expires
@@ -113,17 +114,20 @@ The app uses two Open Trivia Database API endpoints:
 2. User selects a category or chooses "Any Category" for random questions
 3. User selects difficulty level (Easy, Medium, or Hard) - defaults to Medium
 4. Category ID and difficulty are passed to quiz page via URL parameters
-5. Questions are fetched based on selected category and difficulty
-6. Answers are shuffled using Fisher-Yates algorithm for randomization
-7. Each question has a 15-second countdown timer
-8. Timer resets when moving to a new question
-9. When timer reaches zero, automatically moves to next question
-10. Users select an answer, which locks the question and stops the timer
-11. Visual feedback shows correct (green) and incorrect (red) answers
-12. Navigate through questions using Previous/Next buttons
-13. Score is calculated dynamically from all answers
-14. Final results show score, category, difficulty, and performance grade
-15. Users can restart quiz (fetches new questions), try again (same settings), or choose new category
+5. App checks localStorage for saved progress and restores if available
+6. Questions are fetched based on selected category and difficulty (if no saved progress)
+7. Answers are shuffled using Fisher-Yates algorithm for randomization
+8. Each question has a 15-second countdown timer
+9. Progress is automatically saved to localStorage after each answer
+10. Timer resets when moving to a new question
+11. When timer reaches zero, automatically moves to next question
+12. Users select an answer, which locks the question and stops the timer
+13. Visual feedback shows correct (green) and incorrect (red) answers
+14. Navigate through questions using Previous/Next buttons
+15. Score is calculated dynamically from all answers
+16. Final results show score, category, difficulty, and performance grade
+17. LocalStorage is cleared when quiz finishes or restarts
+18. Users can restart quiz (fetches new questions), try again (same settings), or choose new category
 
 ## Deploy on Vercel
 

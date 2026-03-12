@@ -50,6 +50,11 @@ export default function QuizPage() {
 
   useEffect(() => {
     async function fetchQuestions() {
+      // Skip if we already have questions loaded from localStorage
+      if (questions.length > 0 && refreshKey === 0) {
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -98,6 +103,25 @@ export default function QuizPage() {
 
     fetchQuestions();
   }, [categoryId, difficulty, refreshKey]);
+
+  // Save progress to localStorage whenever state changes
+  useEffect(() => {
+    if (questions.length > 0 && !finished) {
+      const progressData = {
+        savedIndex: index,
+        savedAnswers: answers,
+        savedQuestions: questions,
+      };
+      localStorage.setItem(storageKey, JSON.stringify(progressData));
+    }
+  }, [index, answers, questions, finished, storageKey]);
+
+  // Clear localStorage when quiz finishes
+  useEffect(() => {
+    if (finished) {
+      localStorage.removeItem(storageKey);
+    }
+  }, [finished, storageKey]);
 
   // Timer effect - resets when question changes
   useEffect(() => {
@@ -165,6 +189,9 @@ export default function QuizPage() {
   };
 
   const handleRestartQuiz = () => {
+    // Clear localStorage before restarting
+    localStorage.removeItem(storageKey);
+    
     // Reset all state
     setIndex(0);
     setAnswers([]);
