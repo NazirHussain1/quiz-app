@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { shuffleArray } from "../utils/shuffle";
+import { useSound } from "../utils/useSound";
 
 export default function QuizPage() {
   const searchParams = useSearchParams();
   const categoryId = searchParams.get("category");
   const difficulty = searchParams.get("difficulty") || "medium";
+  const { playCorrect, playWrong, playComplete } = useSound();
   
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
@@ -19,6 +22,7 @@ export default function QuizPage() {
   const [timeLeft, setTimeLeft] = useState(15);
   const [categoryName, setCategoryName] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Generate unique storage key based on category and difficulty
   const storageKey = `quiz_progress_${categoryId || 'any'}_${difficulty}`;
@@ -45,6 +49,12 @@ export default function QuizPage() {
         console.error("Failed to restore progress:", err);
         localStorage.removeItem(storageKey);
       }
+    }
+    
+    // Load sound preference
+    const savedSoundPref = localStorage.getItem("soundEnabled");
+    if (savedSoundPref !== null) {
+      setSoundEnabled(savedSoundPref === "true");
     }
   }, [storageKey]);
 
@@ -116,12 +126,45 @@ export default function QuizPage() {
     }
   }, [index, answers, questions, finished, storageKey]);
 
-  // Clear localStorage when quiz finishes
+  // Clear localStorage when quiz finishes and play completion sound
   useEffect(() => {
     if (finished) {
       localStorage.removeItem(storageKey);
+      
+      // Play completion sound
+      if (soundEnabled) {
+        playComplete();
+      }
+      
+      // Save score to leaderboard
+      const playerName = localStorage.getItem("playerName") || "Anonymous";
+      const score = calculateScore();
+      
+      const leaderboardEntry = {
+        name: playerName,
+        score: score,
+        total: questions.length,
+        category: categoryName || "Mixed",
+        difficulty: difficulty,
+        date: new Date().toISOString(),
+      };
+      
+      // Get existing leaderboard
+      const existingLeaderboard = JSON.parse(localStorage.getItem("leaderboard") || "[]");
+      
+      // Add new entry
+      existingLeaderboard.push(leaderboardEntry);
+      
+      // Sort by score (highest first)
+      existingLeaderboard.sort((a, b) => b.score - a.score);
+      
+      // Keep only top 50 entries
+      const topEntries = existingLeaderboard.slice(0, 50);
+      
+      // Save back to localStorage
+      localStorage.setItem("leaderboard", JSON.stringify(topEntries));
     }
-  }, [finished, storageKey]);
+  }, [finished, storageKey, categoryName, difficulty, questions.length, soundEnabled, playComplete]);
 
   // Timer effect - resets when question changes
   useEffect(() => {
@@ -166,6 +209,15 @@ export default function QuizPage() {
     const newAnswers = [...answers];
     newAnswers[index] = option;
     setAnswers(newAnswers);
+    
+    // Play sound effect based on answer correctness
+    if (soundEnabled) {
+      if (option === questions[index].correct) {
+        playCorrect();
+      } else {
+        playWrong();
+      }
+    }
   };
 
   // Calculate score dynamically from answers
@@ -241,32 +293,71 @@ export default function QuizPage() {
 
   if (finished)
     return (
-      <div className="container mt-5" style={{ maxWidth: 600 }}>
-        <div className="card p-4 shadow">
-          <h2 className="text-center">Quiz Finished 🎉</h2>
+      <motion.div 
+        className="container mt-5" 
+        style={{ maxWidth: 600 }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, type: "spring" }}
+      >
+        <motion.div 
+          className="card p-4 shadow"
+          initial={{ y: 50 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          <motion.h2 
+            className="text-center"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+          >
+            Quiz Finished 🎉
+          </motion.h2>
           
           {categoryName && (
-            <p className="text-center text-muted mb-2">
+            <motion.p 
+              className="text-center text-muted mb-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
               <small>
                 Category: {categoryName} | Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
               </small>
-            </p>
+            </motion.p>
           )}
 
-          <p className="text-center fs-5">
+          <motion.p 
+            className="text-center fs-5"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
             Your Score: <b>{score} / {questions.length}</b>
-          </p>
+          </motion.p>
 
           {/* Performance Message */}
-          {(() => {
-            const percent = (score / questions.length) * 100;
-            if (percent < 40) return <p className="text-danger text-center fs-6">Fail</p>;
-            else if (percent < 60) return <p className="text-warning text-center fs-6">Average - Need More Improvement</p>;
-            else if (percent < 75) return <p className="text-info text-center fs-6">Good</p>;
-            else return <p className="text-success text-center fs-6">Excellent 🎉</p>;
-          })()}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.6, type: "spring" }}
+          >
+            {(() => {
+              const percent = (score / questions.length) * 100;
+              if (percent < 40) return <p className="text-danger text-center fs-6">Fail</p>;
+              else if (percent < 60) return <p className="text-warning text-center fs-6">Average - Need More Improvement</p>;
+              else if (percent < 75) return <p className="text-info text-center fs-6">Good</p>;
+              else return <p className="text-success text-center fs-6">Excellent 🎉</p>;
+            })()}
+          </motion.div>
 
-          <div className="d-grid gap-2 mt-3">
+          <motion.div 
+            className="d-grid gap-2 mt-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+          >
             <button
               className="btn btn-success btn-lg"
               onClick={handleRestartQuiz}
@@ -275,23 +366,26 @@ export default function QuizPage() {
               🔄 Restart Quiz
             </button>
             <div className="d-flex gap-2">
-              <Link href="/" className="btn btn-secondary w-100">
-                🏠 New Category
+              <Link href="/leaderboard" className="btn btn-primary w-100">
+                🏆 Leaderboard
               </Link>
-              <Link 
-                href={`/quiz?${categoryId ? `category=${categoryId}&` : ""}difficulty=${difficulty}`}
-                className="btn btn-outline-success w-100"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleRestartQuiz();
-                }}
-              >
-                ↻ Try Again
+              <Link href="/" className="btn btn-secondary w-100">
+                🏠 Home
               </Link>
             </div>
-          </div>
-        </div>
-      </div>
+            <Link 
+              href={`/quiz?${categoryId ? `category=${categoryId}&` : ""}difficulty=${difficulty}`}
+              className="btn btn-outline-success w-100"
+              onClick={(e) => {
+                e.preventDefault();
+                handleRestartQuiz();
+              }}
+            >
+              ↻ Try Again
+            </Link>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     );
 
   const current = questions[index];
@@ -300,16 +394,47 @@ export default function QuizPage() {
 
   return (
     <div className="container mt-4" style={{ maxWidth: 600 }}>
+      {/* Sound Toggle Button */}
+      <motion.div 
+        className="d-flex justify-content-end mb-2"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <button
+          onClick={() => {
+            const newSoundState = !soundEnabled;
+            setSoundEnabled(newSoundState);
+            localStorage.setItem("soundEnabled", newSoundState.toString());
+          }}
+          className="btn btn-sm btn-outline-secondary"
+          aria-label="Toggle sound effects"
+          title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+        >
+          {soundEnabled ? "🔊 Sound On" : "🔇 Sound Off"}
+        </button>
+      </motion.div>
+      
       {/* SCORE */}
-      <div className="d-flex justify-content-between align-items-center mb-2">
+      <motion.div 
+        className="d-flex justify-content-between align-items-center mb-2"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <h5 aria-live="polite" className="mb-0">Score: {score}</h5>
         <h5 aria-live="polite" className="mb-0 text-success">
           {score}/{questions.length}
         </h5>
-      </div>
+      </motion.div>
       
       {categoryName && (
-        <div className="text-center mb-3">
+        <motion.div 
+          className="text-center mb-3"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
           <span className="badge bg-info text-dark me-2">
             📚 {categoryName}
           </span>
@@ -322,11 +447,16 @@ export default function QuizPage() {
              difficulty === "hard" ? "🔥 Hard" : 
              "🤔 Medium"}
           </span>
-        </div>
+        </motion.div>
       )}
 
       {/* QUESTION PROGRESS INDICATOR */}
-      <div className="card mb-3 p-3 shadow-sm bg-light">
+      <motion.div 
+        className="card mb-3 p-3 shadow-sm bg-light"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="d-flex justify-content-between align-items-center mb-2">
           <span className="fw-bold text-muted">
             Question {index + 1} of {questions.length}
@@ -338,33 +468,40 @@ export default function QuizPage() {
         
         {/* PROGRESS BAR */}
         <div className="progress" style={{ height: "12px" }}>
-          <div
+          <motion.div
             className="progress-bar bg-success progress-bar-striped progress-bar-animated"
             role="progressbar"
             style={{ width: `${progressPercent}%` }}
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.5 }}
             aria-valuenow={index + 1}
             aria-valuemin="0"
             aria-valuemax={questions.length}
             aria-label={`Question ${index + 1} of ${questions.length}`}
-          ></div>
+          ></motion.div>
         </div>
-      </div>
-        ></div>
-      </div>
+      </motion.div>
 
       {/* COUNTDOWN TIMER */}
-      <div className="card mb-3 p-3 text-center shadow-sm border-2" style={{ 
-        borderColor: timeLeft <= 5 ? '#dc3545' : '#198754' 
-      }}>
+      <motion.div 
+        className="card mb-3 p-3 text-center shadow-sm border-2" 
+        style={{ borderColor: timeLeft <= 5 ? '#dc3545' : '#198754' }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
         <div className="d-flex align-items-center justify-content-center">
           <span className="me-2 fs-5">⏱️</span>
-          <span 
+          <motion.span 
             className={`fs-3 fw-bold ${timeLeft <= 5 ? 'text-danger' : 'text-success'}`}
             aria-live="polite"
             aria-atomic="true"
+            animate={{ scale: timeLeft <= 5 ? [1, 1.1, 1] : 1 }}
+            transition={{ duration: 0.5, repeat: timeLeft <= 5 ? Infinity : 0 }}
           >
             {timeLeft}s
-          </span>
+          </motion.span>
           <span className="ms-2 text-muted small">remaining</span>
         </div>
         <div className="progress mt-2" style={{ height: "8px" }}>
@@ -380,68 +517,94 @@ export default function QuizPage() {
             aria-valuemax="15"
           ></div>
         </div>
-      </div>
+      </motion.div>
 
       {/* QUESTION CARD */}
-      <div className="card p-4 shadow-sm">
-        <h5
-          dangerouslySetInnerHTML={{ __html: current.question }}
-          className="mb-3"
-          role="heading"
-          aria-level="2"
-        ></h5>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={index}
+          className="card p-4 shadow-sm"
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -100 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.h5
+            dangerouslySetInnerHTML={{ __html: current.question }}
+            className="mb-3"
+            role="heading"
+            aria-level="2"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          ></motion.h5>
 
-        {/* OPTIONS */}
-        <div className="list-group" role="radiogroup" aria-label="Answer options">
-          {current.options.map((option, i) => {
-            let className = "list-group-item list-group-item-action";
-            const isSelected = option === answers[index];
-            const isCorrect = option === current.correct;
+          {/* OPTIONS */}
+          <div className="list-group" role="radiogroup" aria-label="Answer options">
+            {current.options.map((option, i) => {
+              let className = "list-group-item list-group-item-action";
+              const isSelected = option === answers[index];
+              const isCorrect = option === current.correct;
 
-            if (isLocked) {
-              if (isCorrect) {
-                className += " bg-success text-white";
-              } else if (isSelected && !isCorrect) {
-                className += " bg-danger text-white";
+              if (isLocked) {
+                if (isCorrect) {
+                  className += " bg-success text-white";
+                } else if (isSelected && !isCorrect) {
+                  className += " bg-danger text-white";
+                }
               }
-            }
 
-            return (
-              <button
-                key={i}
-                className={className}
-                onClick={() => handleSelect(option)}
-                dangerouslySetInnerHTML={{ __html: option }}
-                disabled={isLocked}
-                role="radio"
-                aria-checked={isSelected}
-                aria-label={`Option ${i + 1}`}
-              ></button>
-            );
-          })}
-        </div>
-      </div>
+              return (
+                <motion.button
+                  key={i}
+                  className={className}
+                  onClick={() => handleSelect(option)}
+                  dangerouslySetInnerHTML={{ __html: option }}
+                  disabled={isLocked}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
+                  whileHover={{ scale: isLocked ? 1 : 1.02 }}
+                  whileTap={{ scale: isLocked ? 1 : 0.98 }}
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={`Option ${i + 1}`}
+                ></motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* BUTTONS */}
-      <div className="d-flex justify-content-between mt-3">
-        <button
+      <motion.div 
+        className="d-flex justify-content-between mt-3"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.3 }}
+      >
+        <motion.button
           className="btn btn-secondary"
           onClick={handlePrev}
           disabled={index === 0}
           aria-label="Go to previous question"
+          whileHover={{ scale: index === 0 ? 1 : 1.05 }}
+          whileTap={{ scale: index === 0 ? 1 : 0.95 }}
         >
           ← Previous
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           className="btn btn-success"
           disabled={!isLocked}
           onClick={handleNext}
           aria-label={index === questions.length - 1 ? "Finish quiz" : "Go to next question"}
+          whileHover={{ scale: !isLocked ? 1 : 1.05 }}
+          whileTap={{ scale: !isLocked ? 1 : 0.95 }}
         >
           {index === questions.length - 1 ? "Finish" : "Next →"}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </div>
   );
 }

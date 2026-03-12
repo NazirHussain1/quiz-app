@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter();
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("medium");
+  const [playerName, setPlayerName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,7 +33,29 @@ export default function HomePage() {
     }
 
     fetchCategories();
+    
+    // Load saved player name
+    const savedName = localStorage.getItem("playerName");
+    if (savedName) {
+      setPlayerName(savedName);
+    }
   }, []);
+
+  const handleStartQuiz = (e) => {
+    e.preventDefault();
+    
+    if (!playerName.trim()) {
+      alert("Please enter your name to start the quiz!");
+      return;
+    }
+    
+    // Save player name to localStorage
+    localStorage.setItem("playerName", playerName.trim());
+    
+    // Navigate to quiz page
+    const url = `/quiz?${selectedCategory ? `category=${selectedCategory}&` : ""}difficulty=${selectedDifficulty}`;
+    router.push(url);
+  };
 
   return (
     <div className="d-flex flex-column justify-content-center align-items-center vh-100 text-center px-3">
@@ -38,6 +63,21 @@ export default function HomePage() {
       <p className="mb-4 fs-5">Test your knowledge with fun and challenging questions!</p>
 
       <div className="card p-4 shadow" style={{ maxWidth: 500, width: "100%" }}>
+        <label htmlFor="player-name" className="form-label fw-bold">
+          Enter Your Name
+        </label>
+        <input
+          type="text"
+          id="player-name"
+          className="form-control mb-4"
+          placeholder="Your name"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          maxLength={30}
+          required
+          aria-label="Enter your name"
+        />
+        
         <label htmlFor="category-select" className="form-label fw-bold">
           Select Quiz Category
         </label>
@@ -119,12 +159,20 @@ export default function HomePage() {
               </div>
             </div>
 
-            <Link 
-              href={`/quiz?${selectedCategory ? `category=${selectedCategory}&` : ""}difficulty=${selectedDifficulty}`}
-              className="btn btn-success btn-lg w-100"
+            <button
+              onClick={handleStartQuiz}
+              className="btn btn-success btn-lg w-100 mb-2"
               aria-label="Start the quiz"
             >
               Start Quiz
+            </button>
+            
+            <Link 
+              href="/leaderboard"
+              className="btn btn-outline-primary w-100"
+              aria-label="View leaderboard"
+            >
+              🏆 View Leaderboard
             </Link>
           </>
         )}
