@@ -62,27 +62,41 @@ npm start
 ```
 quiz-app/
 ├── app/
-│   ├── components/
-│   │   └── QuestionCard.js    # Question card component
+│   ├── components/          # Reusable UI components
+│   │   ├── CategoryBadge.js
+│   │   ├── QuestionCard.js
+│   │   ├── QuestionDisplay.js
+│   │   ├── QuizProgress.js
+│   │   ├── QuizResults.js
+│   │   ├── SoundToggle.js
+│   │   └── Timer.js
+│   ├── hooks/               # Custom React hooks
+│   │   ├── useLeaderboard.js
+│   │   ├── useQuizState.js
+│   │   └── useTimer.js
 │   ├── leaderboard/
-│   │   └── page.js            # Leaderboard page
+│   │   └── page.js          # Leaderboard page
 │   ├── quiz/
-│   │   └── page.js            # Quiz page with game logic
-│   ├── utils/
-│   │   └── shuffle.js         # Fisher-Yates shuffle algorithm
-│   │   └── useSound.js        # Sound effects hook
-│   ├── favicon.ico            # App icon
-│   ├── globals.css            # Global styles (Tailwind + dark mode)
-│   ├── layout.js              # Root layout with dark mode toggle
-│   └── page.js                # Home/landing page with name input
+│   │   └── page.js          # Quiz page with game logic
+│   ├── services/            # API and storage services
+│   │   ├── leaderboardService.js
+│   │   ├── quizService.js
+│   │   └── storageService.js
+│   ├── utils/               # Utility functions
+│   │   ├── shuffle.js       # Fisher-Yates shuffle algorithm
+│   │   └── useSound.js      # Sound effects hook
+│   ├── favicon.ico
+│   ├── globals.css          # Global styles (Tailwind + dark mode)
+│   ├── layout.js            # Root layout with dark mode toggle
+│   └── page.js              # Home/landing page with name input
 ├── public/
-│   └── sounds/                # Sound effect files
-│       ├── correct.mp3        # Correct answer sound
-│       ├── wrong.mp3          # Wrong answer sound
-│       └── complete.mp3       # Quiz completion sound
-├── next.config.ts             # Next.js configuration
-├── package.json               # Dependencies and scripts
-└── README.md                  # Project documentation
+│   └── sounds/              # Sound effect files
+│       ├── correct.mp3
+│       ├── wrong.mp3
+│       └── complete.mp3
+├── next.config.ts           # Next.js configuration
+├── package.json             # Dependencies and scripts
+└── README.md                # Project documentation
 ```
 
 ## Technologies Used
@@ -90,8 +104,39 @@ quiz-app/
 - Next.js 16.0.4 (App Router)
 - React 19.2.0
 - Bootstrap 5.3.8 (with dark mode support)
+- Framer Motion (animations)
 - Tailwind CSS 4
 - Open Trivia Database API
+
+## Architecture
+
+The application follows a scalable, modular architecture:
+
+### Services Layer
+- **quizService.js**: Handles all API calls to Open Trivia Database
+- **storageService.js**: Manages localStorage operations (progress, preferences)
+- **leaderboardService.js**: Handles leaderboard CRUD operations
+
+### Custom Hooks
+- **useQuizState**: Manages quiz state, questions, answers, and progress
+- **useTimer**: Handles countdown timer logic
+- **useLeaderboard**: Manages leaderboard state and operations
+- **useSound**: Controls sound effects playback
+
+### Components
+- **QuizProgress**: Displays score and progress bar
+- **Timer**: Countdown timer with animations
+- **QuestionDisplay**: Question and answer options with animations
+- **QuizResults**: Results screen with performance evaluation
+- **CategoryBadge**: Category and difficulty badges
+- **SoundToggle**: Sound on/off toggle button
+
+### Benefits
+- **Separation of Concerns**: Logic separated from UI
+- **Reusability**: Components and hooks can be reused
+- **Testability**: Services and hooks are easy to unit test
+- **Maintainability**: Clear structure makes updates easier
+- **Scalability**: Easy to add new features
 
 ## API
 
