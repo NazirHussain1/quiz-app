@@ -171,17 +171,29 @@ Reusable, presentational UI components:
 
 ## 🔊 Sound Effects
 
-The app includes sound effects for enhanced experience:
+The app includes sound effect support for enhanced experience:
 - ✅ Correct answer sound
 - ❌ Wrong answer sound
 - 🎉 Quiz completion sound
 
 Toggle sounds on/off using the button in the quiz page. Preference is saved automatically.
 
-**Note**: Placeholder MP3 files are included. For best experience, replace with actual sound files from:
-- [Freesound.org](https://freesound.org/)
-- [Zapsplat](https://www.zapsplat.com/)
-- [Mixkit](https://mixkit.co/free-sound-effects/)
+### Adding Sound Files
+
+The app currently has empty placeholder files in `public/sounds/`. To enable sounds:
+
+1. Download or create MP3 files (0.5-2 seconds recommended)
+2. Replace the placeholder files:
+   - `public/sounds/correct.mp3` - Success/correct sound
+   - `public/sounds/wrong.mp3` - Error/wrong sound
+   - `public/sounds/complete.mp3` - Celebration/completion sound
+
+**Free Sound Resources**:
+- [Freesound.org](https://freesound.org/) - Large library of free sounds
+- [Zapsplat](https://www.zapsplat.com/) - Free sound effects
+- [Mixkit](https://mixkit.co/free-sound-effects/) - Free sound effects
+
+**Note**: The app works perfectly without sound files - they're optional for enhanced UX.
 
 ## 🌐 API
 
