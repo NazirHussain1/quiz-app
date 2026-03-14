@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getQuestions, getRandomQuestions, createQuestion } from '@/app/lib/models/Question';
+import { connectToDatabase } from '@/app/lib/mongodb';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
@@ -7,27 +9,37 @@ export async function GET(request) {
     const category = searchParams.get('category');
     const subject = searchParams.get('subject');
     const difficulty = searchParams.get('difficulty');
-    const random = searchParams.get('random');
     const limit = parseInt(searchParams.get('limit') || '10');
     
-    const filters = {};
-    if (category) filters.category = category;
-    if (subject) filters.subject = subject;
-    if (difficulty) filters.difficulty = difficulty;
+    const { db } = await connectToDatabase();
+    const collection = db.collection('questions');
     
-    let questions;
-    if (random === 'true') {
-      questions = await getRandomQuestions(filters, limit);
-    } else {
-      questions = await getQuestions(filters);
+    const matchStage = {};
+    if (category) matchStage.category = category;
+    if (subject) matchStage.subject = subject;
+    if (difficulty) matchStage.difficulty = difficulty;
+    
+    const pipeline = [];
+    
+    if (Object.keys(matchStage).length > 0) {
+      pipeline.push({ $match: matchStage });
     }
+    
+    pipeline.push({ $sample: { size: limit } });
+    
+    const questions = await collection.aggregate(pipeline).toArray();
     
     return NextResponse.json({ 
       success: true, 
       count: questions.length,
       questions 
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      }
     });
   } catch (error) {
+    console.error('Error fetching questions:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
@@ -46,13 +58,27 @@ export async function POST(request) {
       );
     }
     
-    const result = await createQuestion(body);
+    const { db } = await connectToDatabase();
+    const collection = db.collection('questions');
+    
+    const result = await collection.insertOne({
+      category: body.category,
+      subject: body.subject,
+      topic: body.topic || '',
+      difficulty: body.difficulty || 'medium',
+      question: body.question,
+      options: body.options,
+      correctAnswer: body.correctAnswer,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
     
     return NextResponse.json({ 
       success: true, 
       questionId: result.insertedId 
     }, { status: 201 });
   } catch (error) {
+    console.error('Error creating question:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
