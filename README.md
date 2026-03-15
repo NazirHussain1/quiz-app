@@ -7,6 +7,46 @@ A modern, feature-rich quiz application built with Next.js 16 and React 19. Test
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.8-purple)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+## 📊 Project Status
+
+### Current Features
+- ✅ Quiz system with multiple-choice questions
+- ✅ MongoDB Atlas integration for persistent storage
+- ✅ Category and subject selection
+- ✅ Random question API with fallback support
+- ✅ Progress tracking with localStorage
+- ✅ Score evaluation and performance grading
+- ✅ Results storage in MongoDB
+- ✅ Leaderboard with filtering options
+- ✅ Dark mode support
+- ✅ Sound effects
+- ✅ Responsive design
+
+### Tech Stack
+- **Frontend**: Next.js 16, React 19
+- **Database**: MongoDB Atlas
+- **Styling**: Bootstrap 5, Tailwind CSS 4
+- **Animations**: Framer Motion
+- **Deployment**: Vercel-ready
+- **Storage**: MongoDB + localStorage
+
+### Development Status
+- ✅ Database integration completed
+- ✅ Basic academic quiz system implemented
+- ✅ 100 sample questions seeded (Mathematics, Physics, Chemistry, Biology, Computer Science)
+- ✅ API routes for questions, results, and seeding
+- ✅ Subject-based quiz navigation
+- ✅ Leaderboard with MongoDB backend
+
+### Planned Features
+- 🔜 Enhanced leaderboard with global rankings
+- 🔜 Admin panel for question management
+- 🔜 Exam mode with time limits
+- 🔜 Analytics dashboard for performance tracking
+- 🔜 User authentication
+- 🔜 Custom quiz creation
+- 🔜 Question difficulty adaptation
+
 ## ✨ Features
 
 ### Core Functionality
