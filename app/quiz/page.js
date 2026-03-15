@@ -9,7 +9,8 @@ import { useSound } from "../utils/useSound";
 
 export default function QuizPage() {
   const searchParams = useSearchParams();
-  const categoryId = searchParams.get("category");
+  const category = searchParams.get("category");
+  const subject = searchParams.get("subject");
   const difficulty = searchParams.get("difficulty") || "medium";
   const { playCorrect, playWrong, playComplete } = useSound();
   
@@ -21,11 +22,12 @@ export default function QuizPage() {
   const [error, setError] = useState(null);
   const [timeLeft, setTimeLeft] = useState(15);
   const [categoryName, setCategoryName] = useState("");
+  const [subjectName, setSubjectName] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
-  // Generate unique storage key based on category and difficulty
-  const storageKey = `quiz_progress_${categoryId || 'any'}_${difficulty}`;
+  // Generate unique storage key based on category, subject, and difficulty
+  const storageKey = `quiz_progress_${category || 'any'}_${subject || 'any'}_${difficulty}`;
 
   // Load saved progress from localStorage on mount
   useEffect(() => {
@@ -39,9 +41,12 @@ export default function QuizPage() {
           setAnswers(savedAnswers || []);
           setLoading(false);
           
-          // Set category name from saved questions
+          // Set category and subject name from saved questions
           if (savedQuestions[0]?.category) {
             setCategoryName(savedQuestions[0].category);
+          }
+          if (savedQuestions[0]?.subject) {
+            setSubjectName(savedQuestions[0].subject);
           }
           return; // Skip fetching new questions
         }
@@ -69,14 +74,21 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
         
-        // Build API URL with optional category and difficulty
-        let apiUrl = "https://opentdb.com/api.php?amount=10&type=multiple";
-        if (categoryId) {
-          apiUrl += `&category=${categoryId}`;
+        // Build API URL with MongoDB endpoint
+        const params = new URLSearchParams();
+        
+        if (category) {
+          params.append('category', category);
+        }
+        if (subject) {
+          params.append('subject', subject);
         }
         if (difficulty) {
-          apiUrl += `&difficulty=${difficulty}`;
+          params.append('difficulty', difficulty);
         }
+        params.append('limit', '10');
+        
+        const apiUrl = `/api/questions?${params.toString()}`;
         
         const res = await fetch(apiUrl);
         
@@ -86,23 +98,29 @@ export default function QuizPage() {
         
         const data = await res.json();
 
-        if (data.response_code !== 0) {
-          throw new Error("No questions available for this category");
+        if (!data.success) {
+          throw new Error(data.error || "No questions available");
         }
 
-        const formatted = data.results.map((q) => ({
+        if (!data.questions || data.questions.length === 0) {
+          throw new Error("No questions available for this category and subject");
+        }
+
+        const formatted = data.questions.map((q) => ({
           question: q.question,
-          correct: q.correct_answer,
-          options: shuffleArray([...q.incorrect_answers, q.correct_answer]),
+          correct: q.correctAnswer,
+          options: shuffleArray([...q.options]),
           category: q.category,
+          subject: q.subject,
         }));
 
         setQuestions(formatted);
         setAnswers(new Array(formatted.length).fill(null));
         
-        // Set category name from first question
+        // Set category and subject name from first question
         if (formatted.length > 0) {
           setCategoryName(formatted[0].category);
+          setSubjectName(formatted[0].subject);
         }
       } catch (err) {
         setError(err.message);
@@ -112,7 +130,7 @@ export default function QuizPage() {
     }
 
     fetchQuestions();
-  }, [categoryId, difficulty, refreshKey]);
+  }, [category, subject, difficulty, refreshKey]);
 
   // Save progress to localStorage whenever state changes
   useEffect(() => {
@@ -145,6 +163,7 @@ export default function QuizPage() {
         score: score,
         total: questions.length,
         category: categoryName || "Mixed",
+        subject: subjectName || "Mixed",
         difficulty: difficulty,
         date: new Date().toISOString(),
       };
@@ -323,7 +342,7 @@ export default function QuizPage() {
               transition={{ delay: 0.4 }}
             >
               <small>
-                Category: {categoryName} | Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                Category: {categoryName} | Subject: {subjectName} | Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
               </small>
             </motion.p>
           )}
@@ -374,7 +393,7 @@ export default function QuizPage() {
               </Link>
             </div>
             <Link 
-              href={`/quiz?${categoryId ? `category=${categoryId}&` : ""}difficulty=${difficulty}`}
+              href={`/quiz?${category ? `category=${category}&` : ""}${subject ? `subject=${subject}&` : ""}difficulty=${difficulty}`}
               className="btn btn-outline-success w-100"
               onClick={(e) => {
                 e.preventDefault();
@@ -428,7 +447,7 @@ export default function QuizPage() {
         </h5>
       </motion.div>
       
-      {categoryName && (
+      {categoryName && subjectName && (
         <motion.div 
           className="text-center mb-3"
           initial={{ opacity: 0, scale: 0.8 }}
@@ -437,6 +456,9 @@ export default function QuizPage() {
         >
           <span className="badge bg-info text-dark me-2">
             📚 {categoryName}
+          </span>
+          <span className="badge bg-secondary me-2">
+            📖 {subjectName}
           </span>
           <span className={`badge ${
             difficulty === "easy" ? "bg-success" : 
