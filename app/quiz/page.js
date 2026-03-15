@@ -74,7 +74,7 @@ export default function QuizPage() {
         setLoading(true);
         setError(null);
         
-        // Build API URL with MongoDB endpoint
+        // Try MongoDB first
         const params = new URLSearchParams();
         
         if (category) {
@@ -92,32 +92,63 @@ export default function QuizPage() {
         
         const res = await fetch(apiUrl);
         
-        if (!res.ok) {
-          throw new Error("Failed to fetch questions");
+        if (res.ok) {
+          const data = await res.json();
+
+          if (data.success && data.questions && data.questions.length > 0) {
+            // MongoDB has questions - use them
+            const formatted = data.questions.map((q) => ({
+              question: q.question,
+              correct: q.correctAnswer,
+              options: shuffleArray([...q.options]),
+              category: q.category,
+              subject: q.subject,
+            }));
+
+            setQuestions(formatted);
+            setAnswers(new Array(formatted.length).fill(null));
+            
+            if (formatted.length > 0) {
+              setCategoryName(formatted[0].category);
+              setSubjectName(formatted[0].subject);
+            }
+            
+            setLoading(false);
+            return;
+          }
         }
         
-        const data = await res.json();
+        // Fallback to Open Trivia API if MongoDB has no questions
+        console.log("MongoDB returned no questions, falling back to Open Trivia API");
+        
+        let triviaUrl = "https://opentdb.com/api.php?amount=10&type=multiple";
+        if (difficulty) {
+          triviaUrl += `&difficulty=${difficulty}`;
+        }
+        
+        const triviaRes = await fetch(triviaUrl);
+        
+        if (!triviaRes.ok) {
+          throw new Error("Failed to fetch questions from both sources");
+        }
+        
+        const triviaData = await triviaRes.json();
 
-        if (!data.success) {
-          throw new Error(data.error || "No questions available");
+        if (triviaData.response_code !== 0) {
+          throw new Error("No questions available");
         }
 
-        if (!data.questions || data.questions.length === 0) {
-          throw new Error("No questions available for this category and subject");
-        }
-
-        const formatted = data.questions.map((q) => ({
+        const formatted = triviaData.results.map((q) => ({
           question: q.question,
-          correct: q.correctAnswer,
-          options: shuffleArray([...q.options]),
+          correct: q.correct_answer,
+          options: shuffleArray([...q.incorrect_answers, q.correct_answer]),
           category: q.category,
-          subject: q.subject,
+          subject: "General",
         }));
 
         setQuestions(formatted);
         setAnswers(new Array(formatted.length).fill(null));
         
-        // Set category and subject name from first question
         if (formatted.length > 0) {
           setCategoryName(formatted[0].category);
           setSubjectName(formatted[0].subject);
@@ -154,7 +185,7 @@ export default function QuizPage() {
         playComplete();
       }
       
-      // Save score to leaderboard
+      // Save score to MongoDB and localStorage leaderboard
       const playerName = localStorage.getItem("playerName") || "Anonymous";
       const score = calculateScore();
       
@@ -167,6 +198,33 @@ export default function QuizPage() {
         difficulty: difficulty,
         date: new Date().toISOString(),
       };
+      
+      // Save to MongoDB
+      fetch('/api/results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: playerName,
+          category: categoryName || "General",
+          subject: subjectName || "General",
+          score: score,
+          totalQuestions: questions.length,
+          difficulty: difficulty,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Result saved to MongoDB:', data.resultId);
+          } else {
+            console.error('Failed to save result to MongoDB:', data.error);
+          }
+        })
+        .catch(err => {
+          console.error('Error saving result to MongoDB:', err);
+        });
       
       // Get existing leaderboard
       const existingLeaderboard = JSON.parse(localStorage.getItem("leaderboard") || "[]");
@@ -183,7 +241,7 @@ export default function QuizPage() {
       // Save back to localStorage
       localStorage.setItem("leaderboard", JSON.stringify(topEntries));
     }
-  }, [finished, storageKey, categoryName, difficulty, questions.length, soundEnabled, playComplete]);
+  }, [finished, storageKey, categoryName, subjectName, difficulty, questions.length, soundEnabled, playComplete]);
 
   // Timer effect - resets when question changes
   useEffect(() => {
