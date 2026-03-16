@@ -6,12 +6,13 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { shuffleArray } from "../utils/shuffle";
 import { useSound } from "../utils/useSound";
+import { adaptiveDifficultyService } from "../services/adaptiveDifficultyService";
 
 export default function QuizPage() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
   const subject = searchParams.get("subject");
-  const difficulty = searchParams.get("difficulty") || "medium";
+  const initialDifficulty = searchParams.get("difficulty") || "medium";
   const { playCorrect, playWrong, playComplete } = useSound();
   
   const [questions, setQuestions] = useState([]);
@@ -25,9 +26,33 @@ export default function QuizPage() {
   const [subjectName, setSubjectName] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [adaptiveDifficulty, setAdaptiveDifficulty] = useState(initialDifficulty);
+  const [difficultyChanged, setDifficultyChanged] = useState(false);
+  const [previousDifficulty, setPreviousDifficulty] = useState(null);
 
   // Generate unique storage key based on category, subject, and difficulty
-  const storageKey = `quiz_progress_${category || 'any'}_${subject || 'any'}_${difficulty}`;
+  const storageKey = `quiz_progress_${category || 'any'}_${subject || 'any'}_${adaptiveDifficulty}`;
+
+  // Check for adaptive difficulty on mount
+  useEffect(() => {
+    if (category && subject) {
+      const newDifficulty = adaptiveDifficultyService.getAdaptiveDifficulty(
+        category,
+        subject,
+        initialDifficulty
+      );
+      
+      if (newDifficulty !== initialDifficulty) {
+        setAdaptiveDifficulty(newDifficulty);
+        setDifficultyChanged(true);
+        setPreviousDifficulty(initialDifficulty);
+      } else {
+        setAdaptiveDifficulty(initialDifficulty);
+      }
+    } else {
+      setAdaptiveDifficulty(initialDifficulty);
+    }
+  }, [category, subject, initialDifficulty]);
 
   // Load saved progress from localStorage on mount
   useEffect(() => {
@@ -83,8 +108,8 @@ export default function QuizPage() {
         if (subject) {
           params.append('subject', subject);
         }
-        if (difficulty) {
-          params.append('difficulty', difficulty);
+        if (adaptiveDifficulty) {
+          params.append('difficulty', adaptiveDifficulty);
         }
         params.append('limit', '10');
         
@@ -122,8 +147,8 @@ export default function QuizPage() {
         console.log("MongoDB returned no questions, falling back to Open Trivia API");
         
         let triviaUrl = "https://opentdb.com/api.php?amount=10&type=multiple";
-        if (difficulty) {
-          triviaUrl += `&difficulty=${difficulty}`;
+        if (adaptiveDifficulty) {
+          triviaUrl += `&difficulty=${adaptiveDifficulty}`;
         }
         
         const triviaRes = await fetch(triviaUrl);
@@ -161,7 +186,7 @@ export default function QuizPage() {
     }
 
     fetchQuestions();
-  }, [category, subject, difficulty, refreshKey]);
+  }, [category, subject, adaptiveDifficulty, refreshKey]);
 
   // Save progress to localStorage whenever state changes
   useEffect(() => {
@@ -189,13 +214,24 @@ export default function QuizPage() {
       const playerName = localStorage.getItem("playerName") || "Anonymous";
       const score = calculateScore();
       
+      // Record performance for adaptive difficulty
+      if (category && subject) {
+        adaptiveDifficultyService.recordQuizResult(
+          category,
+          subject,
+          adaptiveDifficulty,
+          score,
+          questions.length
+        );
+      }
+      
       const leaderboardEntry = {
         name: playerName,
         score: score,
         total: questions.length,
         category: categoryName || "Mixed",
         subject: subjectName || "Mixed",
-        difficulty: difficulty,
+        difficulty: adaptiveDifficulty,
         date: new Date().toISOString(),
       };
       
@@ -211,7 +247,7 @@ export default function QuizPage() {
           subject: subjectName || "General",
           score: score,
           totalQuestions: questions.length,
-          difficulty: difficulty,
+          difficulty: adaptiveDifficulty,
         }),
       })
         .then(res => res.json())
@@ -241,7 +277,7 @@ export default function QuizPage() {
       // Save back to localStorage
       localStorage.setItem("leaderboard", JSON.stringify(topEntries));
     }
-  }, [finished, storageKey, categoryName, subjectName, difficulty, questions.length, soundEnabled, playComplete]);
+  }, [finished, storageKey, categoryName, subjectName, adaptiveDifficulty, questions.length, soundEnabled, playComplete, category, subject]);
 
   // Timer effect - resets when question changes
   useEffect(() => {
@@ -368,7 +404,13 @@ export default function QuizPage() {
 
   const score = calculateScore();
 
-  if (finished)
+  if (finished) {
+    const percentage = (score / questions.length) * 100;
+    const nextDifficulty = category && subject 
+      ? adaptiveDifficultyService.getAdaptiveDifficulty(category, subject, adaptiveDifficulty)
+      : adaptiveDifficulty;
+    const willChangeDifficulty = nextDifficulty !== adaptiveDifficulty;
+    
     return (
       <motion.div 
         className="container mt-5" 
@@ -400,9 +442,27 @@ export default function QuizPage() {
               transition={{ delay: 0.4 }}
             >
               <small>
-                Category: {categoryName} | Subject: {subjectName} | Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                Category: {categoryName} | Subject: {subjectName} | Difficulty: {adaptiveDifficulty.charAt(0).toUpperCase() + adaptiveDifficulty.slice(1)}
               </small>
             </motion.p>
+          )}
+
+          {willChangeDifficulty && (
+            <motion.div
+              className={`alert ${nextDifficulty > adaptiveDifficulty ? 'alert-success' : 'alert-info'} mb-3`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.45 }}
+            >
+              <strong>
+                {nextDifficulty > adaptiveDifficulty ? '🎉 Great job!' : '💡 Tip:'}
+              </strong>
+              {' '}
+              {nextDifficulty > adaptiveDifficulty 
+                ? `Your next quiz will be ${nextDifficulty} difficulty!`
+                : `Your next quiz will be ${nextDifficulty} difficulty to help you improve.`
+              }
+            </motion.div>
           )}
 
           <motion.p 
@@ -421,7 +481,7 @@ export default function QuizPage() {
             transition={{ delay: 0.6, type: "spring" }}
           >
             {(() => {
-              const percent = (score / questions.length) * 100;
+              const percent = percentage;
               if (percent < 40) return <p className="text-danger text-center fs-6">Fail</p>;
               else if (percent < 60) return <p className="text-warning text-center fs-6">Average - Need More Improvement</p>;
               else if (percent < 75) return <p className="text-info text-center fs-6">Good</p>;
@@ -451,7 +511,7 @@ export default function QuizPage() {
               </Link>
             </div>
             <Link 
-              href={`/quiz?${category ? `category=${category}&` : ""}${subject ? `subject=${subject}&` : ""}difficulty=${difficulty}`}
+              href={`/quiz?${category ? `category=${category}&` : ""}${subject ? `subject=${subject}&` : ""}difficulty=${adaptiveDifficulty}`}
               className="btn btn-outline-success w-100"
               onClick={(e) => {
                 e.preventDefault();
@@ -519,14 +579,26 @@ export default function QuizPage() {
             📖 {subjectName}
           </span>
           <span className={`badge ${
-            difficulty === "easy" ? "bg-success" : 
-            difficulty === "hard" ? "bg-danger" : 
+            adaptiveDifficulty === "easy" ? "bg-success" : 
+            adaptiveDifficulty === "hard" ? "bg-danger" : 
             "bg-warning text-dark"
           }`}>
-            {difficulty === "easy" ? "😊 Easy" : 
-             difficulty === "hard" ? "🔥 Hard" : 
+            {adaptiveDifficulty === "easy" ? "😊 Easy" : 
+             adaptiveDifficulty === "hard" ? "🔥 Hard" : 
              "🤔 Medium"}
           </span>
+        </motion.div>
+      )}
+
+      {difficultyChanged && (
+        <motion.div
+          className={`alert ${previousDifficulty && adaptiveDifficulty > previousDifficulty ? 'alert-success' : 'alert-info'} mb-3`}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <strong>🎯 Adaptive Difficulty:</strong> Based on your previous performance, 
+          difficulty has been {adaptiveDifficulty > previousDifficulty ? 'increased' : 'decreased'} to {adaptiveDifficulty}.
         </motion.div>
       )}
 
