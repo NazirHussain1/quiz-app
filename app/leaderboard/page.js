@@ -54,6 +54,13 @@ export default function LeaderboardPage() {
     return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const formatTime = (seconds) => {
+    if (!seconds) return "N/A";
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const getPercentage = (score, total) => {
     return Math.round((score / total) * 100);
   };
@@ -145,6 +152,7 @@ export default function LeaderboardPage() {
                   <th scope="col">Name</th>
                   <th scope="col">Subject</th>
                   <th scope="col">Score</th>
+                  <th scope="col">Mode</th>
                   <th scope="col">Date</th>
                 </tr>
               </thead>
@@ -177,6 +185,20 @@ export default function LeaderboardPage() {
                           {entry.difficulty}
                         </span>
                       </div>
+                    </td>
+                    <td>
+                      {entry.examMode ? (
+                        <div>
+                          <span className="badge bg-warning text-dark">📝 Exam</span>
+                          {entry.timeTaken && (
+                            <div>
+                              <small className="text-muted">{formatTime(entry.timeTaken)}</small>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="badge bg-primary">Quiz</span>
+                      )}
                     </td>
                     <td>
                       <small className="text-muted">

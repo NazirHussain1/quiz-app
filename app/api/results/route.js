@@ -24,6 +24,8 @@ export async function POST(request) {
       score: body.score,
       totalQuestions: body.totalQuestions,
       difficulty: body.difficulty || 'medium',
+      timeTaken: body.timeTaken || null,
+      examMode: body.examMode || false,
       createdAt: new Date()
     });
     

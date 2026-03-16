@@ -51,8 +51,9 @@ export default function SubjectSelectionPage() {
     fetchSubjects();
   }, [category, router]);
 
-  const handleSubjectClick = (subject) => {
-    router.push(`/quiz?category=${encodeURIComponent(category)}&subject=${encodeURIComponent(subject)}&difficulty=${difficulty}`);
+  const handleSubjectClick = (subject, isExamMode = false) => {
+    const route = isExamMode ? '/exam' : '/quiz';
+    router.push(`${route}?category=${encodeURIComponent(category)}&subject=${encodeURIComponent(subject)}&difficulty=${difficulty}`);
   };
 
   if (!category) {
@@ -94,15 +95,26 @@ export default function SubjectSelectionPage() {
               ) : (
                 <div className="list-group">
                   {subjects.map((subject, index) => (
-                    <button
-                      key={index}
-                      className="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3"
-                      onClick={() => handleSubjectClick(subject)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <span className="fw-semibold">{subject}</span>
-                      <span className="badge bg-success rounded-pill">Start →</span>
-                    </button>
+                    <div key={index} className="list-group-item p-0">
+                      <div className="d-flex">
+                        <button
+                          className="flex-grow-1 btn btn-light text-start border-0 rounded-0 py-3"
+                          onClick={() => handleSubjectClick(subject, false)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <span className="fw-semibold">{subject}</span>
+                          <span className="badge bg-primary rounded-pill ms-2">Quiz Mode</span>
+                        </button>
+                        <button
+                          className="btn btn-warning border-0 rounded-0 px-4"
+                          onClick={() => handleSubjectClick(subject, true)}
+                          style={{ cursor: "pointer" }}
+                          title="Exam Mode: 30 questions, 30 minutes"
+                        >
+                          <span className="fw-semibold">📝 Exam</span>
+                        </button>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
