@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { verifyAuth } from '@/app/lib/authMiddleware';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+  
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
@@ -39,6 +48,14 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+  
   try {
     const body = await request.json();
     
@@ -93,6 +110,14 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+  
   try {
     const body = await request.json();
     
