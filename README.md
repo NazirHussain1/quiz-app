@@ -1,313 +1,420 @@
-# Quiz App 🎯
+# 🎯 Quiz App - Interactive Learning Platform
 
-A modern, feature-rich quiz application built with Next.js 16 and React 19. Test your knowledge with trivia questions from the Open Trivia Database.
+A comprehensive, production-ready quiz application built with Next.js 16, React 19, and MongoDB Atlas. Features include adaptive difficulty, real-time analytics, custom quiz creation, and a global leaderboard system.
 
-![Next.js](https://img.shields.io/badge/Next.js-16.0.4-black)
-![React](https://img.shields.io/badge/React-19.2.0-blue)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.8-purple)
-![License](https://img.shields.io/badge/License-MIT-green)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.4-black)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.0-blue)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)](https://www.mongodb.com/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-## 📊 Project Status
+## 📋 Table of Contents
 
-### Current Features
-- ✅ Quiz system with multiple-choice questions
-- ✅ MongoDB Atlas integration for persistent storage
-- ✅ Category and subject selection
-- ✅ Random question API with fallback support
-- ✅ Progress tracking with localStorage
-- ✅ Score evaluation and performance grading
-- ✅ Results storage in MongoDB
-- ✅ Leaderboard with filtering options
-- ✅ Dark mode support
-- ✅ Sound effects
-- ✅ Responsive design
-
-### Tech Stack
-- **Frontend**: Next.js 16, React 19
-- **Database**: MongoDB Atlas
-- **Styling**: Bootstrap 5, Tailwind CSS 4
-- **Animations**: Framer Motion
-- **Deployment**: Vercel-ready
-- **Storage**: MongoDB + localStorage
-
-### Development Status
-- ✅ Database integration completed
-- ✅ Basic academic quiz system implemented
-- ✅ 100 sample questions seeded (Mathematics, Physics, Chemistry, Biology, Computer Science)
-- ✅ API routes for questions, results, and seeding
-- ✅ Subject-based quiz navigation
-- ✅ Leaderboard with MongoDB backend
-
-### Planned Features
-- 🔜 Enhanced leaderboard with global rankings
-- 🔜 Admin panel for question management
-- 🔜 Exam mode with time limits
-- 🔜 Analytics dashboard for performance tracking
-- 🔜 User authentication
-- 🔜 Custom quiz creation
-- 🔜 Question difficulty adaptation
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
+- [Project Structure](#-project-structure)
+- [Deployment](#-deployment)
+- [API Routes](#-api-routes)
+- [Database Schema](#-database-schema)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## ✨ Features
 
-### Core Functionality
-- 🎮 10 multiple-choice trivia questions per quiz
-- 📚 20+ quiz categories to choose from
-- 🎯 Three difficulty levels (Easy, Medium, Hard)
-- ⏱️ 15-second countdown timer per question
-- 📊 Real-time score tracking
-- 🏆 Leaderboard system with top 10 scores
-- 💾 Auto-save progress with localStorage
-- 🔄 Restart quiz with new questions
+### Core Quiz Functionality
+- **Multiple Quiz Modes**
+  - Regular Mode: 10 questions with 15-second timer per question
+  - Exam Mode: 30 questions with 30-minute total timer
+  - Custom Quizzes: User-created quizzes with flexible settings
 
-### User Experience
-- 🎨 Dark mode support with toggle
-- 🔊 Sound effects (correct/wrong/complete)
-- ✨ Smooth animations with Framer Motion
-- 📱 Fully responsive design
-- ♿ Accessibility features (ARIA labels, keyboard navigation)
-- 🎭 Visual feedback (green for correct, red for incorrect)
-- 📈 Progress bar with percentage completion
-- 🏅 Performance evaluation system
+- **Adaptive Difficulty System**
+  - Automatically adjusts question difficulty based on performance
+  - Upgrades difficulty when score > 75%
+  - Downgrades difficulty when score < 40%
+  - Tracks performance history per subject
 
-### Technical Features
-- 🏗️ Scalable architecture with services and hooks
-- 🧩 Reusable component library
-- 🎯 Custom React hooks for state management
-- 💨 Fast page transitions
-- 🔐 Client-side data persistence
-- 🎪 Animated UI transitions
+- **100+ Questions Database**
+  - Mathematics, Physics, Chemistry, Biology, Computer Science
+  - Three difficulty levels: Easy, Medium, Hard
+  - Organized by category, subject, and topic
+
+### User Features
+- **Authentication System**
+  - Secure JWT-based authentication
+  - User registration and login
+  - Password hashing with bcryptjs
+  - Protected routes for authenticated users
+
+- **Analytics Dashboard**
+  - Visual charts showing performance trends
+  - Score history line chart
+  - Subject performance bar chart
+  - Difficulty distribution doughnut chart
+  - Weak areas identification (< 60%)
+  - Strong areas highlighting (≥ 75%)
+
+- **Global Leaderboard**
+  - Top 50 scores worldwide
+  - Filter by difficulty, category, and subject
+  - Medal system for top 3 performers (🥇🥈🥉)
+  - User rank highlighting
+  - Real-time updates from MongoDB
+
+- **Custom Quiz Creation**
+  - Create quizzes manually or select from question pool
+  - Public/private quiz options
+  - Share quizzes with other users
+  - Full CRUD operations
+
+### Admin Features
+- **Admin Panel**
+  - Add, edit, and delete questions
+  - Filter questions by category, subject, difficulty
+  - Real-time question count
+  - Protected with authentication
+
+### UI/UX Features
+- **Modern Interface**
+  - Dark mode support
+  - Responsive design (mobile, tablet, desktop)
+  - Smooth animations with Framer Motion
+  - Sound effects for interactions
+  - Bootstrap 5 + Tailwind CSS styling
+
+- **Accessibility**
+  - ARIA labels for screen readers
+  - Keyboard navigation support
+  - High contrast colors
+  - Semantic HTML
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Framework**: Next.js 16 (App Router)
+- **UI Library**: React 19
+- **Styling**: Bootstrap 5.3.8, Tailwind CSS 4
+- **Animations**: Framer Motion 12
+- **Charts**: Chart.js 4.5, react-chartjs-2 5.3
+
+### Backend
+- **Database**: MongoDB Atlas
+- **Authentication**: JWT with jose, bcryptjs
+- **API**: Next.js API Routes
+
+### Deployment
+- **Platform**: Vercel
+- **CI/CD**: Automatic deployments from Git
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 20+ installed
-- npm, yarn, pnpm, or bun package manager
+- MongoDB Atlas account
+- npm or yarn package manager
 
 ### Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd quiz-app
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   Edit `.env.local` with your MongoDB credentials (see [Environment Variables](#-environment-variables))
+
+4. **Seed the database** (Optional)
+   ```bash
+   npm run dev
+   # In another terminal:
+   curl -X POST http://localhost:3000/api/seed
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Build for Production
+
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd quiz-app
-
-# Install dependencies
-npm install
-```
-
-### Development
-
-```bash
-# Start development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the app.
-
-### Production
-
-```bash
-# Build for production
 npm run build
-
-# Start production server
 npm start
 ```
 
-### Linting
+## 🔐 Environment Variables
 
-```bash
-npm run lint
+Create a `.env.local` file in the root directory with the following variables:
+
+```env
+# MongoDB Atlas Connection String
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority
+
+# JWT Secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+JWT_SECRET=your-secure-random-string-minimum-32-characters
+
+# Next.js Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secure-random-string-minimum-32-characters
+
+# Application Name (Optional)
+NEXT_PUBLIC_APP_NAME=Quiz App
 ```
+
+### Important Security Notes
+
+⚠️ **NEVER commit `.env.local` to version control**
+
+- The `.env.local` file contains sensitive credentials
+- It is already included in `.gitignore`
+- For production, set environment variables in your Vercel dashboard
+- Generate strong, unique secrets for JWT_SECRET and NEXTAUTH_SECRET
+
+### Getting MongoDB URI
+
+1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a new cluster
+3. Click "Connect" → "Connect your application"
+4. Copy the connection string
+5. Replace `<password>` with your database password
+6. Replace `<database>` with `quizapp`
 
 ## 📁 Project Structure
 
 ```
 quiz-app/
 ├── app/
-│   ├── components/          # Reusable UI components
-│   │   ├── CategoryBadge.js
-│   │   ├── QuestionDisplay.js
-│   │   ├── QuizProgress.js
-│   │   ├── QuizResults.js
-│   │   ├── SoundToggle.js
-│   │   └── Timer.js
-│   ├── hooks/               # Custom React hooks
-│   │   ├── useLeaderboard.js
-│   │   ├── useQuizState.js
-│   │   └── useTimer.js
-│   ├── leaderboard/
-│   │   └── page.js          # Leaderboard page
-│   ├── quiz/
-│   │   └── page.js          # Quiz page
-│   ├── services/            # API and storage services
-│   │   ├── leaderboardService.js
-│   │   ├── quizService.js
-│   │   └── storageService.js
-│   ├── utils/               # Utility functions
-│   │   ├── shuffle.js
-│   │   └── useSound.js
-│   ├── favicon.ico
-│   ├── globals.css
-│   ├── layout.js
-│   └── page.js              # Home page
+│   ├── admin/                 # Admin panel for question management
+│   ├── analytics/             # User analytics dashboard
+│   ├── api/
+│   │   ├── admin/            # Admin API routes
+│   │   ├── analytics/        # Analytics data API
+│   │   ├── auth/             # Authentication endpoints
+│   │   ├── custom-quizzes/   # Custom quiz CRUD
+│   │   ├── questions/        # Question management
+│   │   ├── results/          # Quiz results storage
+│   │   └── seed/             # Database seeding
+│   ├── components/           # Reusable React components
+│   ├── contexts/             # React Context providers
+│   ├── create-quiz/          # Quiz creation wizard
+│   ├── custom-quiz/[id]/     # Take custom quiz
+│   ├── exam/                 # Exam mode (30Q, 30min)
+│   ├── hooks/                # Custom React hooks
+│   ├── leaderboard/          # Global leaderboard
+│   ├── lib/                  # Utilities and helpers
+│   │   ├── auth.js          # Authentication helpers
+│   │   ├── authMiddleware.js # JWT verification
+│   │   ├── mongodb.js       # Database connection
+│   │   └── seed/            # Seed data
+│   ├── login/                # Login/Signup page
+│   ├── my-quizzes/           # User's custom quizzes
+│   ├── quiz/                 # Regular quiz mode
+│   ├── services/             # Business logic layer
+│   ├── subjects/             # Subject selection
+│   └── utils/                # Helper functions
 ├── public/
-│   └── sounds/              # Sound effect files
-│       ├── correct.mp3
-│       ├── wrong.mp3
-│       └── complete.mp3
-├── next.config.ts
-├── package.json
-└── README.md
+│   └── sounds/               # Sound effect files
+├── .env.local.example        # Environment variables template
+├── .gitignore                # Git ignore rules
+├── next.config.ts            # Next.js configuration
+├── package.json              # Dependencies
+└── README.md                 # This file
 ```
 
-## 🏗️ Architecture
+## 🚀 Deployment
 
-### Services Layer
-Handles all external interactions and data persistence:
-- **quizService**: API calls to Open Trivia Database
-- **storageService**: localStorage operations
-- **leaderboardService**: Leaderboard CRUD operations
+### Deploy to Vercel (Recommended)
 
-### Custom Hooks
-Encapsulates business logic and state management:
-- **useQuizState**: Quiz state, questions, answers, progress
-- **useTimer**: Countdown timer with callbacks
-- **useLeaderboard**: Leaderboard state and operations
-- **useSound**: Sound effects playback
+1. **Push your code to GitHub**
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git remote add origin <your-repo-url>
+   git push -u origin main
+   ```
 
-### Components
-Reusable, presentational UI components:
-- **QuizProgress**: Score and progress display
-- **Timer**: Animated countdown timer
-- **QuestionDisplay**: Question and answer options
-- **QuizResults**: Results screen with evaluation
-- **CategoryBadge**: Category and difficulty badges
-- **SoundToggle**: Sound control button
+2. **Import to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect Next.js
 
-### Benefits
-- ✅ Separation of concerns
-- ✅ Reusable components and hooks
-- ✅ Easy to test and maintain
-- ✅ Scalable architecture
-- ✅ Clear code organization
+3. **Set Environment Variables**
+   In Vercel dashboard, add:
+   - `MONGODB_URI`
+   - `JWT_SECRET`
+   - `NEXTAUTH_URL` (your production URL)
+   - `NEXTAUTH_SECRET`
+   - `NEXT_PUBLIC_APP_NAME`
 
-## 🎮 How to Play
+4. **Deploy**
+   - Click "Deploy"
+   - Your app will be live in minutes!
 
-1. **Enter Your Name**: Required to track your score
-2. **Select Category**: Choose from 20+ categories or "Any Category"
-3. **Choose Difficulty**: Easy, Medium, or Hard
-4. **Start Quiz**: Answer 10 multiple-choice questions
-5. **Beat the Timer**: 15 seconds per question
-6. **View Results**: See your score and performance grade
-7. **Check Leaderboard**: Compare with other players
+### Environment Variables in Vercel
 
-## 🎯 Performance Grading
+1. Go to your project settings
+2. Navigate to "Environment Variables"
+3. Add each variable from your `.env.local`
+4. Redeploy your application
 
-- **Below 40%**: Fail
-- **40-59%**: Average - Need More Improvement
-- **60-74%**: Good
-- **75%+**: Excellent 🎉
+## 🔌 API Routes
 
-## 🔊 Sound Effects
+### Authentication
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
 
-The app includes sound effect support for enhanced experience:
-- ✅ Correct answer sound
-- ❌ Wrong answer sound
-- 🎉 Quiz completion sound
+### Questions
+- `GET /api/questions` - Fetch questions (with filters)
+- `POST /api/questions` - Create question
+- `GET /api/questions/categories` - Get all categories
+- `GET /api/questions/subjects` - Get all subjects
 
-Toggle sounds on/off using the button in the quiz page. Preference is saved automatically.
+### Results
+- `POST /api/results` - Save quiz result
+- `GET /api/results` - Fetch results (with filters)
 
-### Adding Sound Files
+### Custom Quizzes
+- `GET /api/custom-quizzes` - Get user's quizzes
+- `POST /api/custom-quizzes` - Create custom quiz
+- `GET /api/custom-quizzes/[id]` - Get specific quiz
+- `DELETE /api/custom-quizzes?id=[id]` - Delete quiz
 
-The app currently has empty placeholder files in `public/sounds/`. To enable sounds:
+### Admin (Protected)
+- `GET /api/admin/questions` - Get all questions
+- `POST /api/admin/questions` - Add question
+- `PUT /api/admin/questions` - Update question
+- `DELETE /api/admin/questions?id=[id]` - Delete question
 
-1. Download or create MP3 files (0.5-2 seconds recommended)
-2. Replace the placeholder files:
-   - `public/sounds/correct.mp3` - Success/correct sound
-   - `public/sounds/wrong.mp3` - Error/wrong sound
-   - `public/sounds/complete.mp3` - Celebration/completion sound
+### Analytics (Protected)
+- `GET /api/analytics` - Get user analytics data
 
-**Free Sound Resources**:
-- [Freesound.org](https://freesound.org/) - Large library of free sounds
-- [Zapsplat](https://www.zapsplat.com/) - Free sound effects
-- [Mixkit](https://mixkit.co/free-sound-effects/) - Free sound effects
+### Seeding
+- `POST /api/seed` - Seed database with sample questions
 
-**Note**: The app works perfectly without sound files - they're optional for enhanced UX.
+## 🗄 Database Schema
 
-## 🌐 API
+### Collections
 
-Uses Open Trivia Database API:
+#### users
+```javascript
+{
+  _id: ObjectId,
+  email: String,
+  password: String (hashed),
+  userName: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-1. **Categories**: `https://opentdb.com/api_category.php`
-2. **Questions**: `https://opentdb.com/api.php?amount=10&type=multiple&category={id}&difficulty={level}`
+#### questions
+```javascript
+{
+  _id: ObjectId,
+  category: String,
+  subject: String,
+  topic: String,
+  difficulty: String (easy|medium|hard),
+  question: String,
+  options: [String, String, String, String],
+  correctAnswer: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-## 🛠️ Technologies
+#### results
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  category: String,
+  subject: String,
+  score: Number,
+  totalQuestions: Number,
+  difficulty: String,
+  timeTaken: Number (optional),
+  examMode: Boolean,
+  customQuizId: String (optional),
+  createdAt: Date
+}
+```
 
-- **Framework**: Next.js 16.0.4 (App Router)
-- **UI Library**: React 19.2.0
-- **Styling**: Bootstrap 5.3.8 + Tailwind CSS 4
-- **Animations**: Framer Motion
-- **API**: Open Trivia Database
-- **Storage**: localStorage
+#### customQuizzes
+```javascript
+{
+  _id: ObjectId,
+  userId: String,
+  userName: String,
+  title: String,
+  description: String,
+  subject: String,
+  difficulty: String,
+  questions: [{
+    question: String,
+    options: [String],
+    correctAnswer: String
+  }],
+  isPublic: Boolean,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
-## 🎨 Features in Detail
+## 📊 Project Status
 
-### Dark Mode
-- Toggle between light and dark themes
-- Preference saved to localStorage
-- Smooth transitions
-- All components styled for both themes
+### ✅ Completed Features
+- User authentication system
+- Multiple quiz modes (Regular, Exam, Custom)
+- Adaptive difficulty system
+- Analytics dashboard with charts
+- Global leaderboard
+- Custom quiz creation
+- Admin panel
+- Dark mode
+- Sound effects
+- Responsive design
+- MongoDB integration
+- 100 sample questions
 
-### Leaderboard
-- Top 10 scores displayed
-- Filter by difficulty level
-- Shows player name, score, category, date
-- Medal system for top 3 (🥇🥈🥉)
-- Statistics dashboard
-
-### Progress Tracking
-- Auto-save after each answer
-- Resume quiz after page refresh
-- Separate progress per category/difficulty
-- Cleared automatically on completion
-
-### Animations
-- Question transitions
-- Answer selection feedback
-- Result screen entrance
-- Timer pulsing when low
-- Button hover effects
-
-## 📱 Responsive Design
-
-Works perfectly on:
-- 📱 Mobile phones
-- 📱 Tablets
-- 💻 Laptops
-- 🖥️ Desktop monitors
-
-## ♿ Accessibility
-
-- ARIA labels for screen readers
-- Keyboard navigation support
-- High contrast colors
-- Focus indicators
-- Semantic HTML
-
-## 🚀 Deploy on Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
-
-The easiest way to deploy is using the [Vercel Platform](https://vercel.com/new).
-
-## 📝 License
-
-MIT
+### 🔜 Planned Features
+- Social features (share scores, challenge friends)
+- Multiplayer quiz mode
+- Badges and achievements
+- Export analytics as PDF
+- Mobile app version
+- AI-powered question generation
+- Voice-based quiz mode
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome!
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
 
@@ -315,4 +422,6 @@ Built with ❤️ using Next.js and React
 
 ---
 
-**Powered by Open Trivia Database**
+**⭐ Star this repo if you find it helpful!**
+
+For questions or support, please open an issue on GitHub.

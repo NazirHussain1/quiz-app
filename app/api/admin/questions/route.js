@@ -39,7 +39,6 @@ export async function GET(request) {
       questions 
     });
   } catch (error) {
-    console.error('Error fetching questions:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }

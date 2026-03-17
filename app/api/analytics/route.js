@@ -134,7 +134,6 @@ export async function GET(request) {
       }
     });
   } catch (error) {
-    console.error('Error fetching analytics:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
