@@ -3,6 +3,8 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import { useEffect, useState } from "react";
+import { AuthProvider } from "./contexts/AuthContext";
+import Navbar from "./components/Navbar";
 
 export default function RootLayout({ children }) {
   const [darkMode, setDarkMode] = useState(false);
@@ -35,18 +37,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" data-bs-theme={darkMode ? "dark" : "light"}>
       <body>
-        {/* Dark Mode Toggle Button */}
-        <button
-          onClick={toggleDarkMode}
-          className="btn btn-outline-secondary position-fixed top-0 end-0 m-3"
-          style={{ zIndex: 1050 }}
-          aria-label="Toggle dark mode"
-          title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
-        
-        {children}
+        <AuthProvider>
+          <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
