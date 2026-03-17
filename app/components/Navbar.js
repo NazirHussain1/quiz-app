@@ -1,14 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useAuth } from "../contexts/AuthContext";
+import { usePathname, useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../store/slices/authSlice";
+import { toggleTheme } from "../store/slices/uiSlice";
 
-export default function Navbar({ darkMode, toggleDarkMode }) {
+export default function Navbar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { theme } = useSelector((state) => state.ui);
 
-  // Don't show navbar on login page
+  const handleLogout = async () => {
+    await dispatch(logout());
+    router.push("/");
+  };
+
+  const handleToggleTheme = () => {
+    dispatch(toggleTheme());
+  };
+
   if (pathname === "/login") {
     return null;
   }
@@ -87,11 +100,11 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
           
           <div className="d-flex align-items-center gap-2">
             <button
-              onClick={toggleDarkMode}
+              onClick={handleToggleTheme}
               className="btn btn-outline-light btn-sm"
-              title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+              title={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {darkMode ? "☀️" : "🌙"}
+              {theme === 'dark' ? "☀️" : "🌙"}
             </button>
             
             {user ? (
@@ -116,7 +129,7 @@ export default function Navbar({ darkMode, toggleDarkMode }) {
                   </li>
                   <li><hr className="dropdown-divider" /></li>
                   <li>
-                    <button onClick={logout} className="dropdown-item text-danger">
+                    <button onClick={handleLogout} className="dropdown-item text-danger">
                       🚪 Logout
                     </button>
                   </li>

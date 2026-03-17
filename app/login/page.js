@@ -2,54 +2,48 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { login, signup, clearError } from "../store/slices/authSlice";
 import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { loading, error: authError } = useSelector((state) => state.auth);
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     userName: ""
   });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    setLocalError("");
+    dispatch(clearError());
 
     try {
-      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/signup";
-      const body = isLogin 
-        ? { email: formData.email, password: formData.password }
-        : formData;
-
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        if (isLogin) {
-          localStorage.setItem("playerName", data.user.userName);
+      if (isLogin) {
+        const result = await dispatch(login({ 
+          email: formData.email, 
+          password: formData.password 
+        })).unwrap();
+        
+        if (result) {
           router.push("/");
-        } else {
-          setIsLogin(true);
-          setError("Account created! Please login.");
-          setFormData({ email: formData.email, password: "", userName: "" });
         }
       } else {
-        setError(data.error || "An error occurred");
+        const result = await dispatch(signup(formData)).unwrap();
+        
+        if (result.success) {
+          setIsLogin(true);
+          setLocalError("Account created! Please login.");
+          setFormData({ email: formData.email, password: "", userName: "" });
+        }
       }
     } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
+      setLocalError(err || "An error occurred");
     }
   };
 
@@ -59,6 +53,8 @@ export default function LoginPage() {
       [e.target.name]: e.target.value
     });
   };
+
+  const displayError = localError || authError;
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -78,9 +74,9 @@ export default function LoginPage() {
                   </p>
                 </div>
 
-                {error && (
-                  <div className={`alert ${error.includes("created") ? "alert-success" : "alert-danger"}`}>
-                    {error}
+                {displayError && (
+                  <div className={`alert ${displayError.includes("created") ? "alert-success" : "alert-danger"}`}>
+                    {displayError}
                   </div>
                 )}
 
@@ -162,7 +158,8 @@ export default function LoginPage() {
                     className="btn btn-link text-decoration-none"
                     onClick={() => {
                       setIsLogin(!isLogin);
-                      setError("");
+                      setLocalError("");
+                      dispatch(clearError());
                       setFormData({ email: "", password: "", userName: "" });
                     }}
                   >
