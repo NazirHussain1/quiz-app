@@ -6,7 +6,7 @@ Create a `.env.local` file in the root directory with the following variables:
 
 ```env
 # MongoDB Atlas Connection
-MONGODB_URI=mongodb+srv://Nazirhussain:7JdWfMOteRKtjUlb@cluster0.lkomkrd.mongodb.net/quizapp?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://Nazirhussain:fonbaLMZjEP4ARWL@cluster0.lkomkrd.mongodb.net/quizapp?retryWrites=true&w=majority
 
 # JWT Secret (generate a secure random string)
 JWT_SECRET=your-secure-random-string-here

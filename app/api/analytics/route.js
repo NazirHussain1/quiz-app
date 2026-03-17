@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
+import { verifyAuth } from '@/app/lib/authMiddleware';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return NextResponse.json(
+      { success: false, error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const userName = searchParams.get('userName');
-    
-    if (!userName) {
-      return NextResponse.json(
-        { success: false, error: 'userName is required' },
-        { status: 400 }
-      );
-    }
-    
     const { db } = await connectToDatabase();
     const collection = db.collection('results');
     
     const userResults = await collection
-      .find({ name: userName })
+      .find({ name: user.userName })
       .sort({ createdAt: 1 })
       .toArray();
     
@@ -28,82 +27,110 @@ export async function GET(request) {
         success: true,
         analytics: {
           totalQuizzes: 0,
-          categoryStats: [],
-          subjectStats: [],
-          scoreOverTime: [],
-          strengths: [],
-          weaknesses: []
+          averageScore: 0,
+          byCategory: {},
+          bySubject: {},
+          byDifficulty: {},
+          scoreHistory: [],
+          weakAreas: [],
+          strongAreas: []
         }
       });
     }
     
-    const categoryStats = {};
-    const subjectStats = {};
-    const scoreOverTime = [];
+    const totalQuizzes = userResults.length;
+    const totalScore = userResults.reduce((sum, r) => sum + r.score, 0);
+    const totalQuestions = userResults.reduce((sum, r) => sum + (r.totalQuestions || r.total), 0);
+    const averageScore = Math.round((totalScore / totalQuestions) * 100);
+    
+    const byCategory = {};
+    const bySubject = {};
+    const byDifficulty = { easy: [], medium: [], hard: [] };
     
     userResults.forEach(result => {
-      const category = result.category || 'General';
-      const subject = result.subject || 'General';
-      const percentage = Math.round((result.score / result.totalQuestions) * 100);
+      const percentage = Math.round((result.score / (result.totalQuestions || result.total)) * 100);
       
-      if (!categoryStats[category]) {
-        categoryStats[category] = { count: 0, totalScore: 0, totalQuestions: 0 };
+      if (result.category) {
+        if (!byCategory[result.category]) {
+          byCategory[result.category] = { scores: [], count: 0, totalScore: 0 };
+        }
+        byCategory[result.category].scores.push(percentage);
+        byCategory[result.category].count++;
+        byCategory[result.category].totalScore += percentage;
       }
-      categoryStats[category].count++;
-      categoryStats[category].totalScore += result.score;
-      categoryStats[category].totalQuestions += result.totalQuestions;
       
-      if (!subjectStats[subject]) {
-        subjectStats[subject] = { count: 0, totalScore: 0, totalQuestions: 0, scores: [] };
+      if (result.subject) {
+        if (!bySubject[result.subject]) {
+          bySubject[result.subject] = { scores: [], count: 0, totalScore: 0 };
+        }
+        bySubject[result.subject].scores.push(percentage);
+        bySubject[result.subject].count++;
+        bySubject[result.subject].totalScore += percentage;
       }
-      subjectStats[subject].count++;
-      subjectStats[subject].totalScore += result.score;
-      subjectStats[subject].totalQuestions += result.totalQuestions;
-      subjectStats[subject].scores.push(percentage);
       
-      scoreOverTime.push({
-        date: result.createdAt,
-        score: percentage,
-        category: category,
-        subject: subject,
-        examMode: result.examMode || false
-      });
+      if (result.difficulty && byDifficulty[result.difficulty]) {
+        byDifficulty[result.difficulty].push(percentage);
+      }
     });
     
-    const categoryStatsArray = Object.entries(categoryStats).map(([category, stats]) => ({
-      category,
-      count: stats.count,
-      averageScore: Math.round((stats.totalScore / stats.totalQuestions) * 100)
+    const categoryStats = Object.entries(byCategory).map(([name, data]) => ({
+      name,
+      average: Math.round(data.totalScore / data.count),
+      count: data.count,
+      scores: data.scores
     }));
     
-    const subjectStatsArray = Object.entries(subjectStats).map(([subject, stats]) => ({
-      subject,
-      count: stats.count,
-      averageScore: Math.round((stats.totalScore / stats.totalQuestions) * 100),
-      scores: stats.scores
+    const subjectStats = Object.entries(bySubject).map(([name, data]) => ({
+      name,
+      average: Math.round(data.totalScore / data.count),
+      count: data.count,
+      scores: data.scores
     }));
     
-    subjectStatsArray.sort((a, b) => b.averageScore - a.averageScore);
+    const difficultyStats = {
+      easy: byDifficulty.easy.length > 0 
+        ? Math.round(byDifficulty.easy.reduce((a, b) => a + b, 0) / byDifficulty.easy.length) 
+        : 0,
+      medium: byDifficulty.medium.length > 0 
+        ? Math.round(byDifficulty.medium.reduce((a, b) => a + b, 0) / byDifficulty.medium.length) 
+        : 0,
+      hard: byDifficulty.hard.length > 0 
+        ? Math.round(byDifficulty.hard.reduce((a, b) => a + b, 0) / byDifficulty.hard.length) 
+        : 0
+    };
     
-    const strengths = subjectStatsArray.filter(s => s.averageScore >= 70).slice(0, 5);
-    const weaknesses = subjectStatsArray.filter(s => s.averageScore < 70).slice(0, 5);
+    const scoreHistory = userResults.map((r, index) => ({
+      quiz: index + 1,
+      score: r.score,
+      total: r.totalQuestions || r.total,
+      percentage: Math.round((r.score / (r.totalQuestions || r.total)) * 100),
+      subject: r.subject,
+      category: r.category,
+      difficulty: r.difficulty,
+      date: r.createdAt || r.date
+    }));
+    
+    const weakAreas = subjectStats
+      .filter(s => s.average < 60)
+      .sort((a, b) => a.average - b.average)
+      .slice(0, 5);
+    
+    const strongAreas = subjectStats
+      .filter(s => s.average >= 75)
+      .sort((a, b) => b.average - a.average)
+      .slice(0, 5);
     
     return NextResponse.json({
       success: true,
       analytics: {
-        totalQuizzes: userResults.length,
-        categoryStats: categoryStatsArray,
-        subjectStats: subjectStatsArray,
-        scoreOverTime: scoreOverTime,
-        strengths: strengths,
-        weaknesses: weaknesses,
-        overallAverage: Math.round(
-          subjectStatsArray.reduce((sum, s) => sum + s.averageScore, 0) / subjectStatsArray.length
-        )
-      }
-    }, {
-      headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        totalQuizzes,
+        averageScore,
+        byCategory: categoryStats,
+        bySubject: subjectStats,
+        byDifficulty: difficultyStats,
+        scoreHistory,
+        weakAreas,
+        strongAreas
       }
     });
   } catch (error) {
