@@ -132,19 +132,12 @@ A comprehensive, production-ready quiz application built with Next.js 16, React 
    ```
    Edit `.env.local` with your MongoDB credentials (see [Environment Variables](#-environment-variables))
 
-4. **Seed the database** (Optional)
-   ```bash
-   npm run dev
-   # In another terminal:
-   curl -X POST http://localhost:3000/api/seed
-   ```
-
-5. **Run the development server**
+4. **Run the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Build for Production
@@ -253,12 +246,19 @@ quiz-app/
    - Vercel will auto-detect Next.js
 
 3. **Set Environment Variables**
-   In Vercel dashboard, add:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
-   - `NEXTAUTH_URL` (your production URL)
-   - `NEXTAUTH_SECRET`
-   - `NEXT_PUBLIC_APP_NAME`
+   In Vercel dashboard → Project Settings → Environment Variables, add:
+   
+   **Required:**
+   - `MONGODB_URI` - Your MongoDB Atlas connection string
+     ```
+     mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority
+     ```
+   
+   **Optional (but recommended):**
+   - `JWT_SECRET` - Random 32+ character string for JWT signing
+   - `NEXTAUTH_URL` - Your production URL (e.g., https://your-app.vercel.app)
+   - `NEXTAUTH_SECRET` - Random 32+ character string for NextAuth
+   - `NEXT_PUBLIC_APP_NAME` - Your app name (default: "Quiz App")
 
 4. **Deploy**
    - Click "Deploy"
