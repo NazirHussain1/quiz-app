@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,7 +8,7 @@ import { shuffleArray } from "../utils/shuffle";
 import { useSound } from "../utils/useSound";
 import { adaptiveDifficultyService } from "../services/adaptiveDifficultyService";
 
-export default function QuizPage() {
+function QuizContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
   const subject = searchParams.get("subject");
@@ -524,6 +524,7 @@ export default function QuizPage() {
         </motion.div>
       </motion.div>
     );
+  }
 
   const current = questions[index];
   const isLocked = !!answers[index];
@@ -760,4 +761,17 @@ export default function QuizPage() {
     </div>
   );
 }
+
+export default function QuizPage() {
+  return (
+    <Suspense fallback={
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    }>
+      <QuizContent />
+    </Suspense>
+  );
 }
