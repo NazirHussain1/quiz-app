@@ -140,12 +140,16 @@ A comprehensive, production-ready quiz application built with Next.js 16, React 
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-### Build for Production
+### Seed Database (Optional)
+
+After setting up your environment, you can seed the database with sample questions:
 
 ```bash
-npm run build
-npm start
+# Using the API endpoint
+curl -X POST http://localhost:3000/api/seed
 ```
+
+Or visit `http://localhost:3000/api/seed` in your browser.
 
 ## 🔐 Environment Variables
 
@@ -246,30 +250,46 @@ quiz-app/
    - Vercel will auto-detect Next.js
 
 3. **Set Environment Variables**
-   In Vercel dashboard → Project Settings → Environment Variables, add:
+   In Vercel dashboard → Project Settings → Environment Variables, add these **REQUIRED** variables:
    
-   **Required:**
-   - `MONGODB_URI` - Your MongoDB Atlas connection string
-     ```
-     mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority
-     ```
+   | Variable | Value | Description |
+   |----------|-------|-------------|
+   | `MONGODB_URI` | `mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority` | Your MongoDB Atlas connection string |
+   | `JWT_SECRET` | Random 32+ character string | For JWT token signing (generate with crypto) |
+   | `NEXTAUTH_URL` | `https://your-app.vercel.app` | Your production URL (Vercel will provide this) |
+   | `NEXTAUTH_SECRET` | Random 32+ character string | For NextAuth session encryption |
+   | `NEXT_PUBLIC_APP_NAME` | `Quiz App` | Your application name (optional) |
    
-   **Optional (but recommended):**
-   - `JWT_SECRET` - Random 32+ character string for JWT signing
-   - `NEXTAUTH_URL` - Your production URL (e.g., https://your-app.vercel.app)
-   - `NEXTAUTH_SECRET` - Random 32+ character string for NextAuth
-   - `NEXT_PUBLIC_APP_NAME` - Your app name (default: "Quiz App")
+   **How to generate secure secrets:**
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
 
 4. **Deploy**
    - Click "Deploy"
    - Your app will be live in minutes!
+   - After deployment, update `NEXTAUTH_URL` with your actual Vercel URL
 
-### Environment Variables in Vercel
+### Post-Deployment Steps
 
-1. Go to your project settings
-2. Navigate to "Environment Variables"
-3. Add each variable from your `.env.local`
-4. Redeploy your application
+1. **Update NEXTAUTH_URL**: After first deployment, go back to Environment Variables and update `NEXTAUTH_URL` with your actual Vercel URL (e.g., `https://quiz-app-xyz.vercel.app`)
+
+2. **Seed Database**: Visit `https://your-app.vercel.app/api/seed` to populate sample questions
+
+3. **Create Admin User**: 
+   - Sign up for an account
+   - Use the admin scripts locally to promote your user:
+     ```bash
+     npm run make-admin your-email@example.com
+     ```
+
+### Troubleshooting Deployment
+
+If deployment fails, check:
+- All environment variables are set correctly in Vercel
+- MongoDB Atlas allows connections from anywhere (0.0.0.0/0) or Vercel IPs
+- No syntax errors in code (`npm run build` succeeds locally)
+- Next.js version is up to date (currently 16.1.7)
 
 ## 🔌 API Routes
 
