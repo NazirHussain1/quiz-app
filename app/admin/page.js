@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "../contexts/AuthContext";
+import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 
 export default function AdminPanel() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useSelector((state) => state.auth);
   const router = useRouter();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
