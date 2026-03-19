@@ -257,9 +257,14 @@ export default function AdminPanel() {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="display-5">🔧 Admin Panel</h1>
-        <Link href="/" className="btn btn-outline-secondary">
-          ← Back to Home
-        </Link>
+        <div className="d-flex gap-2">
+          <Link href="/admin/analytics" className="btn btn-primary">
+            📊 Analytics Dashboard
+          </Link>
+          <Link href="/" className="btn btn-outline-secondary">
+            ← Back to Home
+          </Link>
+        </div>
       </div>
 
       <div className="row mb-4">

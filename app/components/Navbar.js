@@ -87,14 +87,24 @@ export default function Navbar() {
                   </Link>
                 </li>
                 {user.role === "admin" && (
-                  <li className="nav-item">
-                    <Link 
-                      href="/admin" 
-                      className={`nav-link ${pathname === "/admin" ? "active" : ""}`}
-                    >
-                      🔧 Admin
-                    </Link>
-                  </li>
+                  <>
+                    <li className="nav-item">
+                      <Link 
+                        href="/admin" 
+                        className={`nav-link ${pathname === "/admin" ? "active" : ""}`}
+                      >
+                        🔧 Admin Panel
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link 
+                        href="/admin/analytics" 
+                        className={`nav-link ${pathname === "/admin/analytics" ? "active" : ""}`}
+                      >
+                        📊 Admin Analytics
+                      </Link>
+                    </li>
+                  </>
                 )}
               </>
             )}
