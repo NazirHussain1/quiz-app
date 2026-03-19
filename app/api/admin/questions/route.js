@@ -1,19 +1,11 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { verifyAuth } from '@/app/lib/authMiddleware';
+import { requireAdmin } from '@/app/lib/authMiddleware';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
-  const user = await verifyAuth(request);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
-  
+export const GET = requireAdmin(async (request) => {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
@@ -44,17 +36,9 @@ export async function GET(request) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request) {
-  const user = await verifyAuth(request);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
-  
+export const POST = requireAdmin(async (request) => {
   try {
     const body = await request.json();
     
@@ -100,23 +84,14 @@ export async function POST(request) {
       message: 'Question added successfully'
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating question:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
     );
   }
-}
+});
 
-export async function PUT(request) {
-  const user = await verifyAuth(request);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
-  
+export const PUT = requireAdmin(async (request) => {
   try {
     const body = await request.json();
     
@@ -164,15 +139,14 @@ export async function PUT(request) {
       message: 'Question updated successfully'
     });
   } catch (error) {
-    console.error('Error updating question:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
     );
   }
-}
+});
 
-export async function DELETE(request) {
+export const DELETE = requireAdmin(async (request) => {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -201,10 +175,9 @@ export async function DELETE(request) {
       message: 'Question deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting question:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 500 }
     );
   }
-}
+});

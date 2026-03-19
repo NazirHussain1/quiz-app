@@ -38,7 +38,8 @@ export async function POST(request) {
     const token = await new SignJWT({
       userId: user.id,
       email: user.email,
-      userName: user.userName
+      userName: user.userName,
+      role: user.role
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('7d')
@@ -49,7 +50,8 @@ export async function POST(request) {
       user: {
         id: user.id,
         email: user.email,
-        userName: user.userName
+        userName: user.userName,
+        role: user.role
       }
     });
     

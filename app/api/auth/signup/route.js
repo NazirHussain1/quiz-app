@@ -26,7 +26,8 @@ export async function POST(request) {
       user: {
         id: user.id,
         email: user.email,
-        userName: user.userName
+        userName: user.userName,
+        role: user.role
       }
     }, { status: 201 });
   } catch (error) {

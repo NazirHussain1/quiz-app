@@ -18,7 +18,8 @@ export async function verifyAuth(request) {
     return {
       userId: payload.userId,
       email: payload.email,
-      userName: payload.userName
+      userName: payload.userName,
+      role: payload.role || 'student' // Backward compatibility
     };
   } catch (error) {
     return null;
@@ -33,6 +34,29 @@ export function requireAuth(handler) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+    
+    request.user = user;
+    return handler(request, context);
+  };
+}
+
+export function requireAdmin(handler) {
+  return async (request, context) => {
+    const user = await verifyAuth(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    if (user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Admin access required' },
+        { status: 403 }
       );
     }
     

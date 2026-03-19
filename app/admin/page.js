@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "../contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function AdminPanel() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,11 +34,51 @@ export default function AdminPanel() {
     correctAnswer: ""
   });
 
+  // Role-based access control
   useEffect(() => {
-    fetchQuestions();
-    fetchCategories();
-    fetchSubjects();
-  }, [filterCategory, filterSubject, filterDifficulty]);
+    if (!authLoading) {
+      if (!user) {
+        router.push("/login");
+      } else if (user.role !== "admin") {
+        router.push("/");
+      }
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (user && user.role === "admin") {
+      fetchQuestions();
+      fetchCategories();
+      fetchSubjects();
+    }
+  }, [filterCategory, filterSubject, filterDifficulty, user]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show access denied if not admin
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger" role="alert">
+          <h4 className="alert-heading">Access Denied</h4>
+          <p>You do not have permission to access this page.</p>
+          <hr />
+          <Link href="/" className="btn btn-primary">
+            Go to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const fetchQuestions = async () => {
     try {

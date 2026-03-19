@@ -25,6 +25,7 @@ export async function createUser(email, password, userName) {
     email,
     password: hashedPassword,
     userName,
+    role: 'student', // Default role
     createdAt: new Date(),
     updatedAt: new Date()
   });
@@ -32,7 +33,8 @@ export async function createUser(email, password, userName) {
   return {
     id: result.insertedId.toString(),
     email,
-    userName
+    userName,
+    role: 'student'
   };
 }
 
@@ -46,11 +48,15 @@ export async function findUserByEmail(email) {
     return null;
   }
   
+  // Ensure existing users have a role (backward compatibility)
+  const role = user.role || 'student';
+  
   return {
     id: user._id.toString(),
     email: user.email,
     userName: user.userName,
-    password: user.password
+    password: user.password,
+    role: role
   };
 }
 
@@ -65,9 +71,13 @@ export async function findUserById(id) {
     return null;
   }
   
+  // Ensure existing users have a role (backward compatibility)
+  const role = user.role || 'student';
+  
   return {
     id: user._id.toString(),
     email: user.email,
-    userName: user.userName
+    userName: user.userName,
+    role: role
   };
 }
