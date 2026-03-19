@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "make-admin": "node scripts/makeAdmin.js",
+    "list-users": "node scripts/listUsers.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",

@@ -86,14 +86,16 @@ export default function Navbar() {
                     ➕ Create Quiz
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link 
-                    href="/admin" 
-                    className={`nav-link ${pathname === "/admin" ? "active" : ""}`}
-                  >
-                    🔧 Admin
-                  </Link>
-                </li>
+                {user.role === "admin" && (
+                  <li className="nav-item">
+                    <Link 
+                      href="/admin" 
+                      className={`nav-link ${pathname === "/admin" ? "active" : ""}`}
+                    >
+                      🔧 Admin
+                    </Link>
+                  </li>
+                )}
               </>
             )}
           </ul>
