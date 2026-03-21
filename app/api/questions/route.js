@@ -10,6 +10,7 @@ export async function GET(request) {
     const category = searchParams.get('category');
     const subject = searchParams.get('subject');
     const difficulty = searchParams.get('difficulty');
+    const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '10');
     
     const { db } = await connectToDatabase();
@@ -19,6 +20,11 @@ export async function GET(request) {
     if (category) matchStage.category = category;
     if (subject) matchStage.subject = subject;
     if (difficulty) matchStage.difficulty = difficulty;
+    
+    // Add keyword search for question text
+    if (search && search.trim()) {
+      matchStage.question = { $regex: search.trim(), $options: 'i' };
+    }
     
     const pipeline = [];
     

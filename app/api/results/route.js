@@ -46,6 +46,7 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50');
+    const page = parseInt(searchParams.get('page') || '1');
     const category = searchParams.get('category');
     const subject = searchParams.get('subject');
     const difficulty = searchParams.get('difficulty');
@@ -58,15 +59,24 @@ export async function GET(request) {
     if (subject) filter.subject = subject;
     if (difficulty) filter.difficulty = difficulty;
     
+    // Get total count for pagination
+    const totalCount = await collection.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / limit);
+    const skip = (page - 1) * limit;
+    
     const results = await collection
       .find(filter)
       .sort({ score: -1, createdAt: -1 })
+      .skip(skip)
       .limit(limit)
       .toArray();
     
     return NextResponse.json({ 
       success: true, 
       count: results.length,
+      totalCount,
+      totalPages,
+      currentPage: page,
       results 
     }, {
       headers: {

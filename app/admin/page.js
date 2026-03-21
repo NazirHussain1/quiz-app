@@ -17,6 +17,10 @@ export default function AdminPanel() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterSubject, setFilterSubject] = useState("all");
   const [filterDifficulty, setFilterDifficulty] = useState("all");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
   const [categories, setCategories] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -47,11 +51,18 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (user && user.role === "admin") {
+      setCurrentPage(1); // Reset to page 1 when filters change
       fetchQuestions();
       fetchCategories();
       fetchSubjects();
     }
-  }, [filterCategory, filterSubject, filterDifficulty, user]);
+  }, [filterCategory, filterSubject, filterDifficulty, searchKeyword, user]);
+
+  useEffect(() => {
+    if (user && user.role === "admin") {
+      fetchQuestions();
+    }
+  }, [currentPage]);
 
   // Show loading while checking auth
   if (authLoading) {
@@ -84,15 +95,20 @@ export default function AdminPanel() {
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      params.append('page', currentPage);
+      params.append('limit', '20');
       if (filterCategory !== "all") params.append("category", filterCategory);
       if (filterSubject !== "all") params.append("subject", filterSubject);
       if (filterDifficulty !== "all") params.append("difficulty", filterDifficulty);
+      if (searchKeyword.trim()) params.append("search", searchKeyword.trim());
       
       const res = await fetch(`/api/admin/questions?${params}`);
       const data = await res.json();
       
       if (data.success) {
         setQuestions(data.questions);
+        setTotalPages(data.totalPages || 1);
+        setTotalCount(data.totalCount || data.count);
       } else {
         setError(data.error);
       }
@@ -438,6 +454,18 @@ export default function AdminPanel() {
           <h5 className="mb-0">🔍 Filter Questions</h5>
         </div>
         <div className="card-body">
+          <div className="row mb-3">
+            <div className="col-12">
+              <label className="form-label fw-bold">Search by Keyword</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search question text..."
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="row">
             <div className="col-md-4 mb-3">
               <label className="form-label fw-bold">Category</label>
@@ -497,7 +525,10 @@ export default function AdminPanel() {
       ) : (
         <div className="card shadow">
           <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">📚 Questions ({questions.length})</h5>
+            <h5 className="mb-0">📚 Questions ({totalCount})</h5>
+            <span className="badge bg-light text-dark">
+              Page {currentPage} of {totalPages}
+            </span>
           </div>
           <div className="card-body p-0">
             {questions.length === 0 ? (
@@ -575,6 +606,55 @@ export default function AdminPanel() {
               </div>
             )}
           </div>
+          {totalPages > 1 && (
+            <div className="card-footer">
+              <nav>
+                <ul className="pagination justify-content-center mb-0">
+                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </button>
+                  </li>
+                  {[...Array(totalPages)].map((_, i) => {
+                    const pageNum = i + 1;
+                    // Show first, last, current, and adjacent pages
+                    if (
+                      pageNum === 1 || 
+                      pageNum === totalPages || 
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                      return (
+                        <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                          <button 
+                            className="page-link" 
+                            onClick={() => setCurrentPage(pageNum)}
+                          >
+                            {pageNum}
+                          </button>
+                        </li>
+                      );
+                    } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                      return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                    }
+                    return null;
+                  })}
+                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                    <button 
+                      className="page-link" 
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </button>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -12,6 +12,9 @@ export default function LeaderboardPage() {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [userRank, setUserRank] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
   const [categories, setCategories] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -23,8 +26,13 @@ export default function LeaderboardPage() {
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to page 1 when filters change
     fetchLeaderboard();
   }, [filter, filterCategory, filterSubject]);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [currentPage]);
 
   const checkAuth = async () => {
     try {
@@ -68,6 +76,7 @@ export default function LeaderboardPage() {
       setLoading(true);
       
       const params = new URLSearchParams();
+      params.append('page', currentPage);
       params.append('limit', '50');
       
       if (filter !== "all") {
@@ -90,12 +99,14 @@ export default function LeaderboardPage() {
       
       if (data.success) {
         setLeaderboard(data.results);
+        setTotalPages(data.totalPages || 1);
+        setTotalCount(data.totalCount || data.count);
         
         // Calculate user's rank if logged in
         if (user) {
           const userIndex = data.results.findIndex(r => r.name === user.userName);
           if (userIndex !== -1) {
-            setUserRank(userIndex + 1);
+            setUserRank((currentPage - 1) * 50 + userIndex + 1);
           } else {
             setUserRank(null);
           }
@@ -162,7 +173,7 @@ export default function LeaderboardPage() {
     <div className="container mt-4" style={{ maxWidth: 1200 }}>
       <div className="text-center mb-4">
         <h1 className="display-4">🏆 Global Leaderboard</h1>
-        <p className="text-muted">Top 50 quiz performers worldwide</p>
+        <p className="text-muted">Top performers worldwide - {totalCount} total scores</p>
         {error && (
           <div className="alert alert-warning" role="alert">
             <small>Using local data. {error}</small>
@@ -170,7 +181,7 @@ export default function LeaderboardPage() {
         )}
         {user && userRank && (
           <div className="alert alert-info">
-            <strong>Your Rank:</strong> #{userRank} out of {leaderboard.length}
+            <strong>Your Rank:</strong> #{userRank} out of {totalCount}
           </div>
         )}
       </div>
@@ -290,8 +301,10 @@ export default function LeaderboardPage() {
           {/* Full Leaderboard Table */}
           <div className="card shadow">
             <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">📊 Rankings ({leaderboard.length})</h5>
-              <span className="badge bg-light text-dark">Top 50</span>
+              <h5 className="mb-0">📊 Rankings ({totalCount})</h5>
+              <span className="badge bg-light text-dark">
+                Page {currentPage} of {totalPages}
+              </span>
             </div>
             <div className="card-body p-0">
               <div className="table-responsive">
@@ -311,11 +324,12 @@ export default function LeaderboardPage() {
                     {leaderboard.map((entry, index) => {
                       const isCurrentUser = user && entry.name === user.userName;
                       const rowClass = isCurrentUser ? 'table-primary' : '';
+                      const globalRank = (currentPage - 1) * 50 + index + 1;
                       
                       return (
                         <tr key={entry._id || index} className={rowClass}>
                           <td className="fw-bold fs-5">
-                            {getMedalEmoji(index)}
+                            {globalRank <= 3 ? getMedalEmoji(globalRank - 1) : `${globalRank}.`}
                           </td>
                           <td>
                             <div className="fw-bold">
@@ -376,6 +390,55 @@ export default function LeaderboardPage() {
                 </table>
               </div>
             </div>
+            {totalPages > 1 && (
+              <div className="card-footer">
+                <nav>
+                  <ul className="pagination justify-content-center mb-0">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                      <button 
+                        className="page-link" 
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </button>
+                    </li>
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      // Show first, last, current, and adjacent pages
+                      if (
+                        pageNum === 1 || 
+                        pageNum === totalPages || 
+                        (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                      ) {
+                        return (
+                          <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                            <button 
+                              className="page-link" 
+                              onClick={() => setCurrentPage(pageNum)}
+                            >
+                              {pageNum}
+                            </button>
+                          </li>
+                        );
+                      } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                        return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                      }
+                      return null;
+                    })}
+                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                      <button 
+                        className="page-link" 
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            )}
           </div>
         </>
       )}
