@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { requireAdmin } from '@/app/lib/authMiddleware';
+import { validateSubject } from '@/app/lib/models/Question';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,6 +46,14 @@ export const POST = requireAdmin(async (request) => {
     if (!body.category || !body.subject || !body.question || !body.options || !body.correctAnswer) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+    
+    const subjectValidation = validateSubject(body.subject);
+    if (!subjectValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: subjectValidation.error },
         { status: 400 }
       );
     }
@@ -100,6 +109,16 @@ export const PUT = requireAdmin(async (request) => {
         { success: false, error: 'Question ID is required' },
         { status: 400 }
       );
+    }
+    
+    if (body.subject) {
+      const subjectValidation = validateSubject(body.subject);
+      if (!subjectValidation.valid) {
+        return NextResponse.json(
+          { success: false, error: subjectValidation.error },
+          { status: 400 }
+        );
+      }
     }
     
     if (body.options && (!Array.isArray(body.options) || body.options.length !== 4)) {

@@ -2,6 +2,29 @@ import { connectToDatabase } from '../mongodb';
 
 const COLLECTION_NAME = 'questions';
 
+export const VALID_SUBJECTS = [
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'Computer Science'
+];
+
+export function validateSubject(subject) {
+  if (!subject) {
+    return { valid: false, error: 'Subject is required' };
+  }
+  
+  if (!VALID_SUBJECTS.includes(subject)) {
+    return { 
+      valid: false, 
+      error: `Invalid subject. Must be one of: ${VALID_SUBJECTS.join(', ')}` 
+    };
+  }
+  
+  return { valid: true };
+}
+
 export async function getQuestions(filters = {}) {
   const { db } = await connectToDatabase();
   const collection = db.collection(COLLECTION_NAME);

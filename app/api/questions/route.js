@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
+import { validateSubject } from '@/app/lib/models/Question';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +55,14 @@ export async function POST(request) {
     if (!body.category || !body.subject || !body.question || !body.options || !body.correctAnswer) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+    
+    const subjectValidation = validateSubject(body.subject);
+    if (!subjectValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: subjectValidation.error },
         { status: 400 }
       );
     }

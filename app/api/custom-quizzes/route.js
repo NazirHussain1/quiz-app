@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import { verifyAuth } from '@/app/lib/authMiddleware';
 import { ObjectId } from 'mongodb';
+import { validateSubject } from '@/app/lib/models/Question';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +62,17 @@ export async function POST(request) {
         { success: false, error: 'Quiz must have at least one question' },
         { status: 400 }
       );
+    }
+    
+    // Validate subject if provided
+    if (body.subject && body.subject !== 'Custom') {
+      const subjectValidation = validateSubject(body.subject);
+      if (!subjectValidation.valid) {
+        return NextResponse.json(
+          { success: false, error: subjectValidation.error },
+          { status: 400 }
+        );
+      }
     }
     
     // Validate each question
