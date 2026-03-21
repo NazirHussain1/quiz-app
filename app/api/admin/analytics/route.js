@@ -241,6 +241,86 @@ export const GET = requireAdmin(async (request) => {
       }
     ]).toArray();
 
+    // 13. Overall Accuracy Percentage
+    const accuracyPercentage = Math.round(averageScore);
+
+    // 14. Average Time Per Question (from results with timeTaken)
+    const timeStats = await resultsCollection.aggregate([
+      {
+        $match: {
+          timeTaken: { $exists: true, $gt: 0 }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalTime: { $sum: '$timeTaken' },
+          totalQuestions: { $sum: '$totalQuestions' }
+        }
+      }
+    ]).toArray();
+
+    const averageTimePerQuestion = timeStats[0] 
+      ? Math.round(timeStats[0].totalTime / timeStats[0].totalQuestions)
+      : 0;
+
+    // 15. Weak Topics (subjects with <60% average)
+    const weakTopics = subjectStats
+      .filter(s => s.averageScore < 60)
+      .sort((a, b) => a.averageScore - b.averageScore)
+      .map(s => ({
+        name: s.subject,
+        averageScore: s.averageScore,
+        attempts: s.totalAttempts
+      }));
+
+    // 16. Strong Topics (subjects with >=75% average)
+    const strongTopics = subjectStats
+      .filter(s => s.averageScore >= 75)
+      .sort((a, b) => b.averageScore - a.averageScore)
+      .map(s => ({
+        name: s.subject,
+        averageScore: s.averageScore,
+        attempts: s.totalAttempts
+      }));
+
+    // 17. Weak Categories (categories with <60% average)
+    const categoryPerformance = await resultsCollection.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          totalAttempts: { $sum: 1 },
+          averageScore: { $avg: { $multiply: [{ $divide: ['$score', '$totalQuestions'] }, 100] } }
+        }
+      },
+      {
+        $project: {
+          category: '$_id',
+          totalAttempts: 1,
+          averageScore: { $round: ['$averageScore', 2] },
+          _id: 0
+        }
+      }
+    ]).toArray();
+
+    const weakCategories = categoryPerformance
+      .filter(c => c.averageScore < 60)
+      .sort((a, b) => a.averageScore - b.averageScore)
+      .map(c => ({
+        name: c.category,
+        averageScore: c.averageScore,
+        attempts: c.totalAttempts
+      }));
+
+    const strongCategories = categoryPerformance
+      .filter(c => c.averageScore >= 75)
+      .sort((a, b) => b.averageScore - a.averageScore)
+      .map(c => ({
+        name: c.category,
+        averageScore: c.averageScore,
+        attempts: c.totalAttempts
+      }));
+
     return NextResponse.json({
       success: true,
       data: {
@@ -248,6 +328,8 @@ export const GET = requireAdmin(async (request) => {
           totalUsers,
           totalQuizzes,
           averageScore: Math.round(averageScore * 100) / 100,
+          accuracyPercentage,
+          averageTimePerQuestion,
           totalQuestions
         },
         subjectStats,
@@ -258,7 +340,11 @@ export const GET = requireAdmin(async (request) => {
         modeStats,
         questionsBySubject,
         recentActivity,
-        roleStats
+        roleStats,
+        weakTopics,
+        strongTopics,
+        weakCategories,
+        strongCategories
       }
     });
 

@@ -268,8 +268,8 @@ export default function AdminAnalytics() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6 className="text-muted mb-1">Average Score</h6>
-                  <h3 className="mb-0">{analytics.overview.averageScore}%</h3>
+                  <h6 className="text-muted mb-1">Accuracy</h6>
+                  <h3 className="mb-0">{analytics.overview.accuracyPercentage}%</h3>
                 </div>
                 <div className="fs-1">🎯</div>
               </div>
@@ -281,11 +281,113 @@ export default function AdminAnalytics() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6 className="text-muted mb-1">Total Questions</h6>
-                  <h3 className="mb-0">{analytics.overview.totalQuestions}</h3>
+                  <h6 className="text-muted mb-1">Avg Time/Q</h6>
+                  <h3 className="mb-0">
+                    {analytics.overview.averageTimePerQuestion > 0 
+                      ? `${analytics.overview.averageTimePerQuestion}s` 
+                      : 'N/A'}
+                  </h3>
                 </div>
-                <div className="fs-1">❓</div>
+                <div className="fs-1">⏱️</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Weak and Strong Topics Row */}
+      <div className="row g-3 mb-4">
+        <div className="col-lg-6">
+          <div className="card shadow-sm border-warning">
+            <div className="card-header bg-warning text-dark">
+              <h5 className="mb-0">⚠️ Weak Topics (&lt;60% Accuracy)</h5>
+            </div>
+            <div className="card-body">
+              {analytics.weakTopics && analytics.weakTopics.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Topic</th>
+                        <th className="text-end">Avg Score</th>
+                        <th className="text-end">Attempts</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.weakTopics.map((topic, index) => (
+                        <tr key={index}>
+                          <td>{topic.name}</td>
+                          <td className="text-end">
+                            <span className="badge bg-danger">{topic.averageScore}%</span>
+                          </td>
+                          <td className="text-end">{topic.attempts}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-muted mb-0">No weak topics found. Great job!</p>
+              )}
+              {analytics.weakCategories && analytics.weakCategories.length > 0 && (
+                <div className="mt-3">
+                  <small className="text-muted">Weak Categories:</small>
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    {analytics.weakCategories.map((cat, idx) => (
+                      <span key={idx} className="badge bg-warning text-dark">
+                        {cat.name} ({cat.averageScore}%)
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="col-lg-6">
+          <div className="card shadow-sm border-success">
+            <div className="card-header bg-success text-white">
+              <h5 className="mb-0">🌟 Strong Topics (≥75% Accuracy)</h5>
+            </div>
+            <div className="card-body">
+              {analytics.strongTopics && analytics.strongTopics.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Topic</th>
+                        <th className="text-end">Avg Score</th>
+                        <th className="text-end">Attempts</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.strongTopics.map((topic, index) => (
+                        <tr key={index}>
+                          <td>{topic.name}</td>
+                          <td className="text-end">
+                            <span className="badge bg-success">{topic.averageScore}%</span>
+                          </td>
+                          <td className="text-end">{topic.attempts}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-muted mb-0">No strong topics yet. Keep practicing!</p>
+              )}
+              {analytics.strongCategories && analytics.strongCategories.length > 0 && (
+                <div className="mt-3">
+                  <small className="text-muted">Strong Categories:</small>
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    {analytics.strongCategories.map((cat, idx) => (
+                      <span key={idx} className="badge bg-success">
+                        {cat.name} ({cat.averageScore}%)
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

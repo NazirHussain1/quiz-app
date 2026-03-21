@@ -28,6 +28,8 @@ export async function GET(request) {
         analytics: {
           totalQuizzes: 0,
           averageScore: 0,
+          accuracyPercentage: 0,
+          averageTimePerQuestion: 0,
           byCategory: {},
           bySubject: {},
           byDifficulty: {},
@@ -42,6 +44,16 @@ export async function GET(request) {
     const totalScore = userResults.reduce((sum, r) => sum + r.score, 0);
     const totalQuestions = userResults.reduce((sum, r) => sum + (r.totalQuestions || r.total), 0);
     const averageScore = Math.round((totalScore / totalQuestions) * 100);
+    const accuracyPercentage = averageScore; // Same as average score
+    
+    // Calculate average time per question (only for results with timeTaken)
+    const resultsWithTime = userResults.filter(r => r.timeTaken && r.timeTaken > 0);
+    let averageTimePerQuestion = 0;
+    if (resultsWithTime.length > 0) {
+      const totalTime = resultsWithTime.reduce((sum, r) => sum + r.timeTaken, 0);
+      const totalQuestionsWithTime = resultsWithTime.reduce((sum, r) => sum + (r.totalQuestions || r.total), 0);
+      averageTimePerQuestion = Math.round(totalTime / totalQuestionsWithTime);
+    }
     
     const byCategory = {};
     const bySubject = {};
@@ -120,17 +132,30 @@ export async function GET(request) {
       .sort((a, b) => b.average - a.average)
       .slice(0, 5);
     
+    // Add weak and strong topics based on categories as well
+    const weakTopics = categoryStats
+      .filter(c => c.average < 60)
+      .sort((a, b) => a.average - b.average);
+    
+    const strongTopics = categoryStats
+      .filter(c => c.average >= 75)
+      .sort((a, b) => b.average - a.average);
+    
     return NextResponse.json({
       success: true,
       analytics: {
         totalQuizzes,
         averageScore,
+        accuracyPercentage,
+        averageTimePerQuestion,
         byCategory: categoryStats,
         bySubject: subjectStats,
         byDifficulty: difficultyStats,
         scoreHistory,
         weakAreas,
-        strongAreas
+        strongAreas,
+        weakTopics,
+        strongTopics
       }
     });
   } catch (error) {

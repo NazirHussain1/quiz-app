@@ -194,24 +194,50 @@ export default function AnalyticsPage() {
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm h-100">
             <div className="card-body text-center">
-              <h6 className="text-muted">Average Score</h6>
-              <h2 className="text-success">{analytics.averageScore}%</h2>
+              <h6 className="text-muted">Accuracy</h6>
+              <h2 className="text-success">{analytics.accuracyPercentage || analytics.averageScore}%</h2>
             </div>
           </div>
         </div>
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm h-100">
             <div className="card-body text-center">
-              <h6 className="text-muted">Strong Areas</h6>
-              <h2 className="text-info">{analytics.strongAreas.length}</h2>
+              <h6 className="text-muted">Avg Time/Question</h6>
+              <h2 className="text-info">
+                {analytics.averageTimePerQuestion > 0 
+                  ? `${analytics.averageTimePerQuestion}s` 
+                  : 'N/A'}
+              </h2>
             </div>
           </div>
         </div>
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm h-100">
             <div className="card-body text-center">
-              <h6 className="text-muted">Weak Areas</h6>
+              <h6 className="text-muted">Strong Topics</h6>
+              <h2 className="text-success">{analytics.strongAreas.length}</h2>
+              <small className="text-muted">≥75%</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Stats Row */}
+      <div className="row mb-4">
+        <div className="col-md-6 mb-3">
+          <div className="card shadow-sm h-100 border-warning">
+            <div className="card-body text-center">
+              <h6 className="text-muted">Weak Topics</h6>
               <h2 className="text-warning">{analytics.weakAreas.length}</h2>
+              <small className="text-muted">&lt;60% accuracy</small>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-6 mb-3">
+          <div className="card shadow-sm h-100">
+            <div className="card-body text-center">
+              <h6 className="text-muted">Average Score</h6>
+              <h2 className="text-primary">{analytics.averageScore}%</h2>
             </div>
           </div>
         </div>
@@ -259,7 +285,7 @@ export default function AnalyticsPage() {
       {analytics.weakAreas.length > 0 && (
         <div className="card shadow mb-4 border-warning">
           <div className="card-header bg-warning text-dark">
-            <h5 className="mb-0">⚠️ Areas Needing Improvement</h5>
+            <h5 className="mb-0">⚠️ Weak Topics - Need Improvement (&lt;60% Accuracy)</h5>
           </div>
           <div className="card-body">
             <div className="row">
@@ -287,6 +313,18 @@ export default function AnalyticsPage() {
                 </div>
               ))}
             </div>
+            {analytics.weakTopics && analytics.weakTopics.length > 0 && (
+              <div className="mt-3">
+                <h6 className="text-muted">Also check these categories:</h6>
+                <div className="d-flex flex-wrap gap-2">
+                  {analytics.weakTopics.map((topic, idx) => (
+                    <span key={idx} className="badge bg-warning text-dark">
+                      {topic.name} ({topic.average}%)
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="alert alert-info mt-3 mb-0">
               <strong>💡 Tip:</strong> Focus on these subjects to improve your overall performance!
             </div>
@@ -298,7 +336,7 @@ export default function AnalyticsPage() {
       {analytics.strongAreas.length > 0 && (
         <div className="card shadow mb-4 border-success">
           <div className="card-header bg-success text-white">
-            <h5 className="mb-0">🌟 Your Strong Areas</h5>
+            <h5 className="mb-0">🌟 Strong Topics - Excellent Performance (≥75% Accuracy)</h5>
           </div>
           <div className="card-body">
             <div className="row">
@@ -326,6 +364,18 @@ export default function AnalyticsPage() {
                 </div>
               ))}
             </div>
+            {analytics.strongTopics && analytics.strongTopics.length > 0 && (
+              <div className="mt-3">
+                <h6 className="text-muted">Also excelling in these categories:</h6>
+                <div className="d-flex flex-wrap gap-2">
+                  {analytics.strongTopics.map((topic, idx) => (
+                    <span key={idx} className="badge bg-success">
+                      {topic.name} ({topic.average}%)
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="alert alert-success mt-3 mb-0">
               <strong>🎉 Great job!</strong> Keep up the excellent work in these areas!
             </div>
