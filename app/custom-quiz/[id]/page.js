@@ -18,7 +18,7 @@ export default function CustomQuizPage() {
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(30);
 
   useEffect(() => {
     fetchQuiz();
@@ -51,7 +51,7 @@ export default function CustomQuizPage() {
   useEffect(() => {
     if (loading || finished) return;
 
-    setTimeLeft(15);
+    setTimeLeft(30);
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {

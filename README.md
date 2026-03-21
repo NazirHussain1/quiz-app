@@ -24,7 +24,7 @@ A comprehensive, production-ready quiz application built with Next.js 16, React 
 
 ### Core Quiz Functionality
 - **Multiple Quiz Modes**
-  - Regular Mode: 10 questions with 15-second timer per question
+  - Regular Mode: 10 questions with 30-second timer per question
   - Exam Mode: 30 questions with 30-minute total timer
   - Custom Quizzes: User-created quizzes with flexible settings
 

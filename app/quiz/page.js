@@ -21,7 +21,7 @@ function QuizContent() {
   const [finished, setFinished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [categoryName, setCategoryName] = useState("");
   const [subjectName, setSubjectName] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -283,7 +283,7 @@ function QuizContent() {
   useEffect(() => {
     if (loading || finished) return;
 
-    setTimeLeft(15); // Reset timer for new question
+    setTimeLeft(30); // Reset timer for new question
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -361,7 +361,7 @@ function QuizContent() {
     setIndex(0);
     setAnswers([]);
     setFinished(false);
-    setTimeLeft(15);
+    setTimeLeft(30);
     // Trigger re-fetch of questions by updating refreshKey
     setRefreshKey(prev => prev + 1);
   };
@@ -662,12 +662,12 @@ function QuizContent() {
             className={`progress-bar ${timeLeft <= 5 ? 'bg-danger' : 'bg-success'}`}
             role="progressbar"
             style={{ 
-              width: `${(timeLeft / 15) * 100}%`,
+              width: `${(timeLeft / 30) * 100}%`,
               transition: 'width 1s linear'
             }}
             aria-valuenow={timeLeft}
             aria-valuemin="0"
-            aria-valuemax="15"
+            aria-valuemax="30"
           ></div>
         </div>
       </motion.div>

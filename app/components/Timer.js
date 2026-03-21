@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-export default function Timer({ timeLeft, totalTime = 15 }) {
+export default function Timer({ timeLeft, totalTime = 30 }) {
   const isLowTime = timeLeft <= 5;
 
   return (
