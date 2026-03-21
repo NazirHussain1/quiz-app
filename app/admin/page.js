@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useSelector((state) => state.auth);
@@ -161,12 +162,12 @@ export default function AdminPanel() {
     ];
     
     if (options.some(opt => !opt.trim())) {
-      alert("All 4 options are required!");
+      toast.error("All 4 options are required!");
       return;
     }
     
     if (!options.includes(formData.correctAnswer)) {
-      alert("Correct answer must match one of the options!");
+      toast.error("Correct answer must match one of the options!");
       return;
     }
     
@@ -200,14 +201,14 @@ export default function AdminPanel() {
       const data = await res.json();
       
       if (data.success) {
-        alert(data.message);
+        toast.success(data.message);
         resetForm();
         fetchQuestions();
       } else {
-        alert("Error: " + data.error);
+        toast.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      toast.error(err.message);
     }
   };
 
@@ -242,13 +243,13 @@ export default function AdminPanel() {
       const data = await res.json();
       
       if (data.success) {
-        alert(data.message);
+        toast.success(data.message);
         fetchQuestions();
       } else {
-        alert("Error: " + data.error);
+        toast.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      toast.error(err.message);
     }
   };
 

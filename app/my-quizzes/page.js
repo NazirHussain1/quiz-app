@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export default function MyQuizzesPage() {
   const router = useRouter();
@@ -64,12 +65,12 @@ export default function MyQuizzesPage() {
       
       if (data.success) {
         setQuizzes(quizzes.filter(q => q._id !== id));
-        alert("Quiz deleted successfully");
+        toast.success("Quiz deleted successfully");
       } else {
-        alert("Error: " + data.error);
+        toast.error(data.error);
       }
     } catch (err) {
-      alert("Error deleting quiz");
+      toast.error("Error deleting quiz");
     }
   };
 

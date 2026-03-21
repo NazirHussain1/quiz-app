@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { shuffleArray } from "../utils/shuffle";
 import { useSound } from "../utils/useSound";
+import { toast } from "react-toastify";
 
 function ExamContent() {
   const searchParams = useSearchParams();
@@ -168,6 +169,7 @@ function ExamContent() {
       setFinished(true);
       saveExamResult();
       if (soundEnabled) playComplete();
+      toast.success("Exam submitted successfully!");
       return;
     }
     setIndex(index + 1);
@@ -184,6 +186,7 @@ function ExamContent() {
     setFinished(true);
     saveExamResult();
     if (soundEnabled) playComplete();
+    toast.success("Exam submitted successfully!");
   };
 
   const formatTime = (seconds) => {

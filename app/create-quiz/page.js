@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export default function CreateQuizPage() {
   const router = useRouter();
@@ -96,26 +97,27 @@ export default function CreateQuizPage() {
 
   const addQuestion = () => {
     if (!currentQuestion.question.trim()) {
-      alert("Please enter a question");
+      toast.error("Please enter a question");
       return;
     }
     
     if (currentQuestion.options.some(opt => !opt.trim())) {
-      alert("Please fill all 4 options");
+      toast.error("Please fill all 4 options");
       return;
     }
     
     if (!currentQuestion.correctAnswer.trim()) {
-      alert("Please select the correct answer");
+      toast.error("Please select the correct answer");
       return;
     }
     
     if (!currentQuestion.options.includes(currentQuestion.correctAnswer)) {
-      alert("Correct answer must match one of the options");
+      toast.error("Correct answer must match one of the options");
       return;
     }
     
     setQuestions([...questions, { ...currentQuestion }]);
+    toast.success("Question added successfully!");
     setCurrentQuestion({
       question: "",
       options: ["", "", "", ""],
@@ -139,7 +141,7 @@ export default function CreateQuizPage() {
 
   const handleSubmit = async () => {
     if (!quizInfo.title.trim()) {
-      alert("Please enter a quiz title");
+      toast.error("Please enter a quiz title");
       return;
     }
     
@@ -150,7 +152,7 @@ export default function CreateQuizPage() {
     }));
     
     if (finalQuestions.length === 0) {
-      alert("Please add at least one question");
+      toast.error("Please add at least one question");
       return;
     }
     
@@ -167,13 +169,13 @@ export default function CreateQuizPage() {
       const data = await res.json();
       
       if (data.success) {
-        alert("Quiz created successfully!");
+        toast.success("Quiz created successfully!");
         router.push(`/custom-quiz/${data.quizId}`);
       } else {
-        alert("Error: " + data.error);
+        toast.error(data.error);
       }
     } catch (error) {
-      alert("Error creating quiz");
+      toast.error("Error creating quiz");
     }
   };
 

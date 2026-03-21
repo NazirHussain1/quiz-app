@@ -5,22 +5,21 @@ import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { login, signup, clearError } from "../store/slices/authSlice";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { loading, error: authError } = useSelector((state) => state.auth);
+  const { loading } = useSelector((state) => state.auth);
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     userName: ""
   });
-  const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError("");
     dispatch(clearError());
 
     try {
@@ -31,19 +30,20 @@ export default function LoginPage() {
         })).unwrap();
         
         if (result) {
+          toast.success("Login successful! Welcome back.");
           router.push("/");
         }
       } else {
         const result = await dispatch(signup(formData)).unwrap();
         
         if (result.success) {
+          toast.success("Account created successfully! Please login.");
           setIsLogin(true);
-          setLocalError("Account created! Please login.");
           setFormData({ email: formData.email, password: "", userName: "" });
         }
       }
     } catch (err) {
-      setLocalError(err || "An error occurred");
+      toast.error(err || "An error occurred");
     }
   };
 
@@ -53,8 +53,6 @@ export default function LoginPage() {
       [e.target.name]: e.target.value
     });
   };
-
-  const displayError = localError || authError;
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -73,12 +71,6 @@ export default function LoginPage() {
                       : "Sign up to start taking quizzes"}
                   </p>
                 </div>
-
-                {displayError && (
-                  <div className={`alert ${displayError.includes("created") ? "alert-success" : "alert-danger"}`}>
-                    {displayError}
-                  </div>
-                )}
 
                 <form onSubmit={handleSubmit}>
                   {!isLogin && (
@@ -158,7 +150,6 @@ export default function LoginPage() {
                     className="btn btn-link text-decoration-none"
                     onClick={() => {
                       setIsLogin(!isLogin);
-                      setLocalError("");
                       dispatch(clearError());
                       setFormData({ email: "", password: "", userName: "" });
                     }}
