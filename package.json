@@ -12,13 +12,16 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
+    "autoprefixer": "^10.4.27",
     "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.36.0",
     "jose": "^6.2.1",
+    "lucide-react": "^0.577.0",
     "mongodb": "^7.1.0",
     "next": "^16.1.7",
+    "postcss": "^8.5.8",
     "react": "19.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.0",
@@ -32,7 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.1.7",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5"
   }
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Trophy, Medal, Crown, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -158,12 +159,13 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="container mt-5">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading leaderboard...</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 animate-pulse">
+            <Trophy className="w-8 h-8 text-white" />
           </div>
-          <p className="mt-3">Loading leaderboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading leaderboard...</p>
         </div>
       </div>
     );

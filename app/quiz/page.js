@@ -368,12 +368,13 @@ function QuizContent() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="spinner-border text-success" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 animate-pulse">
+            <span className="text-white text-2xl font-bold">Q</span>
           </div>
-          <p className="mt-3">Loading questions...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading questions...</p>
         </div>
       </div>
     );
@@ -381,21 +382,31 @@ function QuizContent() {
 
   if (error) {
     return (
-      <div className="container mt-5" style={{ maxWidth: 600 }}>
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">Error!</h4>
-          <p>{error}</p>
-          <hr />
-          <div className="d-flex gap-2">
-            <button 
-              className="btn btn-danger"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </button>
-            <Link href="/" className="btn btn-secondary">
-              Back to Home
-            </Link>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <span className="text-4xl">⚠️</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Oops! Something went wrong</h2>
+              <p className="text-gray-600">{error}</p>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              >
+                Try Again
+              </button>
+              <Link 
+                href="/" 
+                className="block w-full text-center bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+              >
+                Back to Home
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -412,117 +423,123 @@ function QuizContent() {
     const willChangeDifficulty = nextDifficulty !== adaptiveDifficulty;
     
     return (
-      <motion.div 
-        className="container mt-5" 
-        style={{ maxWidth: 600 }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, type: "spring" }}
-      >
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
         <motion.div 
-          className="card p-4 shadow"
-          initial={{ y: 50 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
+          className="max-w-2xl w-full"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, type: "spring" }}
         >
-          <motion.h2 
-            className="text-center"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+          <motion.div 
+            className="bg-white rounded-2xl shadow-2xl p-8"
+            initial={{ y: 50 }}
+            animate={{ y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
           >
-            Quiz Finished 🎉
-          </motion.h2>
-          
-          {categoryName && (
-            <motion.p 
-              className="text-center text-muted mb-2"
+            <motion.div
+              className="text-center mb-6"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            >
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mb-4">
+                <span className="text-5xl">🎉</span>
+              </div>
+              <h2 className="text-4xl font-bold text-gray-900 mb-2">Quiz Finished!</h2>
+              
+              {categoryName && (
+                <p className="text-gray-600">
+                  {categoryName} • {subjectName} • {adaptiveDifficulty.charAt(0).toUpperCase() + adaptiveDifficulty.slice(1)}
+                </p>
+              )}
+            </motion.div>
+
+            {willChangeDifficulty && (
+              <motion.div
+                className={`rounded-xl p-4 mb-6 ${
+                  nextDifficulty > adaptiveDifficulty 
+                    ? 'bg-green-50 border-2 border-green-200' 
+                    : 'bg-blue-50 border-2 border-blue-200'
+                }`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.45 }}
+              >
+                <p className={`font-semibold ${
+                  nextDifficulty > adaptiveDifficulty ? 'text-green-800' : 'text-blue-800'
+                }`}>
+                  <strong>
+                    {nextDifficulty > adaptiveDifficulty ? '🎉 Great job!' : '💡 Tip:'}
+                  </strong>
+                  {' '}
+                  {nextDifficulty > adaptiveDifficulty 
+                    ? `Your next quiz will be ${nextDifficulty} difficulty!`
+                    : `Your next quiz will be ${nextDifficulty} difficulty to help you improve.`
+                  }
+                </p>
+              </motion.div>
+            )}
+
+            <motion.div
+              className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="text-center">
+                <p className="text-gray-600 mb-2">Your Score</p>
+                <p className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                  {score}/{questions.length}
+                </p>
+                
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6, type: "spring" }}
+                >
+                  {(() => {
+                    const percent = percentage;
+                    if (percent < 40) return <p className="text-2xl font-semibold text-red-600">Needs Improvement</p>;
+                    else if (percent < 60) return <p className="text-2xl font-semibold text-yellow-600">Average - Keep Practicing</p>;
+                    else if (percent < 75) return <p className="text-2xl font-semibold text-blue-600">Good Job!</p>;
+                    else return <p className="text-2xl font-semibold text-green-600">Excellent! 🎉</p>;
+                  })()}
+                </motion.div>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              className="space-y-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.7 }}
             >
-              <small>
-                Category: {categoryName} | Subject: {subjectName} | Difficulty: {adaptiveDifficulty.charAt(0).toUpperCase() + adaptiveDifficulty.slice(1)}
-              </small>
-            </motion.p>
-          )}
-
-          {willChangeDifficulty && (
-            <motion.div
-              className={`alert ${nextDifficulty > adaptiveDifficulty ? 'alert-success' : 'alert-info'} mb-3`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.45 }}
-            >
-              <strong>
-                {nextDifficulty > adaptiveDifficulty ? '🎉 Great job!' : '💡 Tip:'}
-              </strong>
-              {' '}
-              {nextDifficulty > adaptiveDifficulty 
-                ? `Your next quiz will be ${nextDifficulty} difficulty!`
-                : `Your next quiz will be ${nextDifficulty} difficulty to help you improve.`
-              }
+              <button
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                onClick={handleRestartQuiz}
+                aria-label="Restart quiz with new questions"
+              >
+                🔄 Restart Quiz
+              </button>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <Link 
+                  href="/leaderboard" 
+                  className="flex items-center justify-center gap-2 bg-yellow-500 text-white py-3 rounded-xl font-semibold hover:bg-yellow-600 transform hover:scale-105 transition-all duration-200 shadow-md"
+                >
+                  🏆 Leaderboard
+                </Link>
+                <Link 
+                  href="/" 
+                  className="flex items-center justify-center gap-2 bg-gray-600 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transform hover:scale-105 transition-all duration-200 shadow-md"
+                >
+                  🏠 Home
+                </Link>
+              </div>
             </motion.div>
-          )}
-
-          <motion.p 
-            className="text-center fs-5"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            Your Score: <b>{score} / {questions.length}</b>
-          </motion.p>
-
-          {/* Performance Message */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6, type: "spring" }}
-          >
-            {(() => {
-              const percent = percentage;
-              if (percent < 40) return <p className="text-danger text-center fs-6">Fail</p>;
-              else if (percent < 60) return <p className="text-warning text-center fs-6">Average - Need More Improvement</p>;
-              else if (percent < 75) return <p className="text-info text-center fs-6">Good</p>;
-              else return <p className="text-success text-center fs-6">Excellent 🎉</p>;
-            })()}
-          </motion.div>
-
-          <motion.div 
-            className="d-grid gap-2 mt-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-          >
-            <button
-              className="btn btn-success btn-lg"
-              onClick={handleRestartQuiz}
-              aria-label="Restart quiz with new questions"
-            >
-              🔄 Restart Quiz
-            </button>
-            <div className="d-flex gap-2">
-              <Link href="/leaderboard" className="btn btn-primary w-100">
-                🏆 Leaderboard
-              </Link>
-              <Link href="/" className="btn btn-secondary w-100">
-                🏠 Home
-              </Link>
-            </div>
-            <Link 
-              href={`/quiz?${category ? `category=${category}&` : ""}${subject ? `subject=${subject}&` : ""}difficulty=${adaptiveDifficulty}`}
-              className="btn btn-outline-success w-100"
-              onClick={(e) => {
-                e.preventDefault();
-                handleRestartQuiz();
-              }}
-            >
-              ↻ Try Again
-            </Link>
           </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     );
   }
 
@@ -531,233 +548,251 @@ function QuizContent() {
   const progressPercent = ((index + 1) / questions.length) * 100;
 
   return (
-    <div className="container mt-4" style={{ maxWidth: 600 }}>
-      {/* Sound Toggle Button */}
-      <motion.div 
-        className="d-flex justify-content-end mb-2"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <button
-          onClick={() => {
-            const newSoundState = !soundEnabled;
-            setSoundEnabled(newSoundState);
-            localStorage.setItem("soundEnabled", newSoundState.toString());
-          }}
-          className="btn btn-sm btn-outline-secondary"
-          aria-label="Toggle sound effects"
-          title={soundEnabled ? "Mute sounds" : "Enable sounds"}
-        >
-          {soundEnabled ? "🔊 Sound On" : "🔇 Sound Off"}
-        </button>
-      </motion.div>
-      
-      {/* SCORE */}
-      <motion.div 
-        className="d-flex justify-content-between align-items-center mb-2"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <h5 aria-live="polite" className="mb-0">Score: {score}</h5>
-        <h5 aria-live="polite" className="mb-0 text-success">
-          {score}/{questions.length}
-        </h5>
-      </motion.div>
-      
-      {categoryName && subjectName && (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        {/* Sound Toggle Button */}
         <motion.div 
-          className="text-center mb-3"
-          initial={{ opacity: 0, scale: 0.8 }}
+          className="flex justify-end mb-4"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <button
+            onClick={() => {
+              const newSoundState = !soundEnabled;
+              setSoundEnabled(newSoundState);
+              localStorage.setItem("soundEnabled", newSoundState.toString());
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+              soundEnabled 
+                ? "bg-blue-500 text-white hover:bg-blue-600" 
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+            aria-label="Toggle sound effects"
+            title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+          >
+            {soundEnabled ? "🔊 Sound On" : "🔇 Sound Off"}
+          </button>
+        </motion.div>
+      
+        {/* Score Card */}
+        <motion.div 
+          className="bg-white rounded-2xl shadow-lg p-6 mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Current Score</p>
+              <p className="text-3xl font-bold text-gray-900">{score}<span className="text-gray-400">/{questions.length}</span></p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-500 mb-1">Progress</p>
+              <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {Math.round(progressPercent)}%
+              </p>
+            </div>
+          </div>
+        </motion.div>
+        
+        {categoryName && subjectName && (
+          <motion.div 
+            className="flex flex-wrap justify-center gap-2 mb-6"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              📚 {categoryName}
+            </span>
+            <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+              📖 {subjectName}
+            </span>
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+              adaptiveDifficulty === "easy" ? "bg-green-100 text-green-700" : 
+              adaptiveDifficulty === "hard" ? "bg-red-100 text-red-700" : 
+              "bg-yellow-100 text-yellow-700"
+            }`}>
+              {adaptiveDifficulty === "easy" ? "😊 Easy" : 
+               adaptiveDifficulty === "hard" ? "🔥 Hard" : 
+               "🤔 Medium"}
+            </span>
+          </motion.div>
+        )}
+
+        {difficultyChanged && (
+          <motion.div
+            className={`rounded-xl p-4 mb-6 ${
+              previousDifficulty && adaptiveDifficulty > previousDifficulty 
+                ? 'bg-green-50 border-2 border-green-200 text-green-800' 
+                : 'bg-blue-50 border-2 border-blue-200 text-blue-800'
+            }`}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <strong>🎯 Adaptive Difficulty:</strong> Based on your previous performance, 
+            difficulty has been {adaptiveDifficulty > previousDifficulty ? 'increased' : 'decreased'} to {adaptiveDifficulty}.
+          </motion.div>
+        )}
+
+        {/* Progress Bar */}
+        <motion.div 
+          className="bg-white rounded-2xl shadow-lg p-6 mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-semibold text-gray-700">
+              Question {index + 1} of {questions.length}
+            </span>
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              {Math.round(progressPercent)}% Complete
+            </span>
+          </div>
+          
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.5 }}
+            ></motion.div>
+          </div>
+        </motion.div>
+
+        {/* Timer Card */}
+        <motion.div 
+          className={`rounded-2xl shadow-lg p-6 mb-6 transition-all duration-300 ${
+            timeLeft <= 5 
+              ? 'bg-red-50 border-2 border-red-300' 
+              : 'bg-white border-2 border-gray-200'
+          }`}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <span className="badge bg-info text-dark me-2">
-            📚 {categoryName}
-          </span>
-          <span className="badge bg-secondary me-2">
-            📖 {subjectName}
-          </span>
-          <span className={`badge ${
-            adaptiveDifficulty === "easy" ? "bg-success" : 
-            adaptiveDifficulty === "hard" ? "bg-danger" : 
-            "bg-warning text-dark"
-          }`}>
-            {adaptiveDifficulty === "easy" ? "😊 Easy" : 
-             adaptiveDifficulty === "hard" ? "🔥 Hard" : 
-             "🤔 Medium"}
-          </span>
-        </motion.div>
-      )}
-
-      {difficultyChanged && (
-        <motion.div
-          className={`alert ${previousDifficulty && adaptiveDifficulty > previousDifficulty ? 'alert-success' : 'alert-info'} mb-3`}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <strong>🎯 Adaptive Difficulty:</strong> Based on your previous performance, 
-          difficulty has been {adaptiveDifficulty > previousDifficulty ? 'increased' : 'decreased'} to {adaptiveDifficulty}.
-        </motion.div>
-      )}
-
-      {/* QUESTION PROGRESS INDICATOR */}
-      <motion.div 
-        className="card mb-3 p-3 shadow-sm bg-light"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <span className="fw-bold text-muted">
-            Question {index + 1} of {questions.length}
-          </span>
-          <span className="badge bg-primary">
-            {Math.round(progressPercent)}% Complete
-          </span>
-        </div>
-        
-        {/* PROGRESS BAR */}
-        <div className="progress" style={{ height: "12px" }}>
-          <motion.div
-            className="progress-bar bg-success progress-bar-striped progress-bar-animated"
-            role="progressbar"
-            style={{ width: `${progressPercent}%` }}
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.5 }}
-            aria-valuenow={index + 1}
-            aria-valuemin="0"
-            aria-valuemax={questions.length}
-            aria-label={`Question ${index + 1} of ${questions.length}`}
-          ></motion.div>
-        </div>
-      </motion.div>
-
-      {/* COUNTDOWN TIMER */}
-      <motion.div 
-        className="card mb-3 p-3 text-center shadow-sm border-2" 
-        style={{ borderColor: timeLeft <= 5 ? '#dc3545' : '#198754' }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="d-flex align-items-center justify-content-center">
-          <span className="me-2 fs-5">⏱️</span>
-          <motion.span 
-            className={`fs-3 fw-bold ${timeLeft <= 5 ? 'text-danger' : 'text-success'}`}
-            aria-live="polite"
-            aria-atomic="true"
-            animate={{ scale: timeLeft <= 5 ? [1, 1.1, 1] : 1 }}
-            transition={{ duration: 0.5, repeat: timeLeft <= 5 ? Infinity : 0 }}
-          >
-            {timeLeft}s
-          </motion.span>
-          <span className="ms-2 text-muted small">remaining</span>
-        </div>
-        <div className="progress mt-2" style={{ height: "8px" }}>
-          <div
-            className={`progress-bar ${timeLeft <= 5 ? 'bg-danger' : 'bg-success'}`}
-            role="progressbar"
-            style={{ 
-              width: `${(timeLeft / 30) * 100}%`,
-              transition: 'width 1s linear'
-            }}
-            aria-valuenow={timeLeft}
-            aria-valuemin="0"
-            aria-valuemax="30"
-          ></div>
-        </div>
-      </motion.div>
-
-      {/* QUESTION CARD */}
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={index}
-          className="card p-4 shadow-sm"
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
-          transition={{ duration: 0.3 }}
-        >
-          <motion.h5
-            dangerouslySetInnerHTML={{ __html: current.question }}
-            className="mb-3"
-            role="heading"
-            aria-level="2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          ></motion.h5>
-
-          {/* OPTIONS */}
-          <div className="list-group" role="radiogroup" aria-label="Answer options">
-            {current.options.map((option, i) => {
-              let className = "list-group-item list-group-item-action";
-              const isSelected = option === answers[index];
-              const isCorrect = option === current.correct;
-
-              if (isLocked) {
-                if (isCorrect) {
-                  className += " bg-success text-white";
-                } else if (isSelected && !isCorrect) {
-                  className += " bg-danger text-white";
-                }
-              }
-
-              return (
-                <motion.button
-                  key={i}
-                  className={className}
-                  onClick={() => handleSelect(option)}
-                  dangerouslySetInnerHTML={{ __html: option }}
-                  disabled={isLocked}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
-                  whileHover={{ scale: isLocked ? 1 : 1.02 }}
-                  whileTap={{ scale: isLocked ? 1 : 0.98 }}
-                  role="radio"
-                  aria-checked={isSelected}
-                  aria-label={`Option ${i + 1}`}
-                ></motion.button>
-              );
-            })}
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-2xl">⏱️</span>
+            <motion.span 
+              className={`text-5xl font-bold ${timeLeft <= 5 ? 'text-red-600' : 'text-gray-900'}`}
+              aria-live="polite"
+              aria-atomic="true"
+              animate={{ scale: timeLeft <= 5 ? [1, 1.1, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: timeLeft <= 5 ? Infinity : 0 }}
+            >
+              {timeLeft}s
+            </motion.span>
+            <span className="text-gray-500 text-sm">remaining</span>
+          </div>
+          <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-1000 linear ${
+                timeLeft <= 5 ? 'bg-red-500' : 'bg-green-500'
+              }`}
+              style={{ width: `${(timeLeft / 30) * 100}%` }}
+            ></div>
           </div>
         </motion.div>
-      </AnimatePresence>
 
-      {/* BUTTONS */}
-      <motion.div 
-        className="d-flex justify-content-between mt-3"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-      >
-        <motion.button
-          className="btn btn-secondary"
-          onClick={handlePrev}
-          disabled={index === 0}
-          aria-label="Go to previous question"
-          whileHover={{ scale: index === 0 ? 1 : 1.05 }}
-          whileTap={{ scale: index === 0 ? 1 : 0.95 }}
-        >
-          ← Previous
-        </motion.button>
+        {/* Question Card */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={index}
+            className="bg-white rounded-2xl shadow-xl p-8 mb-6"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.h2
+              dangerouslySetInnerHTML={{ __html: current.question }}
+              className="text-2xl font-bold text-gray-900 mb-6"
+              role="heading"
+              aria-level="2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+            ></motion.h2>
 
-        <motion.button
-          className="btn btn-success"
-          disabled={!isLocked}
-          onClick={handleNext}
-          aria-label={index === questions.length - 1 ? "Finish quiz" : "Go to next question"}
-          whileHover={{ scale: !isLocked ? 1 : 1.05 }}
-          whileTap={{ scale: !isLocked ? 1 : 0.95 }}
+            {/* Options */}
+            <div className="space-y-3" role="radiogroup" aria-label="Answer options">
+              {current.options.map((option, i) => {
+                const isSelected = option === answers[index];
+                const isCorrect = option === current.correct;
+                
+                let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 ";
+                
+                if (isLocked) {
+                  if (isCorrect) {
+                    buttonClass += "bg-green-50 border-green-500 text-green-900";
+                  } else if (isSelected && !isCorrect) {
+                    buttonClass += "bg-red-50 border-red-500 text-red-900";
+                  } else {
+                    buttonClass += "bg-gray-50 border-gray-200 text-gray-500";
+                  }
+                } else {
+                  if (isSelected) {
+                    buttonClass += "bg-blue-50 border-blue-500 text-blue-900 shadow-md";
+                  } else {
+                    buttonClass += "bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md";
+                  }
+                }
+
+                return (
+                  <motion.button
+                    key={i}
+                    className={buttonClass}
+                    onClick={() => handleSelect(option)}
+                    dangerouslySetInnerHTML={{ __html: option }}
+                    disabled={isLocked}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
+                    whileHover={{ scale: isLocked ? 1 : 1.02 }}
+                    whileTap={{ scale: isLocked ? 1 : 0.98 }}
+                    role="radio"
+                    aria-checked={isSelected}
+                    aria-label={`Option ${i + 1}`}
+                  ></motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation Buttons */}
+        <motion.div 
+          className="flex justify-between gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
         >
-          {index === questions.length - 1 ? "Finish" : "Next →"}
-        </motion.button>
-      </motion.div>
+          <motion.button
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            onClick={handlePrev}
+            disabled={index === 0}
+            aria-label="Go to previous question"
+            whileHover={{ scale: index === 0 ? 1 : 1.05 }}
+            whileTap={{ scale: index === 0 ? 1 : 0.95 }}
+          >
+            ← Previous
+          </motion.button>
+
+          <motion.button
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+            disabled={!isLocked}
+            onClick={handleNext}
+            aria-label={index === questions.length - 1 ? "Finish quiz" : "Go to next question"}
+            whileHover={{ scale: !isLocked ? 1 : 1.05 }}
+            whileTap={{ scale: !isLocked ? 1 : 0.95 }}
+          >
+            {index === questions.length - 1 ? "Finish" : "Next →"}
+          </motion.button>
+        </motion.div>
+      </div>
     </div>
   );
 }

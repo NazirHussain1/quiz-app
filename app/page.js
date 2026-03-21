@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Play, Trophy, BookOpen, Target, Sparkles } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
@@ -34,7 +35,6 @@ export default function HomePage() {
 
     fetchCategories();
     
-    // Load saved player name
     const savedName = localStorage.getItem("playerName");
     if (savedName) {
       setPlayerName(savedName);
@@ -49,137 +49,160 @@ export default function HomePage() {
       return;
     }
     
-    // Save player name to localStorage
     localStorage.setItem("playerName", playerName.trim());
-    
-    // Navigate to quiz page
     const url = `/quiz?${selectedCategory ? `category=${selectedCategory}&` : ""}difficulty=${selectedDifficulty}`;
     router.push(url);
   };
 
   return (
-    <div className="d-flex flex-column justify-content-center align-items-center vh-100 text-center px-3">
-      <h1 className="mb-3">Welcome to Quiz App 🎯</h1>
-      <p className="mb-4 fs-5">Test your knowledge with fun and challenging questions!</p>
-
-      <div className="card p-4 shadow" style={{ maxWidth: 500, width: "100%" }}>
-        <label htmlFor="player-name" className="form-label fw-bold">
-          Enter Your Name
-        </label>
-        <input
-          type="text"
-          id="player-name"
-          className="form-control mb-4"
-          placeholder="Your name"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
-          maxLength={30}
-          required
-          aria-label="Enter your name"
-        />
-        
-        <label htmlFor="category-select" className="form-label fw-bold">
-          Select Quiz Category
-        </label>
-        
-        {loading ? (
-          <div className="text-center py-3">
-            <div className="spinner-border spinner-border-sm text-success" role="status">
-              <span className="visually-hidden">Loading categories...</span>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
+      <div className="max-w-2xl w-full">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+            <Sparkles className="w-10 h-10 text-white" />
           </div>
-        ) : error ? (
-          <div className="alert alert-danger" role="alert">
-            {error}
-          </div>
-        ) : (
-          <>
-            <select
-              id="category-select"
-              className="form-select mb-4"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              aria-label="Select quiz category"
-            >
-              <option value="">Any Category (Random)</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+            Quiz Master
+          </h1>
+          <p className="text-xl text-gray-600">
+            Test your knowledge with fun and challenging questions!
+          </p>
+        </div>
 
-            <div className="mb-4">
-              <label className="form-label fw-bold d-block text-start">
-                Select Difficulty Level
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+          <form onSubmit={handleStartQuiz} className="space-y-6">
+            <div>
+              <label htmlFor="player-name" className="block text-sm font-semibold text-gray-700 mb-2">
+                Your Name
               </label>
-              <div className="d-flex justify-content-around">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="difficulty"
-                    id="difficulty-easy"
-                    value="easy"
-                    checked={selectedDifficulty === "easy"}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  />
-                  <label className="form-check-label" htmlFor="difficulty-easy">
-                    😊 Easy
-                  </label>
+              <input
+                type="text"
+                id="player-name"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                placeholder="Enter your name"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                maxLength={30}
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="category-select" className="block text-sm font-semibold text-gray-700 mb-2">
+                Quiz Category
+              </label>
+              
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="difficulty"
-                    id="difficulty-medium"
-                    value="medium"
-                    checked={selectedDifficulty === "medium"}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  />
-                  <label className="form-check-label" htmlFor="difficulty-medium">
-                    🤔 Medium
-                  </label>
+              ) : error ? (
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700">
+                  {error}
                 </div>
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="difficulty"
-                    id="difficulty-hard"
-                    value="hard"
-                    checked={selectedDifficulty === "hard"}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                  />
-                  <label className="form-check-label" htmlFor="difficulty-hard">
-                    🔥 Hard
-                  </label>
-                </div>
+              ) : (
+                <select
+                  id="category-select"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  <option value="">Any Category (Random)</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Difficulty Level
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDifficulty("easy")}
+                  className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
+                    selectedDifficulty === "easy"
+                      ? "bg-green-500 text-white shadow-lg scale-105"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <span className="text-xl mb-1 block">😊</span>
+                  Easy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDifficulty("medium")}
+                  className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
+                    selectedDifficulty === "medium"
+                      ? "bg-yellow-500 text-white shadow-lg scale-105"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <span className="text-xl mb-1 block">🤔</span>
+                  Medium
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDifficulty("hard")}
+                  className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
+                    selectedDifficulty === "hard"
+                      ? "bg-red-500 text-white shadow-lg scale-105"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <span className="text-xl mb-1 block">🔥</span>
+                  Hard
+                </button>
               </div>
             </div>
 
             <button
-              onClick={handleStartQuiz}
-              className="btn btn-success btn-lg w-100 mb-2"
-              aria-label="Start the quiz"
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
+              <Play className="w-5 h-5" />
               Start Quiz
             </button>
-            
-            <Link 
-              href="/leaderboard"
-              className="btn btn-outline-primary w-100"
-              aria-label="View leaderboard"
-            >
-              🏆 View Leaderboard
-            </Link>
-          </>
-        )}
-      </div>
-      
-      <div className="mt-4 text-muted">
-        <small>Powered by Open Trivia Database</small>
+          </form>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            href="/leaderboard"
+            className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex flex-col items-center gap-2 text-center group"
+          >
+            <Trophy className="w-8 h-8 text-yellow-500 group-hover:scale-110 transition-transform" />
+            <span className="font-semibold text-gray-800">Leaderboard</span>
+            <span className="text-sm text-gray-500">View top scores</span>
+          </Link>
+          
+          <Link
+            href="/subjects"
+            className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex flex-col items-center gap-2 text-center group"
+          >
+            <BookOpen className="w-8 h-8 text-blue-500 group-hover:scale-110 transition-transform" />
+            <span className="font-semibold text-gray-800">Subjects</span>
+            <span className="text-sm text-gray-500">Browse by topic</span>
+          </Link>
+          
+          <Link
+            href="/analytics"
+            className="bg-white rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex flex-col items-center gap-2 text-center group"
+          >
+            <Target className="w-8 h-8 text-purple-500 group-hover:scale-110 transition-transform" />
+            <span className="font-semibold text-gray-800">Analytics</span>
+            <span className="text-sm text-gray-500">Track progress</span>
+          </Link>
+        </div>
+
+        <div className="text-center mt-8 text-gray-500 text-sm">
+          <p>Powered by Open Trivia Database</p>
+        </div>
       </div>
     </div>
   );
