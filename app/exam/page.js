@@ -197,12 +197,13 @@ function ExamContent() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="spinner-border text-success" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl mb-4 animate-pulse">
+            <span className="text-white text-2xl font-bold">📝</span>
           </div>
-          <p className="mt-3">Loading exam questions...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading exam questions...</p>
         </div>
       </div>
     );
@@ -210,14 +211,23 @@ function ExamContent() {
 
   if (error) {
     return (
-      <div className="container mt-5" style={{ maxWidth: 600 }}>
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">Error!</h4>
-          <p>{error}</p>
-          <hr />
-          <Link href="/" className="btn btn-secondary">
-            Back to Home
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <span className="text-4xl">⚠️</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Exam</h2>
+              <p className="text-gray-600">{error}</p>
+            </div>
+            <Link 
+              href="/" 
+              className="block w-full text-center bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -231,239 +241,255 @@ function ExamContent() {
     const percentage = Math.round((score / questions.length) * 100);
     
     return (
-      <motion.div 
-        className="container mt-5" 
-        style={{ maxWidth: 700 }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, type: "spring" }}
-      >
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
         <motion.div 
-          className="card p-4 shadow"
-          initial={{ y: 50 }}
-          animate={{ y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
+          className="max-w-2xl w-full"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, type: "spring" }}
         >
-          <motion.h2 
-            className="text-center"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-          >
-            Exam Completed! 🎓
-          </motion.h2>
-          
-          <motion.div
-            className="text-center mb-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <p className="text-muted mb-2">
-              <small>
-                Category: {category || "General"} | Subject: {subject || "General"}
-              </small>
-            </p>
-            <p className="text-muted">
-              <small>Time Taken: {formatTime(timeTaken)}</small>
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="row text-center mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <div className="col-6">
-              <h3 className="text-primary">{score}</h3>
-              <p className="text-muted">Correct Answers</p>
-            </div>
-            <div className="col-6">
-              <h3 className="text-danger">{questions.length - score}</h3>
-              <p className="text-muted">Wrong Answers</p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="text-center mb-4"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6, type: "spring" }}
-          >
-            <h1 className="display-3 fw-bold text-success">{percentage}%</h1>
-            {(() => {
-              if (percentage < 40) return <p className="text-danger fs-5">Fail - Keep Practicing</p>;
-              else if (percentage < 60) return <p className="text-warning fs-5">Pass - Need Improvement</p>;
-              else if (percentage < 75) return <p className="text-info fs-5">Good Performance</p>;
-              else return <p className="text-success fs-5">Excellent! 🎉</p>;
-            })()}
-          </motion.div>
-
           <motion.div 
-            className="d-grid gap-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
+            className="bg-white rounded-2xl shadow-2xl p-6 md:p-10"
+            initial={{ y: 50 }}
+            animate={{ y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
           >
-            <Link href="/leaderboard" className="btn btn-primary btn-lg">
-              🏆 View Leaderboard
-            </Link>
-            <Link href="/" className="btn btn-secondary">
-              🏠 Back to Home
-            </Link>
+            <motion.div
+              className="text-center mb-8"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            >
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-4">
+                <span className="text-6xl">🎓</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Exam Completed!</h2>
+              
+              <div className="space-y-1 text-gray-600">
+                <p className="text-sm md:text-base">
+                  {category || "General"} • {subject || "General"}
+                </p>
+                <p className="text-sm md:text-base">
+                  Time Taken: <span className="font-semibold">{formatTime(timeTaken)}</span>
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="grid grid-cols-2 gap-4 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="bg-green-50 rounded-xl p-6 text-center border-2 border-green-200">
+                <p className="text-4xl md:text-5xl font-bold text-green-600 mb-2">{score}</p>
+                <p className="text-gray-600 font-medium">Correct</p>
+              </div>
+              <div className="bg-red-50 rounded-xl p-6 text-center border-2 border-red-200">
+                <p className="text-4xl md:text-5xl font-bold text-red-600 mb-2">{questions.length - score}</p>
+                <p className="text-gray-600 font-medium">Wrong</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8 mb-8 text-center"
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6, type: "spring" }}
+            >
+              <p className="text-gray-600 mb-2">Final Score</p>
+              <p className="text-7xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                {percentage}%
+              </p>
+              {(() => {
+                if (percentage < 40) return <p className="text-xl font-semibold text-red-600">Needs Improvement</p>;
+                else if (percentage < 60) return <p className="text-xl font-semibold text-yellow-600">Pass - Keep Practicing</p>;
+                else if (percentage < 75) return <p className="text-xl font-semibold text-blue-600">Good Performance</p>;
+                else return <p className="text-xl font-semibold text-green-600">Excellent! 🎉</p>;
+              })()}
+            </motion.div>
+
+            <motion.div 
+              className="space-y-3"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              <Link 
+                href="/leaderboard" 
+                className="block w-full text-center bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-4 rounded-xl font-semibold text-lg hover:from-yellow-500 hover:to-orange-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              >
+                🏆 View Leaderboard
+              </Link>
+              <Link 
+                href="/" 
+                className="block w-full text-center bg-gray-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-gray-700 transform hover:scale-105 transition-all duration-200 shadow-md"
+              >
+                🏠 Back to Home
+              </Link>
+            </motion.div>
           </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     );
   }
 
-  const current = questions[index];
-  const isAnswered = !!answers[index];
-
   return (
-    <div className="container mt-4" style={{ maxWidth: 700 }}>
-      <div className="card shadow-sm mb-3 bg-warning bg-opacity-10 border-warning">
-        <div className="card-body py-2">
-          <div className="d-flex justify-content-between align-items-center">
-            <span className="badge bg-warning text-dark fs-6">
-              📝 EXAM MODE
-            </span>
-            <span className="text-muted small">
-              {category} - {subject}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Exam Mode Banner */}
+        <div className="bg-yellow-100 border-2 border-yellow-400 rounded-2xl shadow-md mb-6 p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <span className="px-4 py-2 bg-yellow-400 text-yellow-900 rounded-full text-sm md:text-base font-bold">
+                📝 EXAM MODE
+              </span>
+              <span className="text-sm md:text-base text-gray-700">
+                {category} - {subject}
+              </span>
+            </div>
+            <span className="text-xs md:text-sm text-gray-600">
+              30 questions • 30 minutes
             </span>
           </div>
         </div>
-      </div>
 
-      <motion.div 
-        className="card mb-3 p-3 shadow-sm"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <span className="fw-bold">
-            Question {index + 1} of {questions.length}
-          </span>
-          <span className="badge bg-primary">
-            {Math.round(progressPercent)}% Complete
-          </span>
-        </div>
-        
-        <div className="progress" style={{ height: "12px" }}>
-          <motion.div
-            className="progress-bar bg-success progress-bar-striped"
-            role="progressbar"
-            style={{ width: `${progressPercent}%` }}
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.5 }}
-          ></motion.div>
-        </div>
-      </motion.div>
-
-      <motion.div 
-        className={`card mb-3 p-3 text-center shadow-sm border-2`}
-        style={{ borderColor: timeLeft <= 300 ? '#dc3545' : '#198754' }}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="d-flex align-items-center justify-content-center">
-          <span className="me-2 fs-5">⏱️</span>
-          <motion.span 
-            className={`fs-3 fw-bold ${timeLeft <= 300 ? 'text-danger' : 'text-success'}`}
-            animate={{ scale: timeLeft <= 300 ? [1, 1.05, 1] : 1 }}
-            transition={{ duration: 0.5, repeat: timeLeft <= 300 ? Infinity : 0 }}
-          >
-            {formatTime(timeLeft)}
-          </motion.span>
-          <span className="ms-2 text-muted small">remaining</span>
-        </div>
-      </motion.div>
-
-      <AnimatePresence mode="wait">
+        {/* Progress Card */}
         <motion.div 
-          key={index}
-          className="card p-4 shadow-sm"
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -100 }}
-          transition={{ duration: 0.3 }}
+          className="bg-white rounded-2xl shadow-lg p-6 mb-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
         >
-          <motion.h5
-            dangerouslySetInnerHTML={{ __html: current.question }}
-            className="mb-3"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          ></motion.h5>
-
-          <div className="list-group">
-            {current.options.map((option, i) => {
-              const isSelected = option === answers[index];
-              let className = "list-group-item list-group-item-action";
-              
-              if (isSelected) {
-                className += " active";
-              }
-
-              return (
-                <motion.button
-                  key={i}
-                  className={className}
-                  onClick={() => handleSelect(option)}
-                  dangerouslySetInnerHTML={{ __html: option }}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                ></motion.button>
-              );
-            })}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <span className="text-base md:text-lg font-bold text-gray-700">
+              Question {index + 1} of {questions.length}
+            </span>
+            <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm md:text-base font-medium">
+              {Math.round(progressPercent)}% Complete
+            </span>
+          </div>
+          
+          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 0.5 }}
+            ></motion.div>
           </div>
         </motion.div>
-      </AnimatePresence>
 
-      <motion.div 
-        className="d-flex justify-content-between mt-3 gap-2"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-      >
-        <div className="text-muted small">
-          ⚠️ Cannot go back to previous questions
-        </div>
-        
-        <div className="d-flex gap-2">
-          {index === questions.length - 1 ? (
-            <motion.button
-              className="btn btn-success btn-lg"
-              onClick={handleSubmit}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+        {/* Timer Card */}
+        <motion.div 
+          className={`rounded-2xl shadow-lg p-6 mb-6 transition-all duration-300 ${
+            timeLeft <= 300 
+              ? 'bg-red-50 border-2 border-red-300' 
+              : 'bg-white border-2 border-gray-200'
+          }`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-2xl md:text-3xl">⏱️</span>
+            <motion.span 
+              className={`text-4xl md:text-5xl font-bold ${timeLeft <= 300 ? 'text-red-600' : 'text-gray-900'}`}
+              animate={{ scale: timeLeft <= 300 ? [1, 1.05, 1] : 1 }}
+              transition={{ duration: 0.5, repeat: timeLeft <= 300 ? Infinity : 0 }}
             >
-              Submit Exam
-            </motion.button>
-          ) : (
-            <motion.button
-              className="btn btn-primary"
-              onClick={handleNext}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Next →
-            </motion.button>
-          )}
-        </div>
-      </motion.div>
+              {formatTime(timeLeft)}
+            </motion.span>
+            <span className="text-gray-500 text-sm">remaining</span>
+          </div>
+        </motion.div>
 
-      <div className="text-center mt-3">
-        <small className="text-muted">
-          Answered: {answers.filter(a => a !== null).length} / {questions.length}
-        </small>
+        {/* Question Card */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={index}
+            className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.h2
+              dangerouslySetInnerHTML={{ __html: current.question }}
+              className="text-xl md:text-2xl font-bold text-gray-900 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+            ></motion.h2>
+
+            <div className="space-y-3">
+              {current.options.map((option, i) => {
+                const isSelected = option === answers[index];
+                let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 ";
+                
+                if (isSelected) {
+                  buttonClass += "bg-blue-50 border-blue-500 text-blue-900 shadow-md";
+                } else {
+                  buttonClass += "bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md";
+                }
+
+                return (
+                  <motion.button
+                    key={i}
+                    className={buttonClass}
+                    onClick={() => handleSelect(option)}
+                    dangerouslySetInnerHTML={{ __html: option }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  ></motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <motion.div 
+          className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.3 }}
+        >
+          <div className="text-sm text-gray-500 text-center sm:text-left">
+            ⚠️ Cannot go back to previous questions
+          </div>
+          
+          <div className="flex gap-3">
+            {index === questions.length - 1 ? (
+              <motion.button
+                className="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold text-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                onClick={handleSubmit}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Submit Exam
+              </motion.button>
+            ) : (
+              <motion.button
+                className="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                onClick={handleNext}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Next →
+              </motion.button>
+            )}
+          </div>
+        </motion.div>
+
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500">
+            Answered: <span className="font-semibold text-gray-700">{answers.filter(a => a !== null).length}</span> / {questions.length}
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -472,10 +498,8 @@ function ExamContent() {
 export default function ExamPage() {
   return (
     <Suspense fallback={
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
       </div>
     }>
       <ExamContent />

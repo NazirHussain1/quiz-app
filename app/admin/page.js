@@ -68,10 +68,8 @@ export default function AdminPanel() {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
       </div>
     );
   }
@@ -79,14 +77,15 @@ export default function AdminPanel() {
   // Show access denied if not admin
   if (!user || user.role !== "admin") {
     return (
-      <div className="container mt-5">
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">Access Denied</h4>
-          <p>You do not have permission to access this page.</p>
-          <hr />
-          <Link href="/" className="btn btn-primary">
-            Go to Home
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+            <h4 className="text-xl font-bold text-red-800 mb-2">Access Denied</h4>
+            <p className="text-red-700 mb-4">You do not have permission to access this page.</p>
+            <Link href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200">
+              Go to Home
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -271,23 +270,23 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="display-5">🔧 Admin Panel</h1>
-        <div className="d-flex gap-2">
-          <Link href="/admin/analytics" className="btn btn-primary">
-            📊 Analytics Dashboard
-          </Link>
-          <Link href="/" className="btn btn-outline-secondary">
-            ← Back to Home
-          </Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">🔧 Admin Panel</h1>
+          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+            <Link href="/admin/analytics" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg text-center">
+              📊 Analytics Dashboard
+            </Link>
+            <Link href="/" className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 text-center">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
-      </div>
 
-      <div className="row mb-4">
-        <div className="col-12">
+        <div className="mb-6">
           <button
-            className="btn btn-success btn-lg w-100"
+            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 transition-all duration-200 shadow-lg"
             onClick={() => {
               resetForm();
               setShowForm(!showForm);
@@ -296,324 +295,317 @@ export default function AdminPanel() {
             {showForm ? "✖ Cancel" : "+ Add New Question"}
           </button>
         </div>
-      </div>
 
-      {showForm && (
-        <div className="card shadow mb-4">
-          <div className="card-header bg-primary text-white">
-            <h5 className="mb-0">
-              {editingQuestion ? "✏️ Edit Question" : "➕ Add New Question"}
-            </h5>
+        {showForm && (
+          <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4">
+              <h5 className="text-xl font-bold">
+                {editingQuestion ? "✏️ Edit Question" : "➕ Add New Question"}
+              </h5>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Category *</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g., Intermediate"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Subject *</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="e.g., Mathematics"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Topic</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="topic"
+                      value={formData.topic}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Algebra"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Difficulty *</label>
+                  <select
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                    name="difficulty"
+                    value={formData.difficulty}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Question *</label>
+                  <textarea
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                    name="question"
+                    value={formData.question}
+                    onChange={handleInputChange}
+                    required
+                    rows="3"
+                    placeholder="Enter your question here..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 1 *</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="option1"
+                      value={formData.option1}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 2 *</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="option2"
+                      value={formData.option2}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 3 *</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="option3"
+                      value={formData.option3}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 4 *</label>
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                      name="option4"
+                      value={formData.option4}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Correct Answer *</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                    name="correctAnswer"
+                    value={formData.correctAnswer}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Must match one of the options above"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg">
+                    {editingQuestion ? "💾 Update Question" : "➕ Add Question"}
+                  </button>
+                  <button
+                    type="button"
+                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                    onClick={resetForm}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-          <div className="card-body">
-            <form onSubmit={handleSubmit}>
-              <div className="row">
-                <div className="col-md-4 mb-3">
-                  <label className="form-label fw-bold">Category *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g., Intermediate"
-                  />
-                </div>
-                <div className="col-md-4 mb-3">
-                  <label className="form-label fw-bold">Subject *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="e.g., Mathematics"
-                  />
-                </div>
-                <div className="col-md-4 mb-3">
-                  <label className="form-label fw-bold">Topic</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="topic"
-                    value={formData.topic}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Algebra"
-                  />
-                </div>
-              </div>
+        )}
 
-              <div className="mb-3">
-                <label className="form-label fw-bold">Difficulty *</label>
-                <select
-                  className="form-select"
-                  name="difficulty"
-                  value={formData.difficulty}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Question *</label>
-                <textarea
-                  className="form-control"
-                  name="question"
-                  value={formData.question}
-                  onChange={handleInputChange}
-                  required
-                  rows="3"
-                  placeholder="Enter your question here..."
-                />
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-bold">Option 1 *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="option1"
-                    value={formData.option1}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-bold">Option 2 *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="option2"
-                    value={formData.option2}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-bold">Option 3 *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="option3"
-                    value={formData.option3}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label fw-bold">Option 4 *</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="option4"
-                    value={formData.option4}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Correct Answer *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="correctAnswer"
-                  value={formData.correctAnswer}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Must match one of the options above"
-                />
-              </div>
-
-              <div className="d-flex gap-2">
-                <button type="submit" className="btn btn-primary">
-                  {editingQuestion ? "💾 Update Question" : "➕ Add Question"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={resetForm}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+        <div className="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
+          <div className="bg-gray-700 text-white px-6 py-4">
+            <h5 className="text-lg font-bold">🔍 Filter Questions</h5>
           </div>
-        </div>
-      )}
-
-      <div className="card shadow mb-4">
-        <div className="card-header bg-secondary text-white">
-          <h5 className="mb-0">🔍 Filter Questions</h5>
-        </div>
-        <div className="card-body">
-          <div className="row mb-3">
-            <div className="col-12">
-              <label className="form-label fw-bold">Search by Keyword</label>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Search by Keyword</label>
               <input
                 type="text"
-                className="form-control"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
                 placeholder="Search question text..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
               />
             </div>
-          </div>
-          <div className="row">
-            <div className="col-md-4 mb-3">
-              <label className="form-label fw-bold">Category</label>
-              <select
-                className="form-select"
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-4 mb-3">
-              <label className="form-label fw-bold">Subject</label>
-              <select
-                className="form-select"
-                value={filterSubject}
-                onChange={(e) => setFilterSubject(e.target.value)}
-              >
-                <option value="all">All Subjects</option>
-                {subjects.map((subj) => (
-                  <option key={subj} value={subj}>
-                    {subj}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-4 mb-3">
-              <label className="form-label fw-bold">Difficulty</label>
-              <select
-                className="form-select"
-                value={filterDifficulty}
-                onChange={(e) => setFilterDifficulty(e.target.value)}
-              >
-                <option value="all">All Difficulties</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                <select
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Subject</label>
+                <select
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                  value={filterSubject}
+                  onChange={(e) => setFilterSubject(e.target.value)}
+                >
+                  <option value="all">All Subjects</option>
+                  {subjects.map((subj) => (
+                    <option key={subj} value={subj}>
+                      {subj}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Difficulty</label>
+                <select
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                  value={filterDifficulty}
+                  onChange={(e) => setFilterDifficulty(e.target.value)}
+                >
+                  <option value="all">All Difficulties</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto"></div>
         </div>
       ) : error ? (
-        <div className="alert alert-danger">{error}</div>
+        <div className="bg-red-50 border-2 border-red-200 text-red-800 rounded-xl p-4">{error}</div>
       ) : (
-        <div className="card shadow">
-          <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <h5 className="mb-0">📚 Questions ({totalCount})</h5>
-            <span className="badge bg-light text-dark">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gray-800 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <h5 className="text-lg font-bold">📚 Questions ({totalCount})</h5>
+            <span className="px-3 py-1 bg-white text-gray-800 rounded-full text-sm font-medium">
               Page {currentPage} of {totalPages}
             </span>
           </div>
-          <div className="card-body p-0">
-            {questions.length === 0 ? (
-              <div className="text-center py-5">
-                <p className="text-muted">No questions found. Add your first question!</p>
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: "40%" }}>Question</th>
-                      <th>Category</th>
-                      <th>Subject</th>
-                      <th>Difficulty</th>
-                      <th style={{ width: "150px" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {questions.map((q) => (
-                      <tr key={q._id}>
-                        <td>
-                          <div className="text-truncate" style={{ maxWidth: "400px" }}>
-                            {q.question}
-                          </div>
-                          <small className="text-muted">
-                            Answer: {q.correctAnswer}
-                          </small>
-                        </td>
-                        <td>
-                          <span className="badge bg-info text-dark">
-                            {q.category}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="badge bg-secondary">
-                            {q.subject}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              q.difficulty === "easy"
-                                ? "bg-success"
-                                : q.difficulty === "hard"
-                                ? "bg-danger"
-                                : "bg-warning text-dark"
-                            }`}
+          {questions.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No questions found. Add your first question!</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700" style={{ width: "40%" }}>Question</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700">Category</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700">Subject</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700">Difficulty</th>
+                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700" style={{ width: "150px" }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {questions.map((q) => (
+                    <tr key={q._id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-4 py-3">
+                        <div className="truncate max-w-md">
+                          {q.question}
+                        </div>
+                        <small className="text-gray-500">
+                          Answer: {q.correctAnswer}
+                        </small>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                          {q.category}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                          {q.subject}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            q.difficulty === "easy"
+                              ? "bg-green-100 text-green-700"
+                              : q.difficulty === "hard"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {q.difficulty}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            className="px-3 py-1 border-2 border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                            onClick={() => handleEdit(q)}
+                            title="Edit"
                           >
-                            {q.difficulty}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="btn-group btn-group-sm">
-                            <button
-                              className="btn btn-outline-primary"
-                              onClick={() => handleEdit(q)}
-                              title="Edit"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              className="btn btn-outline-danger"
-                              onClick={() => handleDelete(q._id)}
-                              title="Delete"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+                            ✏️
+                          </button>
+                          <button
+                            className="px-3 py-1 border-2 border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200"
+                            onClick={() => handleDelete(q._id)}
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           {totalPages > 1 && (
-            <div className="card-footer">
+            <div className="px-6 py-4 bg-gray-50">
               <nav>
-                <ul className="pagination justify-content-center mb-0">
-                  <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                <ul className="flex justify-center items-center gap-2 flex-wrap">
+                  <li>
                     <button 
-                      className="page-link" 
+                      className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100'}`}
                       onClick={() => setCurrentPage(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
@@ -622,16 +614,15 @@ export default function AdminPanel() {
                   </li>
                   {[...Array(totalPages)].map((_, i) => {
                     const pageNum = i + 1;
-                    // Show first, last, current, and adjacent pages
                     if (
                       pageNum === 1 || 
                       pageNum === totalPages || 
                       (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
                     ) {
                       return (
-                        <li key={pageNum} className={`page-item ${currentPage === pageNum ? 'active' : ''}`}>
+                        <li key={pageNum}>
                           <button 
-                            className="page-link" 
+                            className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${currentPage === pageNum ? 'bg-blue-600 text-white shadow-lg' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100'}`}
                             onClick={() => setCurrentPage(pageNum)}
                           >
                             {pageNum}
@@ -639,13 +630,13 @@ export default function AdminPanel() {
                         </li>
                       );
                     } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                      return <li key={pageNum} className="page-item disabled"><span className="page-link">...</span></li>;
+                      return <li key={pageNum} className="px-2 text-gray-400">...</li>;
                     }
                     return null;
                   })}
-                  <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                  <li>
                     <button 
-                      className="page-link" 
+                      className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100'}`}
                       onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                     >

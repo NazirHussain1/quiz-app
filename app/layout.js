@@ -1,6 +1,5 @@
 "use client";
 
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
 import { ReduxProvider } from "./store/ReduxProvider";

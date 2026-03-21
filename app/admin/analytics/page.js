@@ -76,10 +76,8 @@ export default function AdminAnalytics() {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
       </div>
     );
   }
@@ -87,14 +85,15 @@ export default function AdminAnalytics() {
   // Show access denied if not admin
   if (!user || user.role !== "admin") {
     return (
-      <div className="container mt-5">
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">Access Denied</h4>
-          <p>You do not have permission to access this page.</p>
-          <hr />
-          <Link href="/" className="btn btn-primary">
-            Go to Home
-          </Link>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+            <h4 className="text-xl font-bold text-red-800 mb-2">Access Denied</h4>
+            <p className="text-red-700 mb-4">You do not have permission to access this page.</p>
+            <Link href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200">
+              Go to Home
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -102,14 +101,10 @@ export default function AdminAnalytics() {
 
   if (loading) {
     return (
-      <div className="container mt-5">
-        <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-          <div className="text-center">
-            <div className="spinner-border text-primary mb-3" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-            <p className="text-muted">Loading analytics data...</p>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading analytics data...</p>
         </div>
       </div>
     );
@@ -117,13 +112,15 @@ export default function AdminAnalytics() {
 
   if (error) {
     return (
-      <div className="container mt-5">
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">Error</h4>
-          <p>{error}</p>
-          <button onClick={fetchAnalytics} className="btn btn-danger">
-            Retry
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+            <h4 className="text-xl font-bold text-red-800 mb-2">Error</h4>
+            <p className="text-red-700 mb-4">{error}</p>
+            <button onClick={fetchAnalytics} className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200">
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -218,123 +215,107 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <div className="container-fluid mt-4 mb-5">
-      {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="mb-1">📊 Admin Analytics Dashboard</h2>
-          <p className="text-muted mb-0">Comprehensive system insights and statistics</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">📊 Admin Analytics Dashboard</h2>
+            <p className="text-gray-600">Comprehensive system insights and statistics</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+            <button onClick={fetchAnalytics} className="px-4 py-2 border-2 border-blue-300 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 text-center">
+              🔄 Refresh
+            </button>
+            <Link href="/admin" className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 text-center">
+              ← Back to Admin
+            </Link>
+          </div>
         </div>
-        <div className="d-flex gap-2">
-          <button onClick={fetchAnalytics} className="btn btn-outline-primary btn-sm">
-            🔄 Refresh
-          </button>
-          <Link href="/admin" className="btn btn-outline-secondary btn-sm">
-            ← Back to Admin
-          </Link>
-        </div>
-      </div>
 
-      {/* Overview Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3">
-          <div className="card border-primary shadow-sm">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-1">Total Users</h6>
-                  <h3 className="mb-0">{analytics.overview.totalUsers}</h3>
-                </div>
-                <div className="fs-1">👥</div>
+        {/* Overview Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-300 p-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h6 className="text-sm text-gray-600 mb-1">Total Users</h6>
+                <h3 className="text-3xl font-bold text-gray-900">{analytics.overview.totalUsers}</h3>
               </div>
+              <div className="text-5xl">👥</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-green-300 p-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h6 className="text-sm text-gray-600 mb-1">Total Quizzes</h6>
+                <h3 className="text-3xl font-bold text-gray-900">{analytics.overview.totalQuizzes}</h3>
+              </div>
+              <div className="text-5xl">📝</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-yellow-300 p-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h6 className="text-sm text-gray-600 mb-1">Accuracy</h6>
+                <h3 className="text-3xl font-bold text-gray-900">{analytics.overview.accuracyPercentage}%</h3>
+              </div>
+              <div className="text-5xl">🎯</div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-300 p-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h6 className="text-sm text-gray-600 mb-1">Avg Time/Q</h6>
+                <h3 className="text-3xl font-bold text-gray-900">
+                  {analytics.overview.averageTimePerQuestion > 0 
+                    ? `${analytics.overview.averageTimePerQuestion}s` 
+                    : 'N/A'}
+                </h3>
+              </div>
+              <div className="text-5xl">⏱️</div>
             </div>
           </div>
         </div>
-        <div className="col-md-3">
-          <div className="card border-success shadow-sm">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-1">Total Quizzes</h6>
-                  <h3 className="mb-0">{analytics.overview.totalQuizzes}</h3>
-                </div>
-                <div className="fs-1">📝</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card border-warning shadow-sm">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-1">Accuracy</h6>
-                  <h3 className="mb-0">{analytics.overview.accuracyPercentage}%</h3>
-                </div>
-                <div className="fs-1">🎯</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card border-info shadow-sm">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-1">Avg Time/Q</h6>
-                  <h3 className="mb-0">
-                    {analytics.overview.averageTimePerQuestion > 0 
-                      ? `${analytics.overview.averageTimePerQuestion}s` 
-                      : 'N/A'}
-                  </h3>
-                </div>
-                <div className="fs-1">⏱️</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Weak and Strong Topics Row */}
-      <div className="row g-3 mb-4">
-        <div className="col-lg-6">
-          <div className="card shadow-sm border-warning">
-            <div className="card-header bg-warning text-dark">
-              <h5 className="mb-0">⚠️ Weak Topics (&lt;60% Accuracy)</h5>
+        {/* Weak and Strong Topics Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-yellow-300 overflow-hidden">
+            <div className="bg-yellow-500 text-gray-900 px-6 py-4">
+              <h5 className="text-lg font-bold">⚠️ Weak Topics (&lt;60% Accuracy)</h5>
             </div>
-            <div className="card-body">
+            <div className="p-6">
               {analytics.weakTopics && analytics.weakTopics.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="table table-sm mb-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr>
-                        <th>Topic</th>
-                        <th className="text-end">Avg Score</th>
-                        <th className="text-end">Attempts</th>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2">Topic</th>
+                        <th className="text-right py-2">Avg Score</th>
+                        <th className="text-right py-2">Attempts</th>
                       </tr>
                     </thead>
                     <tbody>
                       {analytics.weakTopics.map((topic, index) => (
-                        <tr key={index}>
-                          <td>{topic.name}</td>
-                          <td className="text-end">
-                            <span className="badge bg-danger">{topic.averageScore}%</span>
+                        <tr key={index} className="border-b border-gray-100">
+                          <td className="py-2">{topic.name}</td>
+                          <td className="text-right py-2">
+                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">{topic.averageScore}%</span>
                           </td>
-                          <td className="text-end">{topic.attempts}</td>
+                          <td className="text-right py-2">{topic.attempts}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <p className="text-muted mb-0">No weak topics found. Great job!</p>
+                <p className="text-gray-500">No weak topics found. Great job!</p>
               )}
               {analytics.weakCategories && analytics.weakCategories.length > 0 && (
-                <div className="mt-3">
-                  <small className="text-muted">Weak Categories:</small>
-                  <div className="d-flex flex-wrap gap-2 mt-2">
+                <div className="mt-4">
+                  <small className="text-gray-600">Weak Categories:</small>
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {analytics.weakCategories.map((cat, idx) => (
-                      <span key={idx} className="badge bg-warning text-dark">
+                      <span key={idx} className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
                         {cat.name} ({cat.averageScore}%)
                       </span>
                     ))}
@@ -343,45 +324,43 @@ export default function AdminAnalytics() {
               )}
             </div>
           </div>
-        </div>
-        <div className="col-lg-6">
-          <div className="card shadow-sm border-success">
-            <div className="card-header bg-success text-white">
-              <h5 className="mb-0">🌟 Strong Topics (≥75% Accuracy)</h5>
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-green-300 overflow-hidden">
+            <div className="bg-green-500 text-white px-6 py-4">
+              <h5 className="text-lg font-bold">🌟 Strong Topics (≥75% Accuracy)</h5>
             </div>
-            <div className="card-body">
+            <div className="p-6">
               {analytics.strongTopics && analytics.strongTopics.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="table table-sm mb-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr>
-                        <th>Topic</th>
-                        <th className="text-end">Avg Score</th>
-                        <th className="text-end">Attempts</th>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2">Topic</th>
+                        <th className="text-right py-2">Avg Score</th>
+                        <th className="text-right py-2">Attempts</th>
                       </tr>
                     </thead>
                     <tbody>
                       {analytics.strongTopics.map((topic, index) => (
-                        <tr key={index}>
-                          <td>{topic.name}</td>
-                          <td className="text-end">
-                            <span className="badge bg-success">{topic.averageScore}%</span>
+                        <tr key={index} className="border-b border-gray-100">
+                          <td className="py-2">{topic.name}</td>
+                          <td className="text-right py-2">
+                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">{topic.averageScore}%</span>
                           </td>
-                          <td className="text-end">{topic.attempts}</td>
+                          <td className="text-right py-2">{topic.attempts}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <p className="text-muted mb-0">No strong topics yet. Keep practicing!</p>
+                <p className="text-gray-500">No strong topics yet. Keep practicing!</p>
               )}
               {analytics.strongCategories && analytics.strongCategories.length > 0 && (
-                <div className="mt-3">
-                  <small className="text-muted">Strong Categories:</small>
-                  <div className="d-flex flex-wrap gap-2 mt-2">
+                <div className="mt-4">
+                  <small className="text-gray-600">Strong Categories:</small>
+                  <div className="flex flex-wrap gap-2 mt-2">
                     {analytics.strongCategories.map((cat, idx) => (
-                      <span key={idx} className="badge bg-success">
+                      <span key={idx} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
                         {cat.name} ({cat.averageScore}%)
                       </span>
                     ))}
@@ -391,88 +370,78 @@ export default function AdminAnalytics() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Charts Row 1 */}
-      <div className="row g-3 mb-4">
-        <div className="col-lg-8">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">📈 Daily Activity (Last 7 Days)</h5>
+        {/* Charts Row 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">📈 Daily Activity (Last 7 Days)</h5>
             </div>
-            <div className="card-body">
+            <div className="p-6">
               <Line data={dailyActivityData} options={chartOptions} />
             </div>
           </div>
-        </div>
-        <div className="col-lg-4">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">🎮 Quiz vs Exam Mode</h5>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">🎮 Quiz vs Exam Mode</h5>
             </div>
-            <div className="card-body">
+            <div className="p-6">
               <Doughnut data={modeData} options={chartOptions} />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Charts Row 2 */}
-      <div className="row g-3 mb-4">
-        <div className="col-lg-8">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">📚 Subject Performance</h5>
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">📚 Subject Performance</h5>
             </div>
-            <div className="card-body">
+            <div className="p-6">
               <Bar data={subjectPerformanceData} options={chartOptions} />
             </div>
           </div>
-        </div>
-        <div className="col-lg-4">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">⚡ Difficulty Distribution</h5>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">⚡ Difficulty Distribution</h5>
             </div>
-            <div className="card-body">
+            <div className="p-6">
               <Pie data={difficultyData} options={chartOptions} />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Top Performers */}
-      <div className="row g-3 mb-4">
-        <div className="col-lg-6">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">🏆 Top Performers</h5>
+        {/* Top Performers */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">🏆 Top Performers</h5>
             </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Name</th>
-                      <th>Subject</th>
-                      <th>Score</th>
-                      <th>%</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Rank</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Name</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Subject</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Score</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">%</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analytics.topPerformers.map((performer, index) => (
-                      <tr key={index}>
-                        <td>
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                        <td className="py-2">
                           {index === 0 && '🥇'}
                           {index === 1 && '🥈'}
                           {index === 2 && '🥉'}
                           {index > 2 && `#${index + 1}`}
                         </td>
-                        <td>{performer.name}</td>
-                        <td><span className="badge bg-info">{performer.subject}</span></td>
-                        <td>{performer.score}/{performer.totalQuestions}</td>
-                        <td><strong>{performer.percentage}%</strong></td>
+                        <td className="py-2">{performer.name}</td>
+                        <td className="py-2"><span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">{performer.subject}</span></td>
+                        <td className="py-2">{performer.score}/{performer.totalQuestions}</td>
+                        <td className="py-2"><strong>{performer.percentage}%</strong></td>
                       </tr>
                     ))}
                   </tbody>
@@ -480,33 +449,31 @@ export default function AdminAnalytics() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Recent Activity */}
-        <div className="col-lg-6">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">🕐 Recent Activity</h5>
+          {/* Recent Activity */}
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">🕐 Recent Activity</h5>
             </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead>
-                    <tr>
-                      <th>User</th>
-                      <th>Subject</th>
-                      <th>Score</th>
-                      <th>Mode</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">User</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Subject</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Score</th>
+                      <th className="text-left py-2 text-sm font-bold text-gray-700">Mode</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analytics.recentActivity.map((activity, index) => (
-                      <tr key={index}>
-                        <td>{activity.name}</td>
-                        <td><span className="badge bg-secondary">{activity.subject}</span></td>
-                        <td>{activity.score}/{activity.totalQuestions}</td>
-                        <td>
-                          <span className={`badge ${activity.examMode ? 'bg-warning' : 'bg-primary'}`}>
+                      <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                        <td className="py-2">{activity.name}</td>
+                        <td className="py-2"><span className="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium">{activity.subject}</span></td>
+                        <td className="py-2">{activity.score}/{activity.totalQuestions}</td>
+                        <td className="py-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${activity.examMode ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700'}`}>
                             {activity.examMode ? 'Exam' : 'Quiz'}
                           </span>
                         </td>
@@ -518,29 +485,27 @@ export default function AdminAnalytics() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Additional Stats */}
-      <div className="row g-3">
-        <div className="col-lg-6">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">📖 Questions by Subject</h5>
+        {/* Additional Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">📖 Questions by Subject</h5>
             </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-sm mb-0">
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr>
-                      <th>Subject</th>
-                      <th className="text-end">Question Count</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2">Subject</th>
+                      <th className="text-right py-2">Question Count</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analytics.questionsBySubject.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.subject}</td>
-                        <td className="text-end"><strong>{item.count}</strong></td>
+                      <tr key={index} className="border-b border-gray-100">
+                        <td className="py-2">{item.subject}</td>
+                        <td className="text-right py-2"><strong>{item.count}</strong></td>
                       </tr>
                     ))}
                   </tbody>
@@ -548,29 +513,27 @@ export default function AdminAnalytics() {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="col-lg-6">
-          <div className="card shadow-sm">
-            <div className="card-header bg-white">
-              <h5 className="mb-0">👥 User Roles</h5>
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h5 className="text-lg font-bold text-gray-900">👥 User Roles</h5>
             </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-sm mb-0">
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr>
-                      <th>Role</th>
-                      <th className="text-end">Count</th>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2">Role</th>
+                      <th className="text-right py-2">Count</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analytics.roleStats.map((item, index) => (
-                      <tr key={index}>
-                        <td>
+                      <tr key={index} className="border-b border-gray-100">
+                        <td className="py-2">
                           {item.role === 'admin' ? '👑' : '👤'} {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
                         </td>
-                        <td className="text-end"><strong>{item.count}</strong></td>
+                        <td className="text-right py-2"><strong>{item.count}</strong></td>
                       </tr>
                     ))}
                   </tbody>

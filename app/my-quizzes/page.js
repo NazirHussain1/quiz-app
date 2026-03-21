@@ -76,71 +76,71 @@ export default function MyQuizzesPage() {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="container py-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="display-6">📚 My Custom Quizzes</h1>
-        <div className="d-flex gap-2">
-          <Link href="/create-quiz" className="btn btn-success">
-            ➕ Create New Quiz
-          </Link>
-          <Link href="/" className="btn btn-outline-secondary">
-            ← Home
-          </Link>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">📚 My Custom Quizzes</h1>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Link href="/create-quiz" className="px-4 py-2 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-all duration-200 shadow-lg text-center">
+              ➕ Create New Quiz
+            </Link>
+            <Link href="/" className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 text-center">
+              ← Home
+            </Link>
+          </div>
         </div>
-      </div>
 
-      {error && (
-        <div className="alert alert-danger">{error}</div>
-      )}
+        {error && (
+          <div className="bg-red-50 border-2 border-red-200 text-red-800 rounded-xl p-4 mb-6">{error}</div>
+        )}
 
-      {quizzes.length === 0 ? (
-        <div className="card shadow text-center p-5">
-          <h3 className="text-muted">No quizzes yet</h3>
-          <p>Create your first custom quiz to get started!</p>
-          <Link href="/create-quiz" className="btn btn-primary mt-3">
-            Create Quiz
-          </Link>
-        </div>
-      ) : (
-        <div className="row">
-          {quizzes.map((quiz) => (
-            <div key={quiz._id} className="col-md-6 col-lg-4 mb-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body">
-                  <h5 className="card-title">{quiz.title}</h5>
+        {quizzes.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-xl text-center p-8 md:p-12">
+            <h3 className="text-2xl font-bold text-gray-400 mb-2">No quizzes yet</h3>
+            <p className="text-gray-600 mb-6">Create your first custom quiz to get started!</p>
+            <Link href="/create-quiz" className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg">
+              Create Quiz
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {quizzes.map((quiz) => (
+              <div key={quiz._id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 flex flex-col">
+                <div className="p-6 flex-1 flex flex-col">
+                  <h5 className="text-xl font-bold text-gray-900 mb-2">{quiz.title}</h5>
                   {quiz.description && (
-                    <p className="card-text text-muted small">{quiz.description}</p>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{quiz.description}</p>
                   )}
                   
-                  <div className="mb-3">
-                    <span className="badge bg-info me-2">{quiz.subject}</span>
-                    <span className="badge bg-warning text-dark me-2">{quiz.difficulty}</span>
-                    <span className="badge bg-secondary">{quiz.questions.length} Q's</span>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">{quiz.subject}</span>
+                    <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">{quiz.difficulty}</span>
+                    <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium">{quiz.questions.length} Q's</span>
                     {quiz.isPublic && (
-                      <span className="badge bg-success ms-2">Public</span>
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Public</span>
                     )}
                   </div>
                   
-                  <div className="small text-muted mb-3">
+                  <div className="text-sm text-gray-500 mb-4">
                     Created: {new Date(quiz.createdAt).toLocaleDateString()}
                   </div>
                   
-                  <div className="d-grid gap-2">
+                  <div className="space-y-2 mt-auto">
                     <Link 
                       href={`/custom-quiz/${quiz._id}`}
-                      className="btn btn-primary btn-sm"
+                      className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200"
                     >
                       Take Quiz
                     </Link>
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      className="w-full px-4 py-2 border-2 border-red-300 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all duration-200"
                       onClick={() => handleDelete(quiz._id)}
                     >
                       Delete
@@ -148,10 +148,10 @@ export default function MyQuizzesPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
