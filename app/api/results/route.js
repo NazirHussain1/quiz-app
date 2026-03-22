@@ -96,6 +96,9 @@ export async function POST(request) {
     const { db } = await connectToDatabase();
     const collection = db.collection('results');
     
+    // Ensure indexes exist for optimal query performance
+    await ensureIndexes(collection);
+    
     const result = await collection.insertOne({
       name: nameValidation.value,
       category,
@@ -146,32 +149,49 @@ export async function GET(request) {
     const { db } = await connectToDatabase();
     const collection = db.collection('results');
     
+    // Ensure indexes exist for optimal query performance
+    await ensureIndexes(collection);
+    
     // Build safe filter object
     const filter = {};
     
-    if (category) {
+    // Apply filters only if provided
+    if (category && category !== 'all') {
       filter.category = category;
     }
     
-    if (subject) {
+    if (subject && subject !== 'all') {
       filter.subject = subject;
     }
     
-    if (difficulty) {
+    if (difficulty && difficulty !== 'all') {
       const difficultyValidation = validateDifficulty(difficulty);
       if (difficultyValidation.valid) {
         filter.difficulty = difficultyValidation.value;
       }
     }
     
-    // Get total count for pagination
+    // Get total count for pagination (with filters applied)
     const totalCount = await collection.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / limit);
     const skip = (page - 1) * limit;
     
+    // Optimized query with projection (return only required fields)
     const results = await collection
-      .find(filter)
-      .sort({ score: -1, createdAt: -1 })
+      .find(filter, {
+        projection: {
+          name: 1,
+          score: 1,
+          totalQuestions: 1,
+          subject: 1,
+          category: 1,
+          difficulty: 1,
+          examMode: 1,
+          timeTaken: 1,
+          createdAt: 1
+        }
+      })
+      .sort({ score: -1, createdAt: 1 }) // Sort by score DESC, then by date ASC (earlier dates first for same score)
       .skip(skip)
       .limit(limit)
       .toArray();
@@ -194,5 +214,66 @@ export async function GET(request) {
       { success: false, error: 'Failed to fetch results' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Ensure database indexes exist for optimal query performance
+ * This function is idempotent - safe to call multiple times
+ */
+async function ensureIndexes(collection) {
+  try {
+    // Check if indexes already exist
+    const existingIndexes = await collection.indexes();
+    const indexNames = existingIndexes.map(idx => idx.name);
+    
+    // Create compound index for leaderboard queries (score DESC, createdAt ASC)
+    if (!indexNames.includes('leaderboard_score_date')) {
+      await collection.createIndex(
+        { score: -1, createdAt: 1 },
+        { name: 'leaderboard_score_date', background: true }
+      );
+      console.log('Created index: leaderboard_score_date');
+    }
+    
+    // Create index for subject filtering
+    if (!indexNames.includes('subject_1')) {
+      await collection.createIndex(
+        { subject: 1 },
+        { name: 'subject_1', background: true }
+      );
+      console.log('Created index: subject_1');
+    }
+    
+    // Create index for difficulty filtering
+    if (!indexNames.includes('difficulty_1')) {
+      await collection.createIndex(
+        { difficulty: 1 },
+        { name: 'difficulty_1', background: true }
+      );
+      console.log('Created index: difficulty_1');
+    }
+    
+    // Create index for category filtering
+    if (!indexNames.includes('category_1')) {
+      await collection.createIndex(
+        { category: 1 },
+        { name: 'category_1', background: true }
+      );
+      console.log('Created index: category_1');
+    }
+    
+    // Create compound index for filtered leaderboard queries
+    if (!indexNames.includes('filtered_leaderboard')) {
+      await collection.createIndex(
+        { subject: 1, difficulty: 1, score: -1, createdAt: 1 },
+        { name: 'filtered_leaderboard', background: true }
+      );
+      console.log('Created index: filtered_leaderboard');
+    }
+    
+  } catch (error) {
+    // Log error but don't fail the request
+    console.error('Error ensuring indexes:', error);
   }
 }
