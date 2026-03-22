@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { verifyToken } from '@/app/lib/jwt';
 import { findUserById } from '@/app/lib/auth';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { rateLimitApi } from '@/app/lib/rateLimit';
 
 export async function GET(request) {
   try {
+    // Rate limiting
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const token = request.cookies.get('auth-token')?.value;
     
     if (!token) {
@@ -17,9 +23,16 @@ export async function GET(request) {
       );
     }
     
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const decoded = verifyToken(token);
     
-    const user = await findUserById(payload.userId);
+    if (!decoded) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid or expired token' },
+        { status: 401 }
+      );
+    }
+    
+    const user = await findUserById(decoded.userId);
     
     if (!user) {
       return NextResponse.json(
@@ -40,7 +53,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Auth verification error:', error);
     return NextResponse.json(
-      { success: false, error: 'Invalid token' },
+      { success: false, error: 'Authentication failed' },
       { status: 401 }
     );
   }

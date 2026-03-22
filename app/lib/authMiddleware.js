@@ -1,25 +1,25 @@
-import { jwtVerify } from 'jose';
 import { NextResponse } from 'next/server';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
+import { verifyToken, extractToken } from '@/app/lib/jwt';
 
 export async function verifyAuth(request) {
   try {
-    const token = request.cookies.get('auth-token')?.value;
+    const token = request.cookies.get('auth-token')?.value || extractToken(request);
     
     if (!token) {
       return null;
     }
     
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const decoded = verifyToken(token);
+    
+    if (!decoded) {
+      return null;
+    }
     
     return {
-      userId: payload.userId,
-      email: payload.email,
-      userName: payload.userName,
-      role: payload.role || 'student' // Backward compatibility
+      userId: decoded.userId,
+      email: decoded.email,
+      userName: decoded.userName || decoded.email.split('@')[0],
+      role: decoded.role || 'student'
     };
   } catch (error) {
     return null;

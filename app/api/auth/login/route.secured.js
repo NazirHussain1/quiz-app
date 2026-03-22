@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { findUserByEmail, verifyPassword } from '@/app/lib/auth';
+import { SignJWT } from 'jose';
 import { validateEmail } from '@/app/lib/validation';
 import { rateLimitLogin } from '@/app/lib/rateLimit';
-import { SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
@@ -10,7 +10,7 @@ const JWT_SECRET = new TextEncoder().encode(
 
 export async function POST(request) {
   try {
-    // Rate limiting for login attempts
+    // Rate limiting - 5 attempts per 15 minutes
     const rateLimit = rateLimitLogin(request);
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -19,30 +19,41 @@ export async function POST(request) {
       );
     }
 
-    const body = await request.json();
+    // Parse and validate request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
     const { email, password } = body;
-    
+
     // Validate email
     const emailValidation = validateEmail(email);
     if (!emailValidation.valid) {
       return NextResponse.json(
-        { success: false, error: emailValidation.error },
-        { status: 400 }
+        { success: false, error: "Invalid credentials" },
+        { status: 401 }
       );
     }
 
     // Validate password exists
     if (!password || typeof password !== 'string') {
       return NextResponse.json(
-        { success: false, error: 'Password is required' },
-        { status: 400 }
+        { success: false, error: "Invalid credentials" },
+        { status: 401 }
       );
     }
-    
+
     // Find user with sanitized email
     const user = await findUserByEmail(emailValidation.value);
     
     if (!user) {
+      // Don't reveal if user exists or not
       return NextResponse.json(
         { success: false, error: 'Invalid credentials' },
         { status: 401 }
@@ -67,6 +78,7 @@ export async function POST(request) {
       role: user.role
     })
       .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
       .setExpirationTime('1d') // 1 day expiry
       .sign(JWT_SECRET);
     
@@ -92,10 +104,32 @@ export async function POST(request) {
   } catch (error) {
     console.error('Login error:', error);
     
-    // Don't expose internal errors
+    // Generic error without exposing internals
     return NextResponse.json(
       { success: false, error: 'Login failed. Please try again.' },
       { status: 500 }
     );
   }
+}
+
+// Reject other methods
+export async function GET() {
+  return NextResponse.json(
+    { success: false, error: 'Method not allowed' },
+    { status: 405 }
+  );
+}
+
+export async function PUT() {
+  return NextResponse.json(
+    { success: false, error: 'Method not allowed' },
+    { status: 405 }
+  );
+}
+
+export async function DELETE() {
+  return NextResponse.json(
+    { success: false, error: 'Method not allowed' },
+    { status: 405 }
+  );
 }

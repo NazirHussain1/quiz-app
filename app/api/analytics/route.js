@@ -1,19 +1,23 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
-import { verifyAuth } from '@/app/lib/authMiddleware';
+import { requireAuth } from '@/app/lib/authMiddleware';
+import { rateLimitApi } from '@/app/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
-  const user = await verifyAuth(request);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: 'Authentication required' },
-      { status: 401 }
-    );
-  }
-
+export const GET = requireAuth(async (request) => {
   try {
+    // Rate limiting
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
+    const user = request.user;
+
     const { db } = await connectToDatabase();
     const collection = db.collection('results');
     
@@ -44,9 +48,9 @@ export async function GET(request) {
     const totalScore = userResults.reduce((sum, r) => sum + r.score, 0);
     const totalQuestions = userResults.reduce((sum, r) => sum + (r.totalQuestions || r.total), 0);
     const averageScore = Math.round((totalScore / totalQuestions) * 100);
-    const accuracyPercentage = averageScore; // Same as average score
+    const accuracyPercentage = averageScore;
     
-    // Calculate average time per question (only for results with timeTaken)
+    // Calculate average time per question
     const resultsWithTime = userResults.filter(r => r.timeTaken && r.timeTaken > 0);
     let averageTimePerQuestion = 0;
     if (resultsWithTime.length > 0) {
@@ -132,7 +136,6 @@ export async function GET(request) {
       .sort((a, b) => b.average - a.average)
       .slice(0, 5);
     
-    // Add weak and strong topics based on categories as well
     const weakTopics = categoryStats
       .filter(c => c.average < 60)
       .sort((a, b) => a.average - b.average);
@@ -159,9 +162,10 @@ export async function GET(request) {
       }
     });
   } catch (error) {
+    console.error('Error fetching analytics:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to fetch analytics' },
       { status: 500 }
     );
   }
-}
+});

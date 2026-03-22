@@ -2,34 +2,67 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { requireAdmin } from '@/app/lib/authMiddleware';
-import { validateSubject } from '@/app/lib/models/Question';
+import {
+  validateSubject,
+  validateDifficulty,
+  validateCategory,
+  validateQuestion,
+  validateOptions,
+  validateCorrectAnswer,
+  validateObjectId,
+  sanitizeString
+} from '@/app/lib/validation';
+import { rateLimitApi } from '@/app/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export const GET = requireAdmin(async (request) => {
   try {
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const subject = searchParams.get('subject');
-    const difficulty = searchParams.get('difficulty');
-    const search = searchParams.get('search');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    
+    const category = sanitizeString(searchParams.get('category') || '');
+    const subject = sanitizeString(searchParams.get('subject') || '');
+    const difficulty = sanitizeString(searchParams.get('difficulty') || '');
+    const search = sanitizeString(searchParams.get('search') || '');
+    
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20')));
     
     const { db } = await connectToDatabase();
     const collection = db.collection('questions');
     
     const filter = {};
-    if (category && category !== 'all') filter.category = category;
-    if (subject && subject !== 'all') filter.subject = subject;
-    if (difficulty && difficulty !== 'all') filter.difficulty = difficulty;
     
-    // Add keyword search for question text
-    if (search && search.trim()) {
-      filter.question = { $regex: search.trim(), $options: 'i' };
+    if (category && category !== 'all') {
+      filter.category = category;
     }
     
-    // Get total count for pagination
+    if (subject && subject !== 'all') {
+      const subjectValidation = validateSubject(subject);
+      if (subjectValidation.valid) {
+        filter.subject = subjectValidation.value;
+      }
+    }
+    
+    if (difficulty && difficulty !== 'all') {
+      const difficultyValidation = validateDifficulty(difficulty);
+      if (difficultyValidation.valid) {
+        filter.difficulty = difficultyValidation.value;
+      }
+    }
+    
+    if (search) {
+      filter.question = { $regex: search, $options: 'i' };
+    }
+    
     const totalCount = await collection.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / limit);
     const skip = (page - 1) * limit;
@@ -50,8 +83,9 @@ export const GET = requireAdmin(async (request) => {
       questions 
     });
   } catch (error) {
+    console.error('GET questions error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to fetch questions' },
       { status: 500 }
     );
   }
@@ -59,11 +93,20 @@ export const GET = requireAdmin(async (request) => {
 
 export const POST = requireAdmin(async (request) => {
   try {
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     
-    if (!body.category || !body.subject || !body.question || !body.options || !body.correctAnswer) {
+    const categoryValidation = validateCategory(body.category);
+    if (!categoryValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: category, subject, question, options, and correctAnswer are required' },
+        { success: false, error: categoryValidation.error },
         { status: 400 }
       );
     }
@@ -76,24 +119,37 @@ export const POST = requireAdmin(async (request) => {
       );
     }
     
-    if (!Array.isArray(body.options) || body.options.length !== 4) {
+    const difficultyValidation = validateDifficulty(body.difficulty || 'medium');
+    if (!difficultyValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Question must have exactly 4 options' },
+        { success: false, error: difficultyValidation.error },
         { status: 400 }
       );
     }
     
-    // Validate all options are non-empty strings
-    if (body.options.some(opt => !opt || typeof opt !== 'string' || opt.trim() === '')) {
+    const questionValidation = validateQuestion(body.question);
+    if (!questionValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'All options must be non-empty strings' },
+        { success: false, error: questionValidation.error },
         { status: 400 }
       );
     }
     
-    if (!body.options.includes(body.correctAnswer)) {
+    const optionsValidation = validateOptions(body.options);
+    if (!optionsValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Correct answer must exactly match one of the 4 options' },
+        { success: false, error: optionsValidation.error },
+        { status: 400 }
+      );
+    }
+    
+    const correctAnswerValidation = validateCorrectAnswer(
+      body.correctAnswer, 
+      optionsValidation.value
+    );
+    if (!correctAnswerValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: correctAnswerValidation.error },
         { status: 400 }
       );
     }
@@ -101,9 +157,8 @@ export const POST = requireAdmin(async (request) => {
     const { db } = await connectToDatabase();
     const collection = db.collection('questions');
     
-    // Check for duplicate question
     const existingQuestion = await collection.findOne({ 
-      question: body.question.trim() 
+      question: questionValidation.value
     });
     
     if (existingQuestion) {
@@ -114,25 +169,26 @@ export const POST = requireAdmin(async (request) => {
     }
     
     const result = await collection.insertOne({
-      category: body.category,
-      subject: body.subject,
-      topic: body.topic || '',
-      difficulty: body.difficulty || 'medium',
-      question: body.question.trim(),
-      options: body.options,
-      correctAnswer: body.correctAnswer,
+      category: categoryValidation.value,
+      subject: subjectValidation.value,
+      topic: body.topic ? sanitizeString(body.topic) : '',
+      difficulty: difficultyValidation.value,
+      question: questionValidation.value,
+      options: optionsValidation.value,
+      correctAnswer: correctAnswerValidation.value,
       createdAt: new Date(),
       updatedAt: new Date()
     });
     
     return NextResponse.json({ 
       success: true, 
-      questionId: result.insertedId,
+      questionId: result.insertedId.toString(),
       message: 'Question added successfully'
     }, { status: 201 });
   } catch (error) {
+    console.error('POST question error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to add question' },
       { status: 500 }
     );
   }
@@ -140,13 +196,35 @@ export const POST = requireAdmin(async (request) => {
 
 export const PUT = requireAdmin(async (request) => {
   try {
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     
-    if (!body._id) {
+    const idValidation = validateObjectId(body._id);
+    if (!idValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Question ID is required' },
+        { success: false, error: idValidation.error },
         { status: 400 }
       );
+    }
+    
+    const updateFields = { updatedAt: new Date() };
+    
+    if (body.category) {
+      const categoryValidation = validateCategory(body.category);
+      if (!categoryValidation.valid) {
+        return NextResponse.json(
+          { success: false, error: categoryValidation.error },
+          { status: 400 }
+        );
+      }
+      updateFields.category = categoryValidation.value;
     }
     
     if (body.subject) {
@@ -157,40 +235,67 @@ export const PUT = requireAdmin(async (request) => {
           { status: 400 }
         );
       }
+      updateFields.subject = subjectValidation.value;
+    }
+    
+    if (body.difficulty) {
+      const difficultyValidation = validateDifficulty(body.difficulty);
+      if (!difficultyValidation.valid) {
+        return NextResponse.json(
+          { success: false, error: difficultyValidation.error },
+          { status: 400 }
+        );
+      }
+      updateFields.difficulty = difficultyValidation.value;
+    }
+    
+    if (body.question) {
+      const questionValidation = validateQuestion(body.question);
+      if (!questionValidation.valid) {
+        return NextResponse.json(
+          { success: false, error: questionValidation.error },
+          { status: 400 }
+        );
+      }
+      updateFields.question = questionValidation.value;
     }
     
     if (body.options) {
-      if (!Array.isArray(body.options) || body.options.length !== 4) {
+      const optionsValidation = validateOptions(body.options);
+      if (!optionsValidation.valid) {
         return NextResponse.json(
-          { success: false, error: 'Question must have exactly 4 options' },
+          { success: false, error: optionsValidation.error },
           { status: 400 }
         );
       }
+      updateFields.options = optionsValidation.value;
       
-      // Validate all options are non-empty strings
-      if (body.options.some(opt => !opt || typeof opt !== 'string' || opt.trim() === '')) {
-        return NextResponse.json(
-          { success: false, error: 'All options must be non-empty strings' },
-          { status: 400 }
+      if (body.correctAnswer) {
+        const correctAnswerValidation = validateCorrectAnswer(
+          body.correctAnswer,
+          optionsValidation.value
         );
+        if (!correctAnswerValidation.valid) {
+          return NextResponse.json(
+            { success: false, error: correctAnswerValidation.error },
+            { status: 400 }
+          );
+        }
+        updateFields.correctAnswer = correctAnswerValidation.value;
       }
     }
     
-    if (body.options && body.correctAnswer && !body.options.includes(body.correctAnswer)) {
-      return NextResponse.json(
-        { success: false, error: 'Correct answer must exactly match one of the 4 options' },
-        { status: 400 }
-      );
+    if (body.topic) {
+      updateFields.topic = sanitizeString(body.topic);
     }
     
     const { db } = await connectToDatabase();
     const collection = db.collection('questions');
     
-    // Check for duplicate question if question text is being updated
-    if (body.question) {
+    if (updateFields.question) {
       const existingQuestion = await collection.findOne({ 
-        question: body.question.trim(),
-        _id: { $ne: new ObjectId(body._id) }
+        question: updateFields.question,
+        _id: { $ne: new ObjectId(idValidation.value) }
       });
       
       if (existingQuestion) {
@@ -201,15 +306,9 @@ export const PUT = requireAdmin(async (request) => {
       }
     }
     
-    const { _id, ...updateData } = body;
-    if (updateData.question) {
-      updateData.question = updateData.question.trim();
-    }
-    updateData.updatedAt = new Date();
-    
     const result = await collection.updateOne(
-      { _id: new ObjectId(_id) },
-      { $set: updateData }
+      { _id: new ObjectId(idValidation.value) },
+      { $set: updateFields }
     );
     
     if (result.matchedCount === 0) {
@@ -220,12 +319,13 @@ export const PUT = requireAdmin(async (request) => {
     }
     
     return NextResponse.json({ 
-      success: true,
+      success: true, 
       message: 'Question updated successfully'
     });
   } catch (error) {
+    console.error('PUT question error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to update question' },
       { status: 500 }
     );
   }
@@ -233,12 +333,21 @@ export const PUT = requireAdmin(async (request) => {
 
 export const DELETE = requireAdmin(async (request) => {
   try {
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
-    if (!id) {
+    const idValidation = validateObjectId(id);
+    if (!idValidation.valid) {
       return NextResponse.json(
-        { success: false, error: 'Question ID is required' },
+        { success: false, error: idValidation.error },
         { status: 400 }
       );
     }
@@ -246,7 +355,9 @@ export const DELETE = requireAdmin(async (request) => {
     const { db } = await connectToDatabase();
     const collection = db.collection('questions');
     
-    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+    const result = await collection.deleteOne({ 
+      _id: new ObjectId(idValidation.value) 
+    });
     
     if (result.deletedCount === 0) {
       return NextResponse.json(
@@ -256,12 +367,13 @@ export const DELETE = requireAdmin(async (request) => {
     }
     
     return NextResponse.json({ 
-      success: true,
+      success: true, 
       message: 'Question deleted successfully'
     });
   } catch (error) {
+    console.error('DELETE question error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to delete question' },
       { status: 500 }
     );
   }

@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/mongodb';
 import { requireAdmin } from '@/app/lib/authMiddleware';
+import { rateLimitApi } from '@/app/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export const GET = requireAdmin(async (request) => {
   try {
+    // Rate limiting
+    const rateLimit = rateLimitApi(request);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { db } = await connectToDatabase();
     
     // Get collections
@@ -244,7 +254,7 @@ export const GET = requireAdmin(async (request) => {
     // 13. Overall Accuracy Percentage
     const accuracyPercentage = Math.round(averageScore);
 
-    // 14. Average Time Per Question (from results with timeTaken)
+    // 14. Average Time Per Question
     const timeStats = await resultsCollection.aggregate([
       {
         $match: {
@@ -264,7 +274,7 @@ export const GET = requireAdmin(async (request) => {
       ? Math.round(timeStats[0].totalTime / timeStats[0].totalQuestions)
       : 0;
 
-    // 15. Weak Topics (subjects with <60% average)
+    // 15. Weak Topics
     const weakTopics = subjectStats
       .filter(s => s.averageScore < 60)
       .sort((a, b) => a.averageScore - b.averageScore)
@@ -274,7 +284,7 @@ export const GET = requireAdmin(async (request) => {
         attempts: s.totalAttempts
       }));
 
-    // 16. Strong Topics (subjects with >=75% average)
+    // 16. Strong Topics
     const strongTopics = subjectStats
       .filter(s => s.averageScore >= 75)
       .sort((a, b) => b.averageScore - a.averageScore)
@@ -284,7 +294,7 @@ export const GET = requireAdmin(async (request) => {
         attempts: s.totalAttempts
       }));
 
-    // 17. Weak Categories (categories with <60% average)
+    // 17. Category Performance
     const categoryPerformance = await resultsCollection.aggregate([
       {
         $group: {
@@ -349,8 +359,9 @@ export const GET = requireAdmin(async (request) => {
     });
 
   } catch (error) {
+    console.error('Error fetching admin analytics:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: 'Failed to fetch analytics' },
       { status: 500 }
     );
   }
