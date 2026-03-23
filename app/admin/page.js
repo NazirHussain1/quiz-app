@@ -344,11 +344,12 @@ export default function AdminPanel() {
 
         <div className="mb-6">
           <button
-            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-green-300"
             onClick={() => {
               resetForm();
               setShowForm(true);
             }}
+            aria-label="Add new question"
           >
             <Plus className="w-6 h-6" />
             Add New Question
@@ -363,6 +364,9 @@ export default function AdminPanel() {
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
               onClick={resetForm}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -373,12 +377,13 @@ export default function AdminPanel() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 flex justify-between items-center rounded-t-2xl z-10">
-                  <h5 className="text-xl font-bold">
+                  <h5 id="modal-title" className="text-xl font-bold">
                     {editingQuestion ? "✏️ Edit Question" : "➕ Add New Question"}
                   </h5>
                   <button
                     onClick={resetForm}
-                    className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200"
+                    className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+                    aria-label="Close modal"
                   >
                     <X className="w-6 h-6" />
                   </button>
@@ -401,9 +406,13 @@ export default function AdminPanel() {
                           value={formData.category}
                           onChange={handleInputChange}
                           placeholder="e.g., Intermediate"
+                          aria-label="Category"
+                          aria-required="true"
+                          aria-invalid={!!formErrors.category}
+                          aria-describedby={formErrors.category ? "category-error" : undefined}
                         />
                         {formErrors.category && (
-                          <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
+                          <p id="category-error" className="text-red-500 text-xs mt-1" role="alert">{formErrors.category}</p>
                         )}
                       </div>
                       <div>
@@ -421,9 +430,13 @@ export default function AdminPanel() {
                           value={formData.subject}
                           onChange={handleInputChange}
                           placeholder="e.g., Mathematics"
+                          aria-label="Subject"
+                          aria-required="true"
+                          aria-invalid={!!formErrors.subject}
+                          aria-describedby={formErrors.subject ? "subject-error" : undefined}
                         />
                         {formErrors.subject && (
-                          <p className="text-red-500 text-xs mt-1">{formErrors.subject}</p>
+                          <p id="subject-error" className="text-red-500 text-xs mt-1" role="alert">{formErrors.subject}</p>
                         )}
                       </div>
                     </div>
@@ -530,7 +543,8 @@ export default function AdminPanel() {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-blue-300"
+                        aria-label={editingQuestion ? "Update question" : "Add question"}
                       >
                         {isSubmitting ? (
                           <>
@@ -545,9 +559,10 @@ export default function AdminPanel() {
                       </button>
                       <button
                         type="button"
-                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-300"
                         onClick={resetForm}
                         disabled={isSubmitting}
+                        aria-label="Cancel"
                       >
                         Cancel
                       </button>
@@ -575,6 +590,7 @@ export default function AdminPanel() {
                 placeholder="Search question text..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
+                aria-label="Search questions"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -584,6 +600,7 @@ export default function AdminPanel() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
                   value={filterSubject}
                   onChange={(e) => setFilterSubject(e.target.value)}
+                  aria-label="Filter by subject"
                 >
                   <option value="all">All Subjects</option>
                   {subjects.map((subj) => (
@@ -599,6 +616,7 @@ export default function AdminPanel() {
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
                   value={filterDifficulty}
                   onChange={(e) => setFilterDifficulty(e.target.value)}
+                  aria-label="Filter by difficulty"
                 >
                   <option value="all">All Difficulties</option>
                   <option value="easy">Easy</option>
@@ -686,16 +704,18 @@ export default function AdminPanel() {
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 group-hover:scale-110"
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 group-hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             onClick={() => handleEdit(q)}
                             title="Edit Question"
+                            aria-label={`Edit question: ${q.question}`}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 group-hover:scale-110"
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 group-hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500"
                             onClick={() => handleDelete(q._id)}
                             title="Delete Question"
+                            aria-label={`Delete question: ${q.question}`}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -713,13 +733,14 @@ export default function AdminPanel() {
                 <ul className="flex justify-center items-center gap-2 flex-wrap">
                   <li>
                     <button 
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-4 ${
                         currentPage === 1 
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                          : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed focus:ring-gray-300' 
+                          : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 focus:ring-blue-300'
                       }`}
                       onClick={() => setCurrentPage(currentPage - 1)}
                       disabled={currentPage === 1}
+                      aria-label="Previous page"
                     >
                       <ChevronLeft className="w-4 h-4" />
                       Previous
@@ -735,12 +756,14 @@ export default function AdminPanel() {
                       return (
                         <li key={pageNum}>
                           <button 
-                            className={`min-w-[40px] px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                            className={`min-w-[40px] px-4 py-2 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-4 ${
                               currentPage === pageNum 
-                                ? 'bg-blue-600 text-white shadow-lg scale-110' 
-                                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400'
+                                ? 'bg-blue-600 text-white shadow-lg scale-110 focus:ring-blue-300' 
+                                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400 focus:ring-gray-300'
                             }`}
                             onClick={() => setCurrentPage(pageNum)}
+                            aria-label={`Go to page ${pageNum}`}
+                            aria-current={currentPage === pageNum ? "page" : undefined}
                           >
                             {pageNum}
                           </button>
@@ -753,13 +776,14 @@ export default function AdminPanel() {
                   })}
                   <li>
                     <button 
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 focus:outline-none focus:ring-4 ${
                         currentPage === totalPages 
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                          : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed focus:ring-gray-300' 
+                          : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 focus:ring-blue-300'
                       }`}
                       onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
+                      aria-label="Next page"
                     >
                       Next
                       <ChevronRight className="w-4 h-4" />

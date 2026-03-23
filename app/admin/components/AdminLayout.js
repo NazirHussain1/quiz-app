@@ -49,6 +49,8 @@ export default function AdminLayout({ children, user }) {
           } bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out fixed lg:relative h-full z-30 ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
+          role="navigation"
+          aria-label="Main navigation"
         >
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -59,7 +61,9 @@ export default function AdminLayout({ children, user }) {
               )}
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                aria-expanded={!sidebarCollapsed}
               >
                 {sidebarCollapsed ? (
                   <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -69,7 +73,8 @@ export default function AdminLayout({ children, user }) {
               </button>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Close menu"
               >
                 <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
@@ -85,12 +90,14 @@ export default function AdminLayout({ children, user }) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       active
                         ? 'bg-blue-600 text-white shadow-lg'
                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                     } ${sidebarCollapsed ? 'justify-center' : ''}`}
                     title={sidebarCollapsed ? item.label : ''}
+                    aria-label={item.label}
+                    aria-current={active ? 'page' : undefined}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     {!sidebarCollapsed && (
@@ -105,10 +112,11 @@ export default function AdminLayout({ children, user }) {
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   sidebarCollapsed ? 'justify-center' : ''
                 }`}
                 title={sidebarCollapsed ? 'Home' : ''}
+                aria-label="Go to home page"
               >
                 <Home className="w-5 h-5 flex-shrink-0" />
                 {!sidebarCollapsed && <span className="font-medium">Home</span>}
@@ -116,10 +124,11 @@ export default function AdminLayout({ children, user }) {
               <Link
                 href="/api/auth/logout"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 ${
                   sidebarCollapsed ? 'justify-center' : ''
                 }`}
                 title={sidebarCollapsed ? 'Logout' : ''}
+                aria-label="Logout"
               >
                 <LogOut className="w-5 h-5 flex-shrink-0" />
                 {!sidebarCollapsed && <span className="font-medium">Logout</span>}
@@ -136,12 +145,14 @@ export default function AdminLayout({ children, user }) {
         )}
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4">
+          <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4" role="banner">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setMobileMenuOpen(true)}
-                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Open menu"
+                  aria-expanded={mobileMenuOpen}
                 >
                   <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
                 </button>
@@ -158,8 +169,9 @@ export default function AdminLayout({ children, user }) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                   title={darkMode ? 'Light Mode' : 'Dark Mode'}
+                  aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                 >
                   {darkMode ? (
                     <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -187,7 +199,7 @@ export default function AdminLayout({ children, user }) {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 lg:p-6">
+          <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 lg:p-6" role="main">
             {children}
           </main>
         </div>

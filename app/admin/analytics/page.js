@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Users, FileText, Target, Clock, TrendingUp, Award, RefreshCw } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
 import {
   Chart as ChartJS,
@@ -121,7 +122,7 @@ export default function AdminAnalytics() {
             <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
               <h4 className="text-xl font-bold text-red-800 mb-2">Error</h4>
               <p className="text-red-700 mb-4">{error}</p>
-              <button onClick={fetchAnalytics} className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200">
+              <button onClick={fetchAnalytics} className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-red-300" aria-label="Retry loading analytics">
                 Retry
               </button>
             </div>
@@ -215,74 +216,202 @@ export default function AdminAnalytics() {
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          padding: 15
+        }
       },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        cornerRadius: 8
+      }
     },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
+    }
   };
+
+  const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          padding: 15
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        cornerRadius: 8
+      }
+    }
+  };
+
+  const mostAttemptedSubject = useMemo(() => {
+    if (!analytics?.subjectStats || analytics.subjectStats.length === 0) return 'N/A';
+    const sorted = [...analytics.subjectStats].sort((a, b) => b.totalAttempts - a.totalAttempts);
+    return sorted[0]?.subject || 'N/A';
+  }, [analytics]);
+
+  const averageScore = useMemo(() => {
+    if (!analytics?.overview) return 0;
+    return analytics.overview.accuracyPercentage || 0;
+  }, [analytics]);
 
   return (
     <AdminLayout user={user}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">📊 Analytics Dashboard</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">📊 Analytics Dashboard</h2>
             <p className="text-gray-600">Comprehensive system insights and statistics</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-            <button onClick={fetchAnalytics} className="px-4 py-2 border-2 border-blue-300 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 text-center">
-              🔄 Refresh
-            </button>
+          <button 
+            onClick={fetchAnalytics} 
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300"
+            aria-label="Refresh analytics data"
+          >
+            <RefreshCw className="w-5 h-5" />
+            Refresh Data
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-6 text-white transform hover:scale-105 transition-transform duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <FileText className="w-8 h-8" />
+              </div>
+              <TrendingUp className="w-6 h-6 opacity-50" />
+            </div>
+            <h3 className="text-sm font-semibold opacity-90 mb-1">Total Quizzes</h3>
+            <p className="text-4xl font-bold">{analytics.overview.totalQuizzes.toLocaleString()}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md p-6 text-white transform hover:scale-105 transition-transform duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <Users className="w-8 h-8" />
+              </div>
+              <TrendingUp className="w-6 h-6 opacity-50" />
+            </div>
+            <h3 className="text-sm font-semibold opacity-90 mb-1">Total Users</h3>
+            <p className="text-4xl font-bold">{analytics.overview.totalUsers.toLocaleString()}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md p-6 text-white transform hover:scale-105 transition-transform duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <Award className="w-8 h-8" />
+              </div>
+              <TrendingUp className="w-6 h-6 opacity-50" />
+            </div>
+            <h3 className="text-sm font-semibold opacity-90 mb-1">Most Attempted</h3>
+            <p className="text-2xl font-bold truncate">{mostAttemptedSubject}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-md p-6 text-white transform hover:scale-105 transition-transform duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-white bg-opacity-20 rounded-lg">
+                <Target className="w-8 h-8" />
+              </div>
+              <TrendingUp className="w-6 h-6 opacity-50" />
+            </div>
+            <h3 className="text-sm font-semibold opacity-90 mb-1">Average Score</h3>
+            <p className="text-4xl font-bold">{averageScore}%</p>
           </div>
         </div>
 
-        {/* Overview Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-300 p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h6 className="text-sm text-gray-600 mb-1">Total Users</h6>
-                <h3 className="text-3xl font-bold text-gray-900">{analytics.overview.totalUsers}</h3>
-              </div>
-              <div className="text-5xl">👥</div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Difficulty Distribution
+              </h5>
+            </div>
+            <div className="p-6">
+              <Pie data={difficultyData} options={pieChartOptions} />
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-green-300 p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h6 className="text-sm text-gray-600 mb-1">Total Quizzes</h6>
-                <h3 className="text-3xl font-bold text-gray-900">{analytics.overview.totalQuizzes}</h3>
-              </div>
-              <div className="text-5xl">📝</div>
+
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Subject Performance
+              </h5>
             </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-yellow-300 p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h6 className="text-sm text-gray-600 mb-1">Accuracy</h6>
-                <h3 className="text-3xl font-bold text-gray-900">{analytics.overview.accuracyPercentage}%</h3>
-              </div>
-              <div className="text-5xl">🎯</div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-blue-300 p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h6 className="text-sm text-gray-600 mb-1">Avg Time/Q</h6>
-                <h3 className="text-3xl font-bold text-gray-900">
-                  {analytics.overview.averageTimePerQuestion > 0 
-                    ? `${analytics.overview.averageTimePerQuestion}s` 
-                    : 'N/A'}
-                </h3>
-              </div>
-              <div className="text-5xl">⏱️</div>
+            <div className="p-6">
+              <Bar data={subjectPerformanceData} options={chartOptions} />
             </div>
           </div>
         </div>
 
-        {/* Weak and Strong Topics Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-yellow-300 overflow-hidden">
-            <div className="bg-yellow-500 text-gray-900 px-6 py-4">
-              <h5 className="text-lg font-bold">⚠️ Weak Topics (&lt;60% Accuracy)</h5>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Daily Activity (Last 7 Days)
+              </h5>
+            </div>
+            <div className="p-6">
+              <Line data={dailyActivityData} options={chartOptions} />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Quiz vs Exam Mode
+              </h5>
+            </div>
+            <div className="p-6">
+              <Doughnut data={modeData} options={pieChartOptions} />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4">
+              <h5 className="text-lg font-bold text-white">⚠️ Weak Topics (&lt;60% Accuracy)</h5>
             </div>
             <div className="p-6">
               {analytics.weakTopics && analytics.weakTopics.length > 0 ? (
@@ -325,9 +454,9 @@ export default function AdminAnalytics() {
               )}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-green-300 overflow-hidden">
-            <div className="bg-green-500 text-white px-6 py-4">
-              <h5 className="text-lg font-bold">🌟 Strong Topics (≥75% Accuracy)</h5>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 px-6 py-4">
+              <h5 className="text-lg font-bold text-white">🌟 Strong Topics (≥75% Accuracy)</h5>
             </div>
             <div className="p-6">
               {analytics.strongTopics && analytics.strongTopics.length > 0 ? (
@@ -372,51 +501,39 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">📈 Daily Activity (Last 7 Days)</h5>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Difficulty Distribution
+              </h5>
             </div>
             <div className="p-6">
-              <Line data={dailyActivityData} options={chartOptions} />
+              <Pie data={difficultyData} options={pieChartOptions} />
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">🎮 Quiz vs Exam Mode</h5>
-            </div>
-            <div className="p-6">
-              <Doughnut data={modeData} options={chartOptions} />
-            </div>
-          </div>
-        </div>
 
-        {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">📚 Subject Performance</h5>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                Subject Performance
+              </h5>
             </div>
             <div className="p-6">
               <Bar data={subjectPerformanceData} options={chartOptions} />
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">⚡ Difficulty Distribution</h5>
-            </div>
-            <div className="p-6">
-              <Pie data={difficultyData} options={chartOptions} />
-            </div>
-          </div>
         </div>
 
-        {/* Top Performers */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">🏆 Top Performers</h5>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Award className="w-5 h-5" />
+                Top Performers
+              </h5>
             </div>
             <div className="p-6">
               <div className="overflow-x-auto">
@@ -451,10 +568,12 @@ export default function AdminAnalytics() {
             </div>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">🕐 Recent Activity</h5>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-pink-600 to-pink-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Recent Activity
+              </h5>
             </div>
             <div className="p-6">
               <div className="overflow-x-auto">
@@ -487,11 +606,13 @@ export default function AdminAnalytics() {
           </div>
         </div>
 
-        {/* Additional Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">📖 Questions by Subject</h5>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Questions by Subject
+              </h5>
             </div>
             <div className="p-6">
               <div className="overflow-x-auto">
@@ -515,9 +636,12 @@ export default function AdminAnalytics() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h5 className="text-lg font-bold text-gray-900">👥 User Roles</h5>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-gradient-to-r from-cyan-600 to-cyan-700 px-6 py-4">
+              <h5 className="text-lg font-bold text-white flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                User Roles
+              </h5>
             </div>
             <div className="p-6">
               <div className="overflow-x-auto">
