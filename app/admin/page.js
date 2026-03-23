@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { Search, Edit2, Trash2, ChevronLeft, ChevronRight, Loader2, X, Plus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import AdminLayout from "./components/AdminLayout";
 
 export default function AdminPanel() {
@@ -39,6 +41,9 @@ export default function AdminPanel() {
     option4: "",
     correctAnswer: ""
   });
+
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Role-based access control
   useEffect(() => {
@@ -145,14 +150,75 @@ export default function AdminPanel() {
   };
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    if (formErrors[name]) {
+      setFormErrors({
+        ...formErrors,
+        [name]: ""
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.category.trim()) {
+      errors.category = "Category is required";
+    }
+    
+    if (!formData.subject.trim()) {
+      errors.subject = "Subject is required";
+    }
+    
+    if (!formData.question.trim()) {
+      errors.question = "Question is required";
+    }
+    
+    if (!formData.option1.trim()) {
+      errors.option1 = "Option 1 is required";
+    }
+    
+    if (!formData.option2.trim()) {
+      errors.option2 = "Option 2 is required";
+    }
+    
+    if (!formData.option3.trim()) {
+      errors.option3 = "Option 3 is required";
+    }
+    
+    if (!formData.option4.trim()) {
+      errors.option4 = "Option 4 is required";
+    }
+    
+    if (!formData.correctAnswer.trim()) {
+      errors.correctAnswer = "Correct answer is required";
+    } else {
+      const options = [
+        formData.option1,
+        formData.option2,
+        formData.option3,
+        formData.option4
+      ];
+      if (!options.includes(formData.correctAnswer)) {
+        errors.correctAnswer = "Correct answer must match one of the options";
+      }
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast.error("Please fix the errors in the form");
+      return;
+    }
     
     const options = [
       formData.option1,
@@ -160,16 +226,6 @@ export default function AdminPanel() {
       formData.option3,
       formData.option4
     ];
-    
-    if (options.some(opt => !opt.trim())) {
-      toast.error("All 4 options are required!");
-      return;
-    }
-    
-    if (!options.includes(formData.correctAnswer)) {
-      toast.error("Correct answer must match one of the options!");
-      return;
-    }
     
     const questionData = {
       category: formData.category,
@@ -182,6 +238,7 @@ export default function AdminPanel() {
     };
     
     try {
+      setIsSubmitting(true);
       let res;
       if (editingQuestion) {
         questionData._id = editingQuestion._id;
@@ -201,14 +258,16 @@ export default function AdminPanel() {
       const data = await res.json();
       
       if (data.success) {
-        toast.success(data.message);
+        toast.success(data.message || (editingQuestion ? "Question updated successfully!" : "Question created successfully!"));
         resetForm();
         fetchQuestions();
       } else {
-        toast.error(data.error);
+        toast.error(data.error || "Failed to save question");
       }
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -226,8 +285,8 @@ export default function AdminPanel() {
       option4: question.options[3],
       correctAnswer: question.correctAnswer
     });
+    setFormErrors({});
     setShowForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id) => {
@@ -266,6 +325,7 @@ export default function AdminPanel() {
       option4: "",
       correctAnswer: ""
     });
+    setFormErrors({});
     setEditingQuestion(null);
     setShowForm(false);
   };
@@ -284,203 +344,244 @@ export default function AdminPanel() {
 
         <div className="mb-6">
           <button
-            className="w-full bg-green-500 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 transition-all duration-200 shadow-lg"
+            className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-xl font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
             onClick={() => {
               resetForm();
-              setShowForm(!showForm);
+              setShowForm(true);
             }}
           >
-            {showForm ? "✖ Cancel" : "+ Add New Question"}
+            <Plus className="w-6 h-6" />
+            Add New Question
           </button>
         </div>
 
-        {showForm && (
-          <div className="bg-white rounded-2xl shadow-xl mb-6 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4">
-              <h5 className="text-xl font-bold">
-                {editingQuestion ? "✏️ Edit Question" : "➕ Add New Question"}
-              </h5>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Category *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="category"
-                      value={formData.category}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="e.g., Intermediate"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Subject *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="e.g., Mathematics"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Topic</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="topic"
-                      value={formData.topic}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Algebra"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Difficulty *</label>
-                  <select
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                    name="difficulty"
-                    value={formData.difficulty}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Question *</label>
-                  <textarea
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                    name="question"
-                    value={formData.question}
-                    onChange={handleInputChange}
-                    required
-                    rows="3"
-                    placeholder="Enter your question here..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 1 *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="option1"
-                      value={formData.option1}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 2 *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="option2"
-                      value={formData.option2}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 3 *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="option3"
-                      value={formData.option3}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Option 4 *</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                      name="option4"
-                      value={formData.option4}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Correct Answer *</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                    name="correctAnswer"
-                    value={formData.correctAnswer}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Must match one of the options above"
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg">
-                    {editingQuestion ? "💾 Update Question" : "➕ Add Question"}
-                  </button>
+        <AnimatePresence>
+          {showForm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+              onClick={resetForm}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 flex justify-between items-center rounded-t-2xl z-10">
+                  <h5 className="text-xl font-bold">
+                    {editingQuestion ? "✏️ Edit Question" : "➕ Add New Question"}
+                  </h5>
                   <button
-                    type="button"
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
                     onClick={resetForm}
+                    className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-all duration-200"
                   >
-                    Cancel
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
+                <div className="p-6">
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Category <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all duration-200 outline-none ${
+                            formErrors.category
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                              : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                          }`}
+                          name="category"
+                          value={formData.category}
+                          onChange={handleInputChange}
+                          placeholder="e.g., Intermediate"
+                        />
+                        {formErrors.category && (
+                          <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Subject <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all duration-200 outline-none ${
+                            formErrors.subject
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                              : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                          }`}
+                          name="subject"
+                          value={formData.subject}
+                          onChange={handleInputChange}
+                          placeholder="e.g., Mathematics"
+                        />
+                        {formErrors.subject && (
+                          <p className="text-red-500 text-xs mt-1">{formErrors.subject}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">Topic</label>
+                        <input
+                          type="text"
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                          name="topic"
+                          value={formData.topic}
+                          onChange={handleInputChange}
+                          placeholder="e.g., Algebra"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          Difficulty <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
+                          name="difficulty"
+                          value={formData.difficulty}
+                          onChange={handleInputChange}
+                        >
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Question <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all duration-200 outline-none ${
+                          formErrors.question
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                            : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                        }`}
+                        name="question"
+                        value={formData.question}
+                        onChange={handleInputChange}
+                        rows="3"
+                        placeholder="Enter your question here..."
+                      />
+                      {formErrors.question && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.question}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="block text-sm font-bold text-gray-700">
+                        Options <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {[1, 2, 3, 4].map((num) => (
+                          <div key={num}>
+                            <input
+                              type="text"
+                              className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all duration-200 outline-none ${
+                                formErrors[`option${num}`]
+                                  ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                                  : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                              }`}
+                              name={`option${num}`}
+                              value={formData[`option${num}`]}
+                              onChange={handleInputChange}
+                              placeholder={`Option ${num}`}
+                            />
+                            {formErrors[`option${num}`] && (
+                              <p className="text-red-500 text-xs mt-1">{formErrors[`option${num}`]}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                        Correct Answer <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-4 transition-all duration-200 outline-none ${
+                          formErrors.correctAnswer
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                            : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                        }`}
+                        name="correctAnswer"
+                        value={formData.correctAnswer}
+                        onChange={handleInputChange}
+                        placeholder="Must match one of the options above"
+                      />
+                      {formErrors.correctAnswer && (
+                        <p className="text-red-500 text-xs mt-1">{formErrors.correctAnswer}</p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            {editingQuestion ? "💾 Update Question" : "➕ Add Question"}
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                        onClick={resetForm}
+                        disabled={isSubmitting}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="bg-white rounded-2xl shadow-lg mb-6 overflow-hidden">
-          <div className="bg-gray-700 text-white px-6 py-4">
-            <h5 className="text-lg font-bold">🔍 Filter Questions</h5>
+          <div className="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-6 py-4">
+            <h5 className="text-lg font-bold flex items-center gap-2">
+              <Search className="w-5 h-5" />
+              Search & Filter Questions
+            </h5>
           </div>
           <div className="p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Search by Keyword</label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
                 placeholder="Search question text..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Subject</label>
                 <select
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Subject</label>
-                <select
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
                   value={filterSubject}
                   onChange={(e) => setFilterSubject(e.target.value)}
                 >
@@ -493,9 +594,9 @@ export default function AdminPanel() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Difficulty</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Difficulty</label>
                 <select
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
                   value={filterDifficulty}
                   onChange={(e) => setFilterDifficulty(e.target.value)}
                 >
@@ -510,59 +611,68 @@ export default function AdminPanel() {
         </div>
 
       {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto"></div>
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="flex flex-col items-center justify-center py-16">
+            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+            <p className="text-gray-600 font-medium">Loading questions...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-50 border-2 border-red-200 text-red-800 rounded-xl p-4">{error}</div>
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-red-50 border-2 border-red-200 text-red-800 rounded-xl p-6 m-6">
+            <h4 className="font-bold mb-2">Error Loading Questions</h4>
+            <p>{error}</p>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gray-800 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <h5 className="text-lg font-bold">📚 Questions ({totalCount})</h5>
-            <span className="px-3 py-1 bg-white text-gray-800 rounded-full text-sm font-medium">
-              Page {currentPage} of {totalPages}
-            </span>
+          <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <h5 className="text-lg font-bold">📚 Questions Database</h5>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-300">Total: {totalCount}</span>
+              <span className="px-3 py-1 bg-white text-gray-800 rounded-full text-sm font-medium">
+                Page {currentPage} / {totalPages}
+              </span>
+            </div>
           </div>
           {questions.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No questions found. Add your first question!</p>
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📝</div>
+              <p className="text-gray-500 text-lg font-medium mb-2">No questions found</p>
+              <p className="text-gray-400 text-sm">Try adjusting your filters or add a new question</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700" style={{ width: "40%" }}>Question</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700">Category</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700">Subject</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700">Difficulty</th>
-                    <th className="px-4 py-3 text-left text-sm font-bold text-gray-700" style={{ width: "150px" }}>Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Question</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Subject</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Difficulty</th>
+                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-200">
                   {questions.map((q) => (
-                    <tr key={q._id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
-                      <td className="px-4 py-3">
-                        <div className="truncate max-w-md">
-                          {q.question}
+                    <tr key={q._id} className="hover:bg-blue-50 transition-colors duration-200 group">
+                      <td className="px-6 py-4">
+                        <div className="max-w-md">
+                          <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                            {q.question}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            <span className="font-semibold">Answer:</span> {q.correctAnswer}
+                          </p>
                         </div>
-                        <small className="text-gray-500">
-                          Answer: {q.correctAnswer}
-                        </small>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                          {q.category}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-medium">
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold">
                           {q.subject}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-6 py-4">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                             q.difficulty === "easy"
                               ? "bg-green-100 text-green-700"
                               : q.difficulty === "hard"
@@ -570,24 +680,24 @@ export default function AdminPanel() {
                               : "bg-yellow-100 text-yellow-700"
                           }`}
                         >
-                          {q.difficulty}
+                          {q.difficulty.charAt(0).toUpperCase() + q.difficulty.slice(1)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
                           <button
-                            className="px-3 py-1 border-2 border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-all duration-200"
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-200 group-hover:scale-110"
                             onClick={() => handleEdit(q)}
-                            title="Edit"
+                            title="Edit Question"
                           >
-                            ✏️
+                            <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            className="px-3 py-1 border-2 border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-all duration-200"
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 group-hover:scale-110"
                             onClick={() => handleDelete(q._id)}
-                            title="Delete"
+                            title="Delete Question"
                           >
-                            🗑️
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -598,15 +708,20 @@ export default function AdminPanel() {
             </div>
           )}
           {totalPages > 1 && (
-            <div className="px-6 py-4 bg-gray-50">
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
               <nav>
                 <ul className="flex justify-center items-center gap-2 flex-wrap">
                   <li>
                     <button 
-                      className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                        currentPage === 1 
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                      }`}
                       onClick={() => setCurrentPage(currentPage - 1)}
                       disabled={currentPage === 1}
                     >
+                      <ChevronLeft className="w-4 h-4" />
                       Previous
                     </button>
                   </li>
@@ -620,7 +735,11 @@ export default function AdminPanel() {
                       return (
                         <li key={pageNum}>
                           <button 
-                            className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${currentPage === pageNum ? 'bg-blue-600 text-white shadow-lg' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+                            className={`min-w-[40px] px-4 py-2 rounded-xl font-semibold transition-all duration-200 ${
+                              currentPage === pageNum 
+                                ? 'bg-blue-600 text-white shadow-lg scale-110' 
+                                : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400'
+                            }`}
                             onClick={() => setCurrentPage(pageNum)}
                           >
                             {pageNum}
@@ -628,17 +747,22 @@ export default function AdminPanel() {
                         </li>
                       );
                     } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                      return <li key={pageNum} className="px-2 text-gray-400">...</li>;
+                      return <li key={pageNum} className="px-2 text-gray-400 font-bold">...</li>;
                     }
                     return null;
                   })}
                   <li>
                     <button 
-                      className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                        currentPage === totalPages 
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'bg-white border-2 border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                      }`}
                       onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
                     >
                       Next
+                      <ChevronRight className="w-4 h-4" />
                     </button>
                   </li>
                 </ul>
