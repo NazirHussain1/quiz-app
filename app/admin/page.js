@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import AdminLayout from "./components/AdminLayout";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useSelector((state) => state.auth);
@@ -270,16 +271,13 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+    <AdminLayout user={user}>
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">🔧 Admin Panel</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">🔧 Questions Management</h1>
           <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
             <Link href="/admin/analytics" className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg text-center">
               📊 Analytics Dashboard
-            </Link>
-            <Link href="/" className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 text-center">
-              ← Back to Home
             </Link>
           </div>
         </div>
@@ -649,6 +647,7 @@ export default function AdminPanel() {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

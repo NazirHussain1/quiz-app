@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import AdminLayout from "../components/AdminLayout";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -101,28 +102,32 @@ export default function AdminAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading analytics data...</p>
+      <AdminLayout user={user}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading analytics data...</p>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
-            <h4 className="text-xl font-bold text-red-800 mb-2">Error</h4>
-            <p className="text-red-700 mb-4">{error}</p>
-            <button onClick={fetchAnalytics} className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200">
-              Retry
-            </button>
+      <AdminLayout user={user}>
+        <div className="flex items-center justify-center py-12">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+              <h4 className="text-xl font-bold text-red-800 mb-2">Error</h4>
+              <p className="text-red-700 mb-4">{error}</p>
+              <button onClick={fetchAnalytics} className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200">
+                Retry
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
@@ -215,21 +220,17 @@ export default function AdminAnalytics() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+    <AdminLayout user={user}>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">📊 Admin Analytics Dashboard</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">📊 Analytics Dashboard</h2>
             <p className="text-gray-600">Comprehensive system insights and statistics</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
             <button onClick={fetchAnalytics} className="px-4 py-2 border-2 border-blue-300 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-200 text-center">
               🔄 Refresh
             </button>
-            <Link href="/admin" className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 text-center">
-              ← Back to Admin
-            </Link>
           </div>
         </div>
 
@@ -543,6 +544,6 @@ export default function AdminAnalytics() {
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
