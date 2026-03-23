@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Trophy, Medal, Crown, Filter, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
@@ -19,6 +19,9 @@ export default function LeaderboardPage() {
   
   const [categories, setCategories] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [debounceTimer, setDebounceTimer] = useState(null);
+
+  const VALID_SUBJECTS = ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science"];
 
   const VALID_SUBJECTS = ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science"];
 
@@ -29,8 +32,20 @@ export default function LeaderboardPage() {
   }, []);
 
   useEffect(() => {
-    setCurrentPage(1);
-    fetchLeaderboard();
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      fetchLeaderboard();
+    }, 300);
+
+    setDebounceTimer(timer);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [filter, filterCategory, filterSubject]);
 
   useEffect(() => {
@@ -107,12 +122,7 @@ export default function LeaderboardPage() {
         setTotalCount(data.totalCount || data.count);
         
         if (user) {
-          const userIndex = data.results.findIndex(r => r.name === user.userName);
-          if (userIndex !== -1) {
-            setUserRank((currentPage - 1) * 50 + userIndex + 1);
-          } else {
-            setUserRank(null);
-          }
+          await calculateUserRank(data.results);
         }
       } else {
         throw new Error(data.error || 'Failed to load leaderboard');
@@ -128,35 +138,111 @@ export default function LeaderboardPage() {
     }
   }
 
-  const formatDate = (dateValue) => {
-    const date = new Date(dateValue);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const calculateUserRank = async (currentResults) => {
+    if (!user) {
+      setUserRank(null);
+      return;
+    }
+
+    const userInCurrentPage = currentResults.findIndex(r => r.name === user.userName);
+    
+    if (userInCurrentPage !== -1) {
+      setUserRank((currentPage - 1) * 50 + userInCurrentPage + 1);
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams();
+      params.append('limit', '1000');
+      
+      if (filter !== "all") {
+        params.append('difficulty', filter);
+      }
+      if (filterCategory !== "all") {
+        params.append('category', filterCategory);
+      }
+      if (filterSubject !== "all") {
+        params.append('subject', filterSubject);
+      }
+
+      const allResultsRes = await fetch(`/api/results?${params.toString()}`);
+      if (allResultsRes.ok) {
+        const allData = await allResultsRes.json();
+        if (allData.success) {
+          const userIndex = allData.results.findIndex(r => r.name === user.userName);
+          if (userIndex !== -1) {
+            setUserRank(userIndex + 1);
+            return;
+          }
+        }
+      }
+      
+      setUserRank(null);
+    } catch (err) {
+      console.error('Error calculating user rank:', err);
+      setUserRank(null);
+    }
   };
 
-  const formatTime = (seconds) => {
+  const formatDate = useCallback((dateValue) => {
+    const date = new Date(dateValue);
+    return date.toLocaleDateString() + " " + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }, []);
+
+  const formatTime = useCallback((seconds) => {
     if (!seconds) return "N/A";
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const getPercentage = (score, total) => {
+  const getPercentage = useCallback((score, total) => {
     return Math.round((score / total) * 100);
-  };
+  }, []);
 
-  const getMedalEmoji = (position) => {
+  const getMedalEmoji = useCallback((position) => {
     if (position === 0) return "🥇";
     if (position === 1) return "🥈";
     if (position === 2) return "🥉";
     return `${position + 1}.`;
-  };
+  }, []);
 
-  const clearLeaderboard = () => {
+  const clearLeaderboard = useCallback(() => {
     if (confirm("Are you sure you want to clear the local leaderboard? (This won't affect MongoDB data)")) {
       localStorage.removeItem("leaderboard");
       window.location.reload();
     }
-  };
+  }, []);
+
+  const getRowBgClass = useCallback((index, isCurrentUser) => {
+    const globalRank = (currentPage - 1) * 50 + index;
+    if (isCurrentUser) return "bg-blue-50 border-l-4 border-blue-500";
+    if (globalRank === 0) return "bg-gradient-to-r from-yellow-50 to-yellow-100 border-l-4 border-yellow-400";
+    if (globalRank === 1) return "bg-gradient-to-r from-gray-50 to-gray-100 border-l-4 border-gray-400";
+    if (globalRank === 2) return "bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400";
+    return "hover:bg-gray-50";
+  }, [currentPage]);
+
+  const topThreeEntries = useMemo(() => {
+    if (leaderboard.length < 3 || currentPage !== 1) return [];
+    return leaderboard.slice(0, 3);
+  }, [leaderboard, currentPage]);
+
+  const statsData = useMemo(() => {
+    if (leaderboard.length === 0) return null;
+    
+    const avgScore = Math.round(
+      leaderboard.reduce((sum, e) => sum + getPercentage(e.score, e.totalQuestions || e.total), 0) / 
+      leaderboard.length
+    );
+
+    return {
+      totalCount,
+      highestScore: `${leaderboard[0]?.score}/${leaderboard[0]?.totalQuestions || leaderboard[0]?.total}`,
+      topPlayer: leaderboard[0]?.name,
+      avgScore
+    };
+  }, [leaderboard, totalCount, getPercentage]);
 
   const getRowBgClass = (index, isCurrentUser) => {
     const globalRank = (currentPage - 1) * 50 + index;
@@ -264,7 +350,21 @@ export default function LeaderboardPage() {
           </div>
         )}
 
-        {!loading && leaderboard.length === 0 ? (
+        {error && !loading && leaderboard.length === 0 && (
+          <div className="bg-red-50 border-2 border-red-200 text-red-800 rounded-xl p-6 text-center">
+            <div className="text-4xl mb-3">⚠️</div>
+            <h3 className="text-xl font-bold mb-2">Failed to load leaderboard</h3>
+            <p className="text-sm mb-4">{error}</p>
+            <button 
+              onClick={fetchLeaderboard}
+              className="px-6 py-2 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && leaderboard.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-xl text-center p-12">
             <div className="text-6xl mb-4">🏆</div>
             <h3 className="text-2xl font-bold text-gray-400 mb-2">No scores yet!</h3>
@@ -273,11 +373,11 @@ export default function LeaderboardPage() {
               Start Quiz
             </Link>
           </div>
-        ) : (
+        ) : leaderboard.length > 0 && (
           <>
-            {leaderboard.length >= 3 && currentPage === 1 && (
+            {topThreeEntries.length >= 3 && (
               <div className="hidden md:grid md:grid-cols-3 gap-4 mb-6">
-                {leaderboard.slice(0, 3).map((entry, index) => {
+                {topThreeEntries.map((entry, index) => {
                   const medals = ["🥇", "🥈", "🥉"];
                   const bgGradients = [
                     "bg-gradient-to-br from-yellow-100 to-yellow-200",
@@ -414,7 +514,7 @@ export default function LeaderboardPage() {
           </>
         )}
 
-      <div className="flex flex-wrap justify-center gap-3 mt-6">
+        <div className="flex flex-wrap justify-center gap-3 mt-6">
         <Link href="/" className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg transform hover:scale-105 flex items-center gap-2">
           🏠 Back to Home
         </Link>
