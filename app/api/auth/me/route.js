@@ -5,7 +5,6 @@ import { rateLimitApi } from '@/app/lib/rateLimit';
 
 export async function GET(request) {
   try {
-    // Rate limiting
     const rateLimit = rateLimitApi(request);
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -23,7 +22,7 @@ export async function GET(request) {
       );
     }
     
-    const decoded = verifyToken(token);
+    const decoded = await verifyToken(token);
     
     if (!decoded) {
       return NextResponse.json(
@@ -51,7 +50,6 @@ export async function GET(request) {
       }
     });
   } catch (error) {
-    console.error('Auth verification error:', error);
     return NextResponse.json(
       { success: false, error: 'Authentication failed' },
       { status: 401 }
