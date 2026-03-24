@@ -1,44 +1,39 @@
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-const JWT_EXPIRY = "1d"; // 1 day
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRY = "1d";
 
-export function generateToken(user) {
-  return jwt.sign(
-    { 
-      userId: user.id || user._id?.toString(), 
-      email: user.email,
-      role: user.role 
-    },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRY }
-  );
+export async function generateToken(user) {
+  const secret = new TextEncoder().encode(JWT_SECRET);
+  
+  const token = await new SignJWT({
+    userId: user.id || user._id?.toString(),
+    email: user.email,
+    role: user.role
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime(JWT_EXPIRY)
+    .setIssuedAt()
+    .sign(secret);
+  
+  return token;
 }
 
-export function verifyToken(token) {
+export async function verifyToken(token) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const secret = new TextEncoder().encode(JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
     
-    // Ensure token has required fields
-    if (!decoded.userId || !decoded.email) {
+    if (!payload.userId || !payload.email) {
       return null;
     }
     
-    return decoded;
+    return payload;
   } catch (error) {
-    // Token expired or invalid
-    if (error.name === "TokenExpiredError") {
-      console.log("Token expired");
-    } else if (error.name === "JsonWebTokenError") {
-      console.log("Invalid token");
-    }
     return null;
   }
 }
 
-/**
- * Extract token from request headers
- */
 export function extractToken(req) {
   const authHeader = req.headers.authorization;
   
@@ -46,7 +41,6 @@ export function extractToken(req) {
     return null;
   }
   
-  // Support "Bearer <token>" format
   if (authHeader.startsWith("Bearer ")) {
     return authHeader.substring(7);
   }
@@ -54,17 +48,14 @@ export function extractToken(req) {
   return authHeader;
 }
 
-/**
- * Verify user is authenticated
- */
-export function requireAuth(req) {
+export async function requireAuth(req) {
   const token = extractToken(req);
   
   if (!token) {
     return { authenticated: false, error: "No token provided" };
   }
   
-  const decoded = verifyToken(token);
+  const decoded = await verifyToken(token);
   
   if (!decoded) {
     return { authenticated: false, error: "Invalid or expired token" };
@@ -73,11 +64,8 @@ export function requireAuth(req) {
   return { authenticated: true, user: decoded };
 }
 
-/**
- * Verify user is admin
- */
-export function requireAdmin(req) {
-  const authResult = requireAuth(req);
+export async function requireAdmin(req) {
+  const authResult = await requireAuth(req);
   
   if (!authResult.authenticated) {
     return authResult;

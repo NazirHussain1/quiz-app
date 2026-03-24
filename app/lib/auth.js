@@ -25,7 +25,7 @@ export async function createUser(email, password, userName) {
     email,
     password: hashedPassword,
     userName,
-    role: 'student', // Default role
+    role: 'student',
     createdAt: new Date(),
     updatedAt: new Date()
   });
@@ -48,7 +48,6 @@ export async function findUserByEmail(email) {
     return null;
   }
   
-  // Ensure existing users have a role (backward compatibility)
   const role = user.role || 'student';
   
   return {
@@ -71,7 +70,6 @@ export async function findUserById(id) {
     return null;
   }
   
-  // Ensure existing users have a role (backward compatibility)
   const role = user.role || 'student';
   
   return {

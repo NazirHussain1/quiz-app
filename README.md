@@ -1,70 +1,55 @@
-# 🎯 Quiz App - Interactive Learning Platform
+# 🎯 Quiz App
 
-A production-ready quiz application built with Next.js 16, React 19, and MongoDB Atlas. Features adaptive difficulty, real-time analytics, custom quiz creation, and a global leaderboard system.
-
-[![Next.js](https://img.shields.io/badge/Next.js-16.1.7-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.0-blue)](https://reactjs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)](https://www.mongodb.com/)
-
-## 📋 Table of Contents
-
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Quick Start](#-quick-start)
-- [Environment Variables](#-environment-variables)
-- [Deployment](#-deployment)
-- [API Documentation](#-api-documentation)
-- [Database Schema](#-database-schema)
+A modern, production-ready quiz application built with Next.js 16 and React 19. Features adaptive difficulty, real-time analytics, custom quiz creation, and a global leaderboard system powered by MongoDB Atlas.
 
 ## ✨ Features
 
-### 🎮 Quiz Modes
-- Regular Mode: 10 questions, 30s per question
-- Exam Mode: 30 questions, 30-minute timer
-- Custom Quizzes: User-created with flexible settings
+### Quiz Modes
+- **Regular Mode**: 10 questions with 30-second timer per question
+- **Exam Mode**: 30 questions with 30-minute total timer
+- **Custom Quizzes**: Create and share your own quizzes
 
-### 🧠 Smart Features
-- Adaptive difficulty based on performance
-- 100+ questions across 5 subjects (Math, Physics, Chemistry, Biology, CS)
-- Real-time analytics with visual charts
-- Global leaderboard with filtering
-- Custom quiz creation and sharing
+### Smart Learning
+- Adaptive difficulty system that adjusts based on performance
+- 100+ questions across 5 subjects (Mathematics, Physics, Chemistry, Biology, Computer Science)
+- Three difficulty levels: Easy, Medium, Hard
 
-### 🔐 User System
-- JWT-based authentication
-- Secure password hashing
-- Protected routes
-- User analytics dashboard
+### User Features
+- Secure JWT-based authentication
+- Personal analytics dashboard with visual charts
+- Performance tracking by subject and difficulty
+- Global leaderboard with filtering options
 
-### 👨‍💼 Admin Panel
-- Question management (CRUD operations)
-- Filter by category, subject, difficulty
+### Admin Panel
+- Complete question management (CRUD operations)
+- Filter by category, subject, and difficulty
 - Real-time statistics
 
-### 🎨 Modern UI
-- Responsive design (mobile, tablet, desktop)
+### Modern UI/UX
+- Fully responsive design (mobile, tablet, desktop)
 - Dark mode support
-- Smooth animations (Framer Motion)
-- Sound effects
+- Smooth animations with Framer Motion
+- Sound effects for interactions
 - Accessibility compliant
 
 ## 🛠 Tech Stack
 
 ### Frontend
-- **Framework**: Next.js 16 (App Router)
-- **UI Library**: React 19
-- **Styling**: Bootstrap 5.3.8, Tailwind CSS 4
-- **Animations**: Framer Motion 12
-- **Charts**: Chart.js 4.5, react-chartjs-2 5.3
+- Next.js 16 (App Router)
+- React 19
+- Bootstrap 5.3.8
+- Tailwind CSS 4
+- Framer Motion 12
+- Chart.js 4.5 with react-chartjs-2
 
 ### Backend
-- **Database**: MongoDB Atlas
-- **Authentication**: JWT with jose, bcryptjs
-- **API**: Next.js API Routes
+- MongoDB Atlas
+- JWT Authentication (jose library)
+- bcryptjs for password hashing
 
-### Deployment
-- **Platform**: Vercel
-- **CI/CD**: Automatic deployments from Git
+### State Management
+- Redux Toolkit
+- React Context API
 
 ## 🚀 Quick Start
 
@@ -75,35 +60,23 @@ A production-ready quiz application built with Next.js 16, React 19, and MongoDB
 
 ### Installation
 
-1. Clone and install:
-   ```bash
-   git clone <repository-url>
-   cd quiz-app
-   npm install
-   ```
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd quiz-app
+```
 
-2. Configure environment:
-   ```bash
-   cp .env.local.example .env.local
-   ```
-   Edit `.env.local` with your credentials (see below)
+2. Install dependencies:
+```bash
+npm install
+```
 
-3. Run development server:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000)
+3. Set up environment variables:
+```bash
+cp .env.local.example .env.local
+```
 
-4. Seed database (optional):
-   Visit `http://localhost:3000/api/seed` or:
-   ```bash
-   curl -X POST http://localhost:3000/api/seed
-   ```
-
-## 🔐 Environment Variables
-
-Create `.env.local` in the root directory:
-
+Edit `.env.local` with your credentials:
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority
 JWT_SECRET=your-secure-random-string-minimum-32-characters
@@ -112,18 +85,38 @@ NEXTAUTH_SECRET=your-secure-random-string-minimum-32-characters
 NEXT_PUBLIC_APP_NAME=Quiz App
 ```
 
-### Generate Secrets
+Generate secure secrets:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+4. Run the development server:
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+5. Seed the database (optional):
+Visit `http://localhost:3000/api/seed` in your browser
+
+## 🔐 Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `MONGODB_URI` | MongoDB Atlas connection string | Yes |
+| `JWT_SECRET` | Secret for JWT token signing (32+ chars) | Yes |
+| `NEXTAUTH_URL` | Application URL | Yes |
+| `NEXTAUTH_SECRET` | Secret for session encryption (32+ chars) | Yes |
+| `NEXT_PUBLIC_APP_NAME` | Application name | No |
+
 ### MongoDB Setup
 1. Create account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Create cluster → Connect → Get connection string
-3. Replace `<password>` and set database to `quizapp`
-4. Whitelist IP: 0.0.0.0/0 (for Vercel)
-
-⚠️ Never commit `.env.local` - it's in `.gitignore`
+2. Create a cluster
+3. Get connection string: Connect → Connect your application
+4. Replace `<password>` with your database password
+5. Set database name to `quizapp`
+6. Whitelist IP: 0.0.0.0/0 (for Vercel deployment)
 
 ## 📁 Project Structure
 
@@ -153,51 +146,7 @@ quiz-app/
 └── package.json
 ```
 
-## 🚀 Deployment
-
-### Deploy to Vercel
-
-1. Push to GitHub:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin <your-repo-url>
-   git push -u origin main
-   ```
-
-2. Deploy on Vercel:
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-   - Vercel auto-detects Next.js
-
-3. Set Environment Variables in Vercel:
-   
-   | Variable | Value |
-   |----------|-------|
-   | `MONGODB_URI` | Your MongoDB connection string |
-   | `JWT_SECRET` | Generate with crypto (32+ chars) |
-   | `NEXTAUTH_URL` | `https://your-app.vercel.app` |
-   | `NEXTAUTH_SECRET` | Generate with crypto (32+ chars) |
-   | `NEXT_PUBLIC_APP_NAME` | `Quiz App` |
-
-4. Deploy and update `NEXTAUTH_URL` with actual Vercel URL
-
-### Post-Deployment
-
-1. Seed database: Visit `https://your-app.vercel.app/api/seed`
-2. Create admin user:
-   ```bash
-   npm run make-admin your-email@example.com
-   ```
-
-### Troubleshooting
-
-- Verify all env variables in Vercel
-- MongoDB Atlas: Whitelist 0.0.0.0/0
-- Test build locally: `npm run build`
-
-## 🔌 API Documentation
+## � API Documentation
 
 ### Authentication
 - `POST /api/auth/signup` - Register user
@@ -241,8 +190,9 @@ quiz-app/
   email: String,
   password: String (hashed),
   userName: String,
-  isAdmin: Boolean,
-  createdAt: Date
+  role: String (student|admin),
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
@@ -256,7 +206,8 @@ quiz-app/
   question: String,
   options: [String],
   correctAnswer: String,
-  createdAt: Date
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
@@ -292,7 +243,8 @@ quiz-app/
     correctAnswer: String
   }],
   isPublic: Boolean,
-  createdAt: Date
+  createdAt: Date,
+  updatedAt: Date
 }
 ```
 
@@ -303,14 +255,69 @@ npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npm run make-admin   # Make user admin
+npm run make-admin   # Make user admin (requires email)
 npm run list-users   # List all users
 ```
 
+### Admin Scripts
+
+Make a user admin:
+```bash
+npm run make-admin user@example.com
+```
+
+List all users:
+```bash
+npm run list-users
+```
+
+## 🚀 Deployment
+
+### Deploy to Vercel
+
+1. Push to GitHub:
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin <your-repo-url>
+git push -u origin main
+```
+
+2. Deploy on Vercel:
+   - Go to [vercel.com](https://vercel.com)
+   - Import your GitHub repository
+   - Vercel auto-detects Next.js
+
+3. Set Environment Variables in Vercel:
+   
+   Add all variables from `.env.local.example` in:
+   Vercel Dashboard → Project Settings → Environment Variables
+
+4. Deploy and update `NEXTAUTH_URL` with your Vercel URL
+
+### Post-Deployment
+
+1. Seed database: Visit `https://your-app.vercel.app/api/seed`
+2. Create admin user:
+   ```bash
+   npm run make-admin your-email@example.com
+   ```
+
+### Troubleshooting
+
+- Verify all env variables in Vercel
+- MongoDB Atlas: Whitelist 0.0.0.0/0
+- Test build locally: `npm run build`
+
 ## 🤝 Contributing
 
-Contributions welcome! Fork, create a feature branch, and submit a PR.
+Contributions welcome! Fork the repository, create a feature branch, and submit a PR.
+
+## 📝 License
+
+MIT License
 
 ---
 
-Built with Next.js 16 and React 19 | Ready for production deployment
+Built with Next.js 16 and React 19 | Production-ready
