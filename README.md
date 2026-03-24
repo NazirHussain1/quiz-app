@@ -1,92 +1,52 @@
 # 🎯 Quiz App - Interactive Learning Platform
 
-A comprehensive, production-ready quiz application built with Next.js 16, React 19, and MongoDB Atlas. Features include adaptive difficulty, real-time analytics, custom quiz creation, and a global leaderboard system.
+A production-ready quiz application built with Next.js 16, React 19, and MongoDB Atlas. Features adaptive difficulty, real-time analytics, custom quiz creation, and a global leaderboard system.
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.0.4-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1.7-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.0-blue)](https://reactjs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)](https://www.mongodb.com/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ## 📋 Table of Contents
 
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
-- [Getting Started](#-getting-started)
+- [Quick Start](#-quick-start)
 - [Environment Variables](#-environment-variables)
-- [Project Structure](#-project-structure)
 - [Deployment](#-deployment)
-- [API Routes](#-api-routes)
+- [API Documentation](#-api-documentation)
 - [Database Schema](#-database-schema)
-- [Contributing](#-contributing)
-- [License](#-license)
 
 ## ✨ Features
 
-### Core Quiz Functionality
-- **Multiple Quiz Modes**
-  - Regular Mode: 10 questions with 30-second timer per question
-  - Exam Mode: 30 questions with 30-minute total timer
-  - Custom Quizzes: User-created quizzes with flexible settings
+### 🎮 Quiz Modes
+- Regular Mode: 10 questions, 30s per question
+- Exam Mode: 30 questions, 30-minute timer
+- Custom Quizzes: User-created with flexible settings
 
-- **Adaptive Difficulty System**
-  - Automatically adjusts question difficulty based on performance
-  - Upgrades difficulty when score > 75%
-  - Downgrades difficulty when score < 40%
-  - Tracks performance history per subject
+### 🧠 Smart Features
+- Adaptive difficulty based on performance
+- 100+ questions across 5 subjects (Math, Physics, Chemistry, Biology, CS)
+- Real-time analytics with visual charts
+- Global leaderboard with filtering
+- Custom quiz creation and sharing
 
-- **100+ Questions Database**
-  - Mathematics, Physics, Chemistry, Biology, Computer Science
-  - Three difficulty levels: Easy, Medium, Hard
-  - Organized by category, subject, and topic
+### 🔐 User System
+- JWT-based authentication
+- Secure password hashing
+- Protected routes
+- User analytics dashboard
 
-### User Features
-- **Authentication System**
-  - Secure JWT-based authentication
-  - User registration and login
-  - Password hashing with bcryptjs
-  - Protected routes for authenticated users
+### 👨‍💼 Admin Panel
+- Question management (CRUD operations)
+- Filter by category, subject, difficulty
+- Real-time statistics
 
-- **Analytics Dashboard**
-  - Visual charts showing performance trends
-  - Score history line chart
-  - Subject performance bar chart
-  - Difficulty distribution doughnut chart
-  - Weak areas identification (< 60%)
-  - Strong areas highlighting (≥ 75%)
-
-- **Global Leaderboard**
-  - Top 50 scores worldwide
-  - Filter by difficulty, category, and subject
-  - Medal system for top 3 performers (🥇🥈🥉)
-  - User rank highlighting
-  - Real-time updates from MongoDB
-
-- **Custom Quiz Creation**
-  - Create quizzes manually or select from question pool
-  - Public/private quiz options
-  - Share quizzes with other users
-  - Full CRUD operations
-
-### Admin Features
-- **Admin Panel**
-  - Add, edit, and delete questions
-  - Filter questions by category, subject, difficulty
-  - Real-time question count
-  - Protected with authentication
-
-### UI/UX Features
-- **Modern Interface**
-  - Dark mode support
-  - Responsive design (mobile, tablet, desktop)
-  - Smooth animations with Framer Motion
-  - Sound effects for interactions
-  - Bootstrap 5 + Tailwind CSS styling
-
-- **Accessibility**
-  - ARIA labels for screen readers
-  - Keyboard navigation support
-  - High contrast colors
-  - Semantic HTML
+### 🎨 Modern UI
+- Responsive design (mobile, tablet, desktop)
+- Dark mode support
+- Smooth animations (Framer Motion)
+- Sound effects
+- Accessibility compliant
 
 ## 🛠 Tech Stack
 
@@ -106,135 +66,98 @@ A comprehensive, production-ready quiz application built with Next.js 16, React 
 - **Platform**: Vercel
 - **CI/CD**: Automatic deployments from Git
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+ installed
+- Node.js 20+
 - MongoDB Atlas account
-- npm or yarn package manager
+- npm or yarn
 
 ### Installation
 
-1. **Clone the repository**
+1. Clone and install:
    ```bash
    git clone <repository-url>
    cd quiz-app
-   ```
-
-2. **Install dependencies**
-   ```bash
    npm install
    ```
 
-3. **Set up environment variables**
+2. Configure environment:
    ```bash
    cp .env.local.example .env.local
    ```
-   Edit `.env.local` with your MongoDB credentials (see [Environment Variables](#-environment-variables))
+   Edit `.env.local` with your credentials (see below)
 
-4. **Run the development server**
+3. Run development server:
    ```bash
    npm run dev
    ```
+   Open [http://localhost:3000](http://localhost:3000)
 
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### Seed Database (Optional)
-
-After setting up your environment, you can seed the database with sample questions:
-
-```bash
-# Using the API endpoint
-curl -X POST http://localhost:3000/api/seed
-```
-
-Or visit `http://localhost:3000/api/seed` in your browser.
+4. Seed database (optional):
+   Visit `http://localhost:3000/api/seed` or:
+   ```bash
+   curl -X POST http://localhost:3000/api/seed
+   ```
 
 ## 🔐 Environment Variables
 
-Create a `.env.local` file in the root directory with the following variables:
+Create `.env.local` in the root directory:
 
 ```env
-# MongoDB Atlas Connection String
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority
-
-# JWT Secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 JWT_SECRET=your-secure-random-string-minimum-32-characters
-
-# Next.js Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secure-random-string-minimum-32-characters
-
-# Application Name (Optional)
 NEXT_PUBLIC_APP_NAME=Quiz App
 ```
 
-### Important Security Notes
+### Generate Secrets
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
-⚠️ **NEVER commit `.env.local` to version control**
+### MongoDB Setup
+1. Create account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create cluster → Connect → Get connection string
+3. Replace `<password>` and set database to `quizapp`
+4. Whitelist IP: 0.0.0.0/0 (for Vercel)
 
-- The `.env.local` file contains sensitive credentials
-- It is already included in `.gitignore`
-- For production, set environment variables in your Vercel dashboard
-- Generate strong, unique secrets for JWT_SECRET and NEXTAUTH_SECRET
-
-### Getting MongoDB URI
-
-1. Create a free account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Create a new cluster
-3. Click "Connect" → "Connect your application"
-4. Copy the connection string
-5. Replace `<password>` with your database password
-6. Replace `<database>` with `quizapp`
+⚠️ Never commit `.env.local` - it's in `.gitignore`
 
 ## 📁 Project Structure
 
 ```
 quiz-app/
 ├── app/
-│   ├── admin/                 # Admin panel for question management
-│   ├── analytics/             # User analytics dashboard
-│   ├── api/
-│   │   ├── admin/            # Admin API routes
-│   │   ├── analytics/        # Analytics data API
-│   │   ├── auth/             # Authentication endpoints
-│   │   ├── custom-quizzes/   # Custom quiz CRUD
-│   │   ├── questions/        # Question management
-│   │   ├── results/          # Quiz results storage
-│   │   └── seed/             # Database seeding
-│   ├── components/           # Reusable React components
-│   ├── contexts/             # React Context providers
-│   ├── create-quiz/          # Quiz creation wizard
-│   ├── custom-quiz/[id]/     # Take custom quiz
-│   ├── exam/                 # Exam mode (30Q, 30min)
-│   ├── hooks/                # Custom React hooks
-│   ├── leaderboard/          # Global leaderboard
-│   ├── lib/                  # Utilities and helpers
-│   │   ├── auth.js          # Authentication helpers
-│   │   ├── authMiddleware.js # JWT verification
-│   │   ├── mongodb.js       # Database connection
-│   │   └── seed/            # Seed data
-│   ├── login/                # Login/Signup page
-│   ├── my-quizzes/           # User's custom quizzes
-│   ├── quiz/                 # Regular quiz mode
-│   ├── services/             # Business logic layer
-│   ├── subjects/             # Subject selection
-│   └── utils/                # Helper functions
-├── public/
-│   └── sounds/               # Sound effect files
-├── .env.local.example        # Environment variables template
-├── .gitignore                # Git ignore rules
-├── next.config.ts            # Next.js configuration
-├── package.json              # Dependencies
-└── README.md                 # This file
+│   ├── admin/              # Admin panel
+│   ├── analytics/          # User analytics
+│   ├── api/                # API routes
+│   │   ├── admin/         # Admin endpoints
+│   │   ├── auth/          # Authentication
+│   │   ├── custom-quizzes/
+│   │   ├── questions/
+│   │   ├── results/
+│   │   └── seed/
+│   ├── components/         # React components
+│   ├── contexts/           # Context providers
+│   ├── hooks/              # Custom hooks
+│   ├── lib/                # Utilities
+│   │   ├── models/        # MongoDB models
+│   │   └── seed/          # Seed data
+│   ├── services/           # Business logic
+│   └── store/              # Redux store
+├── public/sounds/          # Audio files
+├── scripts/                # Utility scripts
+├── .env.local.example      # Env template
+└── package.json
 ```
 
 ## 🚀 Deployment
 
-### Deploy to Vercel (Recommended)
+### Deploy to Vercel
 
-1. **Push your code to GitHub**
+1. Push to GitHub:
    ```bash
    git init
    git add .
@@ -243,143 +166,120 @@ quiz-app/
    git push -u origin main
    ```
 
-2. **Import to Vercel**
+2. Deploy on Vercel:
    - Go to [vercel.com](https://vercel.com)
-   - Click "New Project"
    - Import your GitHub repository
-   - Vercel will auto-detect Next.js
+   - Vercel auto-detects Next.js
 
-3. **Set Environment Variables**
-   In Vercel dashboard → Project Settings → Environment Variables, add these **REQUIRED** variables:
+3. Set Environment Variables in Vercel:
    
-   | Variable | Value | Description |
-   |----------|-------|-------------|
-   | `MONGODB_URI` | `mongodb+srv://username:password@cluster.mongodb.net/quizapp?retryWrites=true&w=majority` | Your MongoDB Atlas connection string |
-   | `JWT_SECRET` | Random 32+ character string | For JWT token signing (generate with crypto) |
-   | `NEXTAUTH_URL` | `https://your-app.vercel.app` | Your production URL (Vercel will provide this) |
-   | `NEXTAUTH_SECRET` | Random 32+ character string | For NextAuth session encryption |
-   | `NEXT_PUBLIC_APP_NAME` | `Quiz App` | Your application name (optional) |
-   
-   **How to generate secure secrets:**
+   | Variable | Value |
+   |----------|-------|
+   | `MONGODB_URI` | Your MongoDB connection string |
+   | `JWT_SECRET` | Generate with crypto (32+ chars) |
+   | `NEXTAUTH_URL` | `https://your-app.vercel.app` |
+   | `NEXTAUTH_SECRET` | Generate with crypto (32+ chars) |
+   | `NEXT_PUBLIC_APP_NAME` | `Quiz App` |
+
+4. Deploy and update `NEXTAUTH_URL` with actual Vercel URL
+
+### Post-Deployment
+
+1. Seed database: Visit `https://your-app.vercel.app/api/seed`
+2. Create admin user:
    ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   npm run make-admin your-email@example.com
    ```
 
-4. **Deploy**
-   - Click "Deploy"
-   - Your app will be live in minutes!
-   - After deployment, update `NEXTAUTH_URL` with your actual Vercel URL
+### Troubleshooting
 
-### Post-Deployment Steps
+- Verify all env variables in Vercel
+- MongoDB Atlas: Whitelist 0.0.0.0/0
+- Test build locally: `npm run build`
 
-1. **Update NEXTAUTH_URL**: After first deployment, go back to Environment Variables and update `NEXTAUTH_URL` with your actual Vercel URL (e.g., `https://quiz-app-xyz.vercel.app`)
-
-2. **Seed Database**: Visit `https://your-app.vercel.app/api/seed` to populate sample questions
-
-3. **Create Admin User**: 
-   - Sign up for an account
-   - Use the admin scripts locally to promote your user:
-     ```bash
-     npm run make-admin your-email@example.com
-     ```
-
-### Troubleshooting Deployment
-
-If deployment fails, check:
-- All environment variables are set correctly in Vercel
-- MongoDB Atlas allows connections from anywhere (0.0.0.0/0) or Vercel IPs
-- No syntax errors in code (`npm run build` succeeds locally)
-- Next.js version is up to date (currently 16.1.7)
-
-## 🔌 API Routes
+## 🔌 API Documentation
 
 ### Authentication
-- `POST /api/auth/signup` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
+- `POST /api/auth/signup` - Register user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
 - `GET /api/auth/me` - Get current user
 
 ### Questions
-- `GET /api/questions` - Fetch questions (with filters)
-- `POST /api/questions` - Create question
-- `GET /api/questions/categories` - Get all categories
-- `GET /api/questions/subjects` - Get all subjects
+- `GET /api/questions` - Fetch questions (filterable)
+- `GET /api/questions/categories` - Get categories
+- `GET /api/questions/subjects` - Get subjects
 
 ### Results
 - `POST /api/results` - Save quiz result
-- `GET /api/results` - Fetch results (with filters)
+- `GET /api/results` - Fetch results
 
 ### Custom Quizzes
-- `GET /api/custom-quizzes` - Get user's quizzes
-- `POST /api/custom-quizzes` - Create custom quiz
-- `GET /api/custom-quizzes/[id]` - Get specific quiz
+- `GET /api/custom-quizzes` - List user quizzes
+- `POST /api/custom-quizzes` - Create quiz
+- `GET /api/custom-quizzes/[id]` - Get quiz
 - `DELETE /api/custom-quizzes?id=[id]` - Delete quiz
 
 ### Admin (Protected)
-- `GET /api/admin/questions` - Get all questions
+- `GET /api/admin/questions` - List all questions
 - `POST /api/admin/questions` - Add question
 - `PUT /api/admin/questions` - Update question
 - `DELETE /api/admin/questions?id=[id]` - Delete question
+- `GET /api/admin/analytics` - Admin analytics
 
-### Analytics (Protected)
-- `GET /api/analytics` - Get user analytics data
+### Analytics
+- `GET /api/analytics` - User analytics data
 
-### Seeding
-- `POST /api/seed` - Seed database with sample questions
+### Utility
+- `POST /api/seed` - Seed database
 
 ## 🗄 Database Schema
 
-### Collections
-
-#### users
+### users
 ```javascript
 {
-  _id: ObjectId,
   email: String,
   password: String (hashed),
   userName: String,
-  createdAt: Date,
-  updatedAt: Date
+  isAdmin: Boolean,
+  createdAt: Date
 }
 ```
 
-#### questions
+### questions
 ```javascript
 {
-  _id: ObjectId,
   category: String,
   subject: String,
   topic: String,
   difficulty: String (easy|medium|hard),
   question: String,
-  options: [String, String, String, String],
+  options: [String],
   correctAnswer: String,
-  createdAt: Date,
-  updatedAt: Date
+  createdAt: Date
 }
 ```
 
-#### results
+### results
 ```javascript
 {
-  _id: ObjectId,
+  userId: String,
   name: String,
   category: String,
   subject: String,
   score: Number,
   totalQuestions: Number,
   difficulty: String,
-  timeTaken: Number (optional),
+  timeTaken: Number,
   examMode: Boolean,
-  customQuizId: String (optional),
+  customQuizId: String,
   createdAt: Date
 }
 ```
 
-#### customQuizzes
+### customQuizzes
 ```javascript
 {
-  _id: ObjectId,
   userId: String,
   userName: String,
   title: String,
@@ -392,56 +292,25 @@ If deployment fails, check:
     correctAnswer: String
   }],
   isPublic: Boolean,
-  createdAt: Date,
-  updatedAt: Date
+  createdAt: Date
 }
 ```
 
-## 📊 Project Status
+## 📊 Scripts
 
-### ✅ Completed Features
-- User authentication system
-- Multiple quiz modes (Regular, Exam, Custom)
-- Adaptive difficulty system
-- Analytics dashboard with charts
-- Global leaderboard
-- Custom quiz creation
-- Admin panel
-- Dark mode
-- Sound effects
-- Responsive design
-- MongoDB integration
-- 100 sample questions
-
-### 🔜 Planned Features
-- Social features (share scores, challenge friends)
-- Multiplayer quiz mode
-- Badges and achievements
-- Export analytics as PDF
-- Mobile app version
-- AI-powered question generation
-- Voice-based quiz mode
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run make-admin   # Make user admin
+npm run list-users   # List all users
+```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👨‍💻 Author
-
-Built with ❤️ using Next.js and React
+Contributions welcome! Fork, create a feature branch, and submit a PR.
 
 ---
 
-**⭐ Star this repo if you find it helpful!**
-
-For questions or support, please open an issue on GitHub.
+Built with Next.js 16 and React 19 | Ready for production deployment
