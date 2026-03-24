@@ -291,10 +291,31 @@ git push -u origin main
 
 3. Set Environment Variables in Vercel:
    
-   Add all variables from `.env.local.example` in:
-   Vercel Dashboard → Project Settings → Environment Variables
+   **IMPORTANT**: Add these in Vercel Dashboard → Project Settings → Environment Variables
+   
+   | Variable | Value | Required |
+   |----------|-------|----------|
+   | `MONGODB_URI` | Your MongoDB connection string | Yes |
+   | `JWT_SECRET` | Generate with crypto (32+ chars) | Yes |
+   | `NEXTAUTH_URL` | `https://your-app.vercel.app` | Yes |
+   | `NEXTAUTH_SECRET` | Generate with crypto (32+ chars) | Yes |
+   | `NEXT_PUBLIC_APP_NAME` | `Quiz App` | No |
 
-4. Deploy and update `NEXTAUTH_URL` with your Vercel URL
+   Generate secrets:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+4. Deploy
+   - Click "Deploy"
+   - Build will succeed (MongoDB connection is lazy-loaded)
+   - After deployment, update `NEXTAUTH_URL` with your actual Vercel URL
+
+### MongoDB Atlas Setup for Vercel
+
+1. Go to MongoDB Atlas → Network Access
+2. Add IP Address: `0.0.0.0/0` (allows all IPs including Vercel)
+3. Or add specific Vercel IP ranges from [Vercel documentation](https://vercel.com/docs/concepts/solutions/databases)
 
 ### Post-Deployment
 
@@ -306,9 +327,10 @@ git push -u origin main
 
 ### Troubleshooting
 
-- Verify all env variables in Vercel
-- MongoDB Atlas: Whitelist 0.0.0.0/0
-- Test build locally: `npm run build`
+- **Build fails**: Check if corrupted files are fixed (see CLEANUP_REPORT.md)
+- **Runtime MongoDB error**: Verify `MONGODB_URI` is set in Vercel
+- **Connection timeout**: Check MongoDB Atlas IP whitelist
+- **JWT errors**: Verify `JWT_SECRET` and `NEXTAUTH_SECRET` are set
 
 ## 🤝 Contributing
 
