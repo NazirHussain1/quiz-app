@@ -7,10 +7,11 @@ export async function GET(request) {
     const category = searchParams.get('category');
     
     const subjects = await getSubjects(category);
+    const limitedSubjects = subjects.slice(0, 10);
     
     return NextResponse.json({ 
       success: true, 
-      subjects 
+      subjects: limitedSubjects 
     });
   } catch (error) {
     return NextResponse.json(

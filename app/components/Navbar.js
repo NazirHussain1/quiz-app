@@ -89,17 +89,19 @@ export default function Navbar() {
                   My Quizzes
                 </Link>
 
-                <Link
-                  href="/create-quiz"
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    pathname === "/create-quiz"
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
-                >
-                  <Plus className="w-4 h-4" />
-                  Create
-                </Link>
+                {user.role === "admin" && (
+                  <Link
+                    href="/create-quiz"
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      pathname === "/create-quiz"
+                        ? "bg-blue-50 text-blue-600"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create
+                  </Link>
+                )}
 
                 {user.role === "admin" && (
                   <Link
@@ -216,18 +218,20 @@ export default function Navbar() {
                     My Quizzes
                   </Link>
 
-                  <Link
-                    href="/create-quiz"
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
-                      pathname === "/create-quiz"
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Quiz
-                  </Link>
+                  {user.role === "admin" && (
+                    <Link
+                      href="/create-quiz"
+                      className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200 ${
+                        pathname === "/create-quiz"
+                          ? "bg-blue-50 text-blue-600"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Create Quiz
+                    </Link>
+                  )}
 
                   {user.role === "admin" && (
                     <Link

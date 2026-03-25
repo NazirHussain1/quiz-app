@@ -255,9 +255,9 @@ export default function CustomQuizPage() {
 
                 if (isLocked) {
                   if (isCorrect) {
-                    className += "bg-green-50 border-green-500 text-green-900";
+                    className += "bg-green-50 border-green-500 text-green-900 font-bold";
                   } else if (isSelected && !isCorrect) {
-                    className += "bg-red-50 border-red-500 text-red-900";
+                    className += "bg-red-50 border-red-500 text-red-900 font-bold";
                   } else {
                     className += "bg-gray-50 border-gray-200 text-gray-500";
                   }

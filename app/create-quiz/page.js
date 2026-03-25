@@ -21,6 +21,10 @@ export default function CreateQuizPage() {
       
       if (data.success) {
         setUser(data.user);
+        if (data.user.role !== 'admin') {
+          toast.error("Only admins can create quizzes");
+          router.push("/");
+        }
       } else {
         router.push("/login");
       }
@@ -50,13 +54,13 @@ export default function CreateQuizPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-          <div className="text-6xl mb-4">🚧</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Feature Under Maintenance</h2>
+          <div className="text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Admin Access Required</h2>
           <p className="text-gray-600 mb-6">
-            The quiz creation feature is temporarily unavailable. We are working to restore it soon.
+            Only administrators can create quizzes. Please contact an admin if you need to create a quiz.
           </p>
-          <Link href="/my-quizzes" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200">
-            View My Quizzes
+          <Link href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200">
+            Back to Home
           </Link>
         </div>
       </div>

@@ -727,9 +727,9 @@ function QuizContent() {
                 
                 if (isLocked) {
                   if (isCorrect) {
-                    buttonClass += "bg-green-50 border-green-500 text-green-900";
+                    buttonClass += "bg-green-50 border-green-500 text-green-900 font-bold";
                   } else if (isSelected && !isCorrect) {
-                    buttonClass += "bg-red-50 border-red-500 text-red-900";
+                    buttonClass += "bg-red-50 border-red-500 text-red-900 font-bold";
                   } else {
                     buttonClass += "bg-gray-50 border-gray-200 text-gray-500";
                   }
