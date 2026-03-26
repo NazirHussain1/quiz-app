@@ -548,8 +548,8 @@ function QuizContent() {
   const progressPercent = ((index + 1) / questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+      <div className="max-w-3xl w-full h-full overflow-y-auto py-8">
         {/* Sound Toggle Button */}
         <motion.div 
           className="flex justify-end mb-4"
@@ -727,9 +727,9 @@ function QuizContent() {
                 
                 if (isLocked) {
                   if (isCorrect) {
-                    buttonClass += "bg-green-50 border-green-500 text-green-900 font-bold";
+                    buttonClass += "bg-green-600 border-green-700 text-white font-bold shadow-lg";
                   } else if (isSelected && !isCorrect) {
-                    buttonClass += "bg-red-50 border-red-500 text-red-900 font-bold";
+                    buttonClass += "bg-red-600 border-red-700 text-white font-bold shadow-lg";
                   } else {
                     buttonClass += "bg-gray-50 border-gray-200 text-gray-500";
                   }
