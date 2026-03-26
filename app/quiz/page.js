@@ -548,8 +548,9 @@ function QuizContent() {
   const progressPercent = ((index + 1) / questions.length) * 100;
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
-      <div className="max-w-3xl w-full h-full overflow-y-auto py-8">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4 py-8 pb-24">
+        <div className="max-w-3xl mx-auto">
         {/* Sound Toggle Button */}
         <motion.div 
           className="flex justify-end mb-4"
@@ -717,8 +718,17 @@ function QuizContent() {
               transition={{ delay: 0.1, duration: 0.3 }}
             ></motion.h2>
 
-            {/* Options */}
-            <div className="space-y-3" role="radiogroup" aria-label="Answer options">
+            {/* Options - Adaptive Layout */}
+            <div 
+              className={`grid gap-3 ${
+                // Check if options are short (less than 30 characters on average)
+                current.options.every(opt => opt.length < 30) 
+                  ? 'grid-cols-1 sm:grid-cols-2' 
+                  : 'grid-cols-1'
+              }`} 
+              role="radiogroup" 
+              aria-label="Answer options"
+            >
               {current.options.map((option, i) => {
                 const isSelected = option === answers[index];
                 const isCorrect = option === current.correct;
@@ -762,36 +772,40 @@ function QuizContent() {
             </div>
           </motion.div>
         </AnimatePresence>
+        </div>
+      </div>
 
-        {/* Navigation Buttons */}
-        <motion.div 
-          className="flex justify-between gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          <motion.button
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            onClick={handlePrev}
-            disabled={index === 0}
-            aria-label="Go to previous question"
-            whileHover={{ scale: index === 0 ? 1 : 1.05 }}
-            whileTap={{ scale: index === 0 ? 1 : 0.95 }}
-          >
-            ← Previous
-          </motion.button>
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl z-50">
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center gap-4">
+            <motion.button
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              onClick={handlePrev}
+              disabled={index === 0}
+              aria-label="Go to previous question"
+              whileHover={{ scale: index === 0 ? 1 : 1.05 }}
+              whileTap={{ scale: index === 0 ? 1 : 0.95 }}
+            >
+              ← Previous
+            </motion.button>
 
-          <motion.button
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-            disabled={!isLocked}
-            onClick={handleNext}
-            aria-label={index === questions.length - 1 ? "Finish quiz" : "Go to next question"}
-            whileHover={{ scale: !isLocked ? 1 : 1.05 }}
-            whileTap={{ scale: !isLocked ? 1 : 0.95 }}
-          >
-            {index === questions.length - 1 ? "Finish" : "Next →"}
-          </motion.button>
-        </motion.div>
+            <div className="text-sm text-gray-600 font-medium">
+              Question {index + 1} of {questions.length}
+            </div>
+
+            <motion.button
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 shadow-lg"
+              disabled={!isLocked}
+              onClick={handleNext}
+              aria-label={index === questions.length - 1 ? "Finish quiz" : "Go to next question"}
+              whileHover={{ scale: !isLocked ? 1 : 1.05 }}
+              whileTap={{ scale: !isLocked ? 1 : 0.95 }}
+            >
+              {index === questions.length - 1 ? "🏁 Finish" : "Next →"}
+            </motion.button>
+          </div>
+        </div>
       </div>
     </div>
   );

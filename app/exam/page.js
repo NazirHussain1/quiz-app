@@ -335,8 +335,9 @@ function ExamContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4 py-8 pb-24">
+        <div className="max-w-4xl mx-auto">
         {/* Exam Mode Banner */}
         <div className="bg-yellow-100 border-2 border-yellow-400 rounded-2xl shadow-md mb-6 p-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -422,7 +423,14 @@ function ExamContent() {
               transition={{ delay: 0.1, duration: 0.3 }}
             ></motion.h2>
 
-            <div className="space-y-3">
+            <div 
+              className={`grid gap-3 ${
+                // Adaptive layout based on option length
+                current.options.every(opt => opt.length < 30) 
+                  ? 'grid-cols-1 sm:grid-cols-2' 
+                  : 'grid-cols-1'
+              }`}
+            >
               {current.options.map((option, i) => {
                 const isSelected = option === answers[index];
                 let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 ";
@@ -450,31 +458,32 @@ function ExamContent() {
             </div>
           </motion.div>
         </AnimatePresence>
+      </div>
 
-        {/* Navigation */}
-        <motion.div 
-          className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          <div className="text-sm text-gray-500 text-center sm:text-left">
-            ⚠️ Cannot go back to previous questions
-          </div>
-          
-          <div className="flex gap-3">
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl z-50">
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center gap-4">
+            <div className="text-sm text-gray-600 font-medium">
+              ⚠️ Cannot go back
+            </div>
+
+            <div className="text-sm text-gray-600 font-medium">
+              Answered: <span className="font-bold text-gray-900">{answers.filter(a => a !== null).length}</span> / {questions.length}
+            </div>
+
             {index === questions.length - 1 ? (
               <motion.button
-                className="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold text-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg"
                 onClick={handleSubmit}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Submit Exam
+                🏁 Submit Exam
               </motion.button>
             ) : (
               <motion.button
-                className="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-lg"
                 onClick={handleNext}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -483,12 +492,6 @@ function ExamContent() {
               </motion.button>
             )}
           </div>
-        </motion.div>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">
-            Answered: <span className="font-semibold text-gray-700">{answers.filter(a => a !== null).length}</span> / {questions.length}
-          </p>
         </div>
       </div>
     </div>

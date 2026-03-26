@@ -206,8 +206,9 @@ export default function CustomQuizPage() {
   const isLocked = !!answers[index];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-4 py-8 pb-24">
+        <div className="max-w-2xl mx-auto">
         <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl shadow-lg p-4 mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <span className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-bold">📝 {quiz.title}</span>
@@ -247,7 +248,14 @@ export default function CustomQuizPage() {
           >
             <h5 className="text-xl font-bold text-gray-900 mb-4">{current.question}</h5>
 
-            <div className="space-y-3">
+            <div 
+              className={`grid gap-3 ${
+                // Adaptive layout based on option length
+                current.options.every(opt => opt.length < 30) 
+                  ? 'grid-cols-1 sm:grid-cols-2' 
+                  : 'grid-cols-1'
+              }`}
+            >
               {current.options.map((option, i) => {
                 let className = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 ";
                 const isSelected = option === answers[index];
@@ -279,23 +287,32 @@ export default function CustomQuizPage() {
             </div>
           </motion.div>
         </AnimatePresence>
+      </div>
 
-        <div className="flex justify-between gap-3">
-          <button
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            onClick={handlePrev}
-            disabled={index === 0}
-          >
-            ← Previous
-          </button>
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl z-50">
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center gap-4">
+            <button
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              onClick={handlePrev}
+              disabled={index === 0}
+            >
+              ← Previous
+            </button>
 
-          <button
-            className="px-6 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-            disabled={!isLocked}
-            onClick={handleNext}
-          >
-            {index === questions.length - 1 ? "Finish" : "Next →"}
-          </button>
+            <div className="text-sm text-gray-600 font-medium">
+              Question {index + 1} of {questions.length}
+            </div>
+
+            <button
+              className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 shadow-lg"
+              disabled={!isLocked}
+              onClick={handleNext}
+            >
+              {index === questions.length - 1 ? "🏁 Finish" : "Next →"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
