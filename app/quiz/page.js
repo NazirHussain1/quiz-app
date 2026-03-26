@@ -549,7 +549,75 @@ function QuizContent() {
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
-      <div className="flex-1 overflow-y-auto px-4 py-8 pb-24">
+      {/* Fixed Top Header */}
+      <div className="sticky top-0 z-40 bg-white border-b-2 border-gray-200 shadow-lg">
+        <div className="max-w-3xl mx-auto px-4 py-4">
+          {/* Timer and Score Row */}
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">⏱️</span>
+              <motion.span 
+                className={`text-3xl font-bold ${timeLeft <= 5 ? 'text-red-600' : 'text-blue-600'}`}
+                animate={{ scale: timeLeft <= 5 ? [1, 1.1, 1] : 1 }}
+                transition={{ duration: 0.5, repeat: timeLeft <= 5 ? Infinity : 0 }}
+              >
+                {timeLeft}s
+              </motion.span>
+            </div>
+
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Score</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {score}<span className="text-gray-400">/{questions.length}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-2">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-semibold text-gray-700">
+                Question {index + 1} of {questions.length}
+              </span>
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                {Math.round(progressPercent)}%
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 0.5 }}
+              ></motion.div>
+            </div>
+          </div>
+
+          {/* Category Tags */}
+          {categoryName && subjectName && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                📚 {categoryName}
+              </span>
+              <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                📖 {subjectName}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                adaptiveDifficulty === "easy" ? "bg-green-100 text-green-700" : 
+                adaptiveDifficulty === "hard" ? "bg-red-100 text-red-700" : 
+                "bg-yellow-100 text-yellow-700"
+              }`}>
+                {adaptiveDifficulty === "easy" ? "😊 Easy" : 
+                 adaptiveDifficulty === "hard" ? "🔥 Hard" : 
+                 "🤔 Medium"}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-24">
         <div className="max-w-3xl mx-auto">
         {/* Sound Toggle Button */}
         <motion.div 
@@ -575,153 +643,30 @@ function QuizContent() {
             {soundEnabled ? "🔊 Sound On" : "🔇 Sound Off"}
           </button>
         </motion.div>
-      
-        {/* Score Card */}
-        <motion.div 
-          className="bg-white rounded-2xl shadow-lg p-6 mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Current Score</p>
-              <p className="text-3xl font-bold text-gray-900">{score}<span className="text-gray-400">/{questions.length}</span></p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-500 mb-1">Progress</p>
-              <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                {Math.round(progressPercent)}%
-              </p>
-            </div>
-          </div>
-        </motion.div>
-        
-        {categoryName && subjectName && (
-          <motion.div 
-            className="flex flex-wrap justify-center gap-2 mb-6"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-              📚 {categoryName}
-            </span>
-            <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-              📖 {subjectName}
-            </span>
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-              adaptiveDifficulty === "easy" ? "bg-green-100 text-green-700" : 
-              adaptiveDifficulty === "hard" ? "bg-red-100 text-red-700" : 
-              "bg-yellow-100 text-yellow-700"
-            }`}>
-              {adaptiveDifficulty === "easy" ? "😊 Easy" : 
-               adaptiveDifficulty === "hard" ? "🔥 Hard" : 
-               "🤔 Medium"}
-            </span>
-          </motion.div>
-        )}
 
-        {difficultyChanged && (
-          <motion.div
-            className={`rounded-xl p-4 mb-6 ${
-              previousDifficulty && adaptiveDifficulty > previousDifficulty 
-                ? 'bg-green-50 border-2 border-green-200 text-green-800' 
-                : 'bg-blue-50 border-2 border-blue-200 text-blue-800'
-            }`}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <strong>🎯 Adaptive Difficulty:</strong> Based on your previous performance, 
-            difficulty has been {adaptiveDifficulty > previousDifficulty ? 'increased' : 'decreased'} to {adaptiveDifficulty}.
-          </motion.div>
-        )}
-
-        {/* Progress Bar */}
-        <motion.div 
-          className="bg-white rounded-2xl shadow-lg p-6 mb-6"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-sm font-semibold text-gray-700">
-              Question {index + 1} of {questions.length}
-            </span>
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-              {Math.round(progressPercent)}% Complete
-            </span>
-          </div>
-          
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 0.5 }}
-            ></motion.div>
-          </div>
-        </motion.div>
-
-        {/* Timer Card */}
-        <motion.div 
-          className={`rounded-2xl shadow-lg p-6 mb-6 transition-all duration-300 ${
-            timeLeft <= 5 
-              ? 'bg-red-50 border-2 border-red-300' 
-              : 'bg-white border-2 border-gray-200'
-          }`}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-2xl">⏱️</span>
-            <motion.span 
-              className={`text-5xl font-bold ${timeLeft <= 5 ? 'text-red-600' : 'text-gray-900'}`}
-              aria-live="polite"
-              aria-atomic="true"
-              animate={{ scale: timeLeft <= 5 ? [1, 1.1, 1] : 1 }}
-              transition={{ duration: 0.5, repeat: timeLeft <= 5 ? Infinity : 0 }}
-            >
-              {timeLeft}s
-            </motion.span>
-            <span className="text-gray-500 text-sm">remaining</span>
-          </div>
-          <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-1000 linear ${
-                timeLeft <= 5 ? 'bg-red-500' : 'bg-green-500'
-              }`}
-              style={{ width: `${(timeLeft / 30) * 100}%` }}
-            ></div>
-          </div>
-        </motion.div>
-
-        {/* Question Card */}
+        {/* Question Card - Modern UI */}
         <AnimatePresence mode="wait">
           <motion.div 
             key={index}
-            className="bg-white rounded-2xl shadow-xl p-8 mb-6"
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
+            className="bg-white rounded-2xl shadow-xl p-6 mb-6"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
             <motion.h2
               dangerouslySetInnerHTML={{ __html: current.question }}
-              className="text-2xl font-bold text-gray-900 mb-6"
+              className="text-xl md:text-2xl font-bold text-gray-900 mb-6 leading-relaxed"
               role="heading"
               aria-level="2"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.3 }}
             ></motion.h2>
 
-            {/* Options - Adaptive Layout */}
+            {/* Options - Modern Card Style with Hover States */}
             <div 
               className={`grid gap-3 ${
-                // Check if options are short (less than 30 characters on average)
                 current.options.every(opt => opt.length < 30) 
                   ? 'grid-cols-1 sm:grid-cols-2' 
                   : 'grid-cols-1'
@@ -733,21 +678,21 @@ function QuizContent() {
                 const isSelected = option === answers[index];
                 const isCorrect = option === current.correct;
                 
-                let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 ";
+                let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 cursor-pointer ";
                 
                 if (isLocked) {
                   if (isCorrect) {
-                    buttonClass += "bg-green-600 border-green-700 text-white font-bold shadow-lg";
+                    buttonClass += "bg-green-600 border-green-700 text-white font-bold shadow-lg transform scale-105";
                   } else if (isSelected && !isCorrect) {
-                    buttonClass += "bg-red-600 border-red-700 text-white font-bold shadow-lg";
+                    buttonClass += "bg-red-600 border-red-700 text-white font-bold shadow-lg transform scale-105";
                   } else {
-                    buttonClass += "bg-gray-50 border-gray-200 text-gray-500";
+                    buttonClass += "bg-gray-50 border-gray-200 text-gray-500 opacity-60";
                   }
                 } else {
                   if (isSelected) {
-                    buttonClass += "bg-blue-50 border-blue-500 text-blue-900 shadow-md";
+                    buttonClass += "bg-blue-500 border-blue-600 text-white shadow-lg transform scale-105 ring-4 ring-blue-200";
                   } else {
-                    buttonClass += "bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md";
+                    buttonClass += "bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md hover:scale-102 active:scale-98";
                   }
                 }
 
@@ -758,11 +703,11 @@ function QuizContent() {
                     onClick={() => handleSelect(option)}
                     dangerouslySetInnerHTML={{ __html: option }}
                     disabled={isLocked}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2 + i * 0.1, duration: 0.3 }}
-                    whileHover={{ scale: isLocked ? 1 : 1.02 }}
-                    whileTap={{ scale: isLocked ? 1 : 0.98 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + i * 0.05, duration: 0.2 }}
+                    whileHover={!isLocked ? { scale: 1.02 } : {}}
+                    whileTap={!isLocked ? { scale: 0.98 } : {}}
                     role="radio"
                     aria-checked={isSelected}
                     aria-label={`Option ${i + 1}`}
