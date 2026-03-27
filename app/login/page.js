@@ -6,13 +6,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { login, signup, clearError } from "../store/slices/authSlice";
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { LogIn, UserPlus, ArrowLeft, Loader2 } from "lucide-react";
+import { LogIn, UserPlus, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.auth);
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -116,17 +117,31 @@ export default function LoginPage() {
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={6}
-                placeholder="Enter your password"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  minLength={6}
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {!isLogin && (
                 <p className="text-sm text-gray-500 mt-1">
                   Minimum 6 characters
@@ -159,6 +174,7 @@ export default function LoginPage() {
                 setIsLogin(!isLogin);
                 dispatch(clearError());
                 setFormData({ email: "", password: "", userName: "" });
+                setShowPassword(false);
               }}
               className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
             >
