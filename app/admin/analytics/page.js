@@ -40,6 +40,18 @@ export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Compute derived values with useMemo (must be before any conditional returns)
+  const mostAttemptedSubject = useMemo(() => {
+    if (!analytics?.subjectStats || analytics.subjectStats.length === 0) return 'N/A';
+    const sorted = [...analytics.subjectStats].sort((a, b) => b.totalAttempts - a.totalAttempts);
+    return sorted[0]?.subject || 'N/A';
+  }, [analytics]);
+
+  const averageScore = useMemo(() => {
+    if (!analytics?.overview) return 0;
+    return analytics.overview.accuracyPercentage || 0;
+  }, [analytics]);
+
   // Role-based access control
   useEffect(() => {
     if (!authLoading) {
@@ -280,17 +292,6 @@ export default function AdminAnalytics() {
       }
     }
   };
-
-  const mostAttemptedSubject = useMemo(() => {
-    if (!analytics?.subjectStats || analytics.subjectStats.length === 0) return 'N/A';
-    const sorted = [...analytics.subjectStats].sort((a, b) => b.totalAttempts - a.totalAttempts);
-    return sorted[0]?.subject || 'N/A';
-  }, [analytics]);
-
-  const averageScore = useMemo(() => {
-    if (!analytics?.overview) return 0;
-    return analytics.overview.accuracyPercentage || 0;
-  }, [analytics]);
 
   return (
     <AdminLayout user={user}>
