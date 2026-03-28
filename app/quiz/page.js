@@ -10,7 +10,6 @@ import { adaptiveDifficultyService } from "../services/adaptiveDifficultyService
 
 function QuizContent() {
   const searchParams = useSearchParams();
-  const category = searchParams.get("category");
   const subject = searchParams.get("subject");
   const initialDifficulty = searchParams.get("difficulty") || "medium";
   const { playCorrect, playWrong, playComplete } = useSound();
@@ -30,14 +29,14 @@ function QuizContent() {
   const [difficultyChanged, setDifficultyChanged] = useState(false);
   const [previousDifficulty, setPreviousDifficulty] = useState(null);
 
-  // Generate unique storage key based on category, subject, and difficulty
-  const storageKey = `quiz_progress_${category || 'any'}_${subject || 'any'}_${adaptiveDifficulty}`;
+  // Generate unique storage key based on subject and difficulty
+  const storageKey = `quiz_progress_${subject || 'any'}_${adaptiveDifficulty}`;
 
   // Check for adaptive difficulty on mount
   useEffect(() => {
-    if (category && subject) {
+    if (subject) {
       const newDifficulty = adaptiveDifficultyService.getAdaptiveDifficulty(
-        category,
+        subject,
         subject,
         initialDifficulty
       );
@@ -52,7 +51,7 @@ function QuizContent() {
     } else {
       setAdaptiveDifficulty(initialDifficulty);
     }
-  }, [category, subject, initialDifficulty]);
+  }, [subject, initialDifficulty]);
 
   // Load saved progress from localStorage on mount
   useEffect(() => {
@@ -99,12 +98,9 @@ function QuizContent() {
         setLoading(true);
         setError(null);
         
-        // Try MongoDB first
+        // Use MongoDB for questions
         const params = new URLSearchParams();
         
-        if (category) {
-          params.append('category', category);
-        }
         if (subject) {
           params.append('subject', subject);
         }
@@ -117,58 +113,27 @@ function QuizContent() {
         
         const res = await fetch(apiUrl);
         
-        if (res.ok) {
-          const data = await res.json();
-
-          if (data.success && data.questions && data.questions.length > 0) {
-            // MongoDB has questions - use them
-            const formatted = data.questions.map((q) => ({
-              question: q.question,
-              correct: q.correctAnswer,
-              options: shuffleArray([...q.options]),
-              category: q.category,
-              subject: q.subject,
-            }));
-
-            setQuestions(formatted);
-            setAnswers(new Array(formatted.length).fill(null));
-            
-            if (formatted.length > 0) {
-              setCategoryName(formatted[0].category);
-              setSubjectName(formatted[0].subject);
-            }
-            
-            setLoading(false);
-            return;
-          }
+        if (!res.ok) {
+          throw new Error("Failed to fetch questions from server");
         }
         
-        // Fallback to Open Trivia API if MongoDB has no questions
-        console.log("MongoDB returned no questions, falling back to Open Trivia API");
-        
-        let triviaUrl = "https://opentdb.com/api.php?amount=10&type=multiple";
-        if (adaptiveDifficulty) {
-          triviaUrl += `&difficulty=${adaptiveDifficulty}`;
-        }
-        
-        const triviaRes = await fetch(triviaUrl);
-        
-        if (!triviaRes.ok) {
-          throw new Error("Failed to fetch questions from both sources");
-        }
-        
-        const triviaData = await triviaRes.json();
+        const data = await res.json();
 
-        if (triviaData.response_code !== 0) {
-          throw new Error("No questions available");
+        if (!data.success) {
+          throw new Error(data.error || "Failed to load questions");
         }
 
-        const formatted = triviaData.results.map((q) => ({
+        if (!data.questions || data.questions.length === 0) {
+          throw new Error("No questions available for the selected subject and difficulty. Please try different options or contact admin to add questions.");
+        }
+
+        // MongoDB has questions - use them
+        const formatted = data.questions.map((q) => ({
           question: q.question,
-          correct: q.correct_answer,
-          options: shuffleArray([...q.incorrect_answers, q.correct_answer]),
-          category: q.category,
-          subject: "General",
+          correct: q.options[q.correctAnswer],
+          options: shuffleArray([...q.options]),
+          category: q.category || q.subject,
+          subject: q.subject,
         }));
 
         setQuestions(formatted);
@@ -178,15 +143,17 @@ function QuizContent() {
           setCategoryName(formatted[0].category);
           setSubjectName(formatted[0].subject);
         }
+        
+        setLoading(false);
       } catch (err) {
+        console.error("Error fetching questions:", err);
         setError(err.message);
-      } finally {
         setLoading(false);
       }
     }
 
     fetchQuestions();
-  }, [category, subject, adaptiveDifficulty, refreshKey]);
+  }, [subject, adaptiveDifficulty, refreshKey]);
 
   // Save progress to localStorage whenever state changes
   useEffect(() => {
@@ -215,9 +182,9 @@ function QuizContent() {
       const score = calculateScore();
       
       // Record performance for adaptive difficulty
-      if (category && subject) {
+      if (subject) {
         adaptiveDifficultyService.recordQuizResult(
-          category,
+          subject,
           subject,
           adaptiveDifficulty,
           score,
@@ -417,8 +384,8 @@ function QuizContent() {
 
   if (finished) {
     const percentage = (score / questions.length) * 100;
-    const nextDifficulty = category && subject 
-      ? adaptiveDifficultyService.getAdaptiveDifficulty(category, subject, adaptiveDifficulty)
+    const nextDifficulty = subject 
+      ? adaptiveDifficultyService.getAdaptiveDifficulty(subject, subject, adaptiveDifficulty)
       : adaptiveDifficulty;
     const willChangeDifficulty = nextDifficulty !== adaptiveDifficulty;
     

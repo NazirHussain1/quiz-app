@@ -7,25 +7,29 @@ import { Play, Trophy, BookOpen, Target, Sparkles } from "lucide-react";
 
 export default function HomePage() {
   const router = useRouter();
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("medium");
   const [playerName, setPlayerName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchSubjects() {
       try {
         setLoading(true);
-        const res = await fetch("https://opentdb.com/api_category.php");
+        const res = await fetch("/api/questions/subjects");
         
         if (!res.ok) {
-          throw new Error("Failed to fetch categories");
+          throw new Error("Failed to fetch subjects");
         }
         
         const data = await res.json();
-        setCategories(data.trivia_categories);
+        if (data.success) {
+          setSubjects(data.subjects);
+        } else {
+          throw new Error(data.error || "Failed to load subjects");
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -33,7 +37,7 @@ export default function HomePage() {
       }
     }
 
-    fetchCategories();
+    fetchSubjects();
     
     const savedName = localStorage.getItem("playerName");
     if (savedName) {
@@ -50,7 +54,7 @@ export default function HomePage() {
     }
     
     localStorage.setItem("playerName", playerName.trim());
-    const url = `/quiz?${selectedCategory ? `category=${selectedCategory}&` : ""}difficulty=${selectedDifficulty}`;
+    const url = `/quiz?${selectedSubject ? `subject=${selectedSubject}&` : ""}difficulty=${selectedDifficulty}`;
     router.push(url);
   };
 
@@ -88,8 +92,8 @@ export default function HomePage() {
             </div>
             
             <div>
-              <label htmlFor="category-select" className="block text-sm font-semibold text-gray-700 mb-2">
-                Quiz Category
+              <label htmlFor="subject-select" className="block text-sm font-semibold text-gray-700 mb-2">
+                Quiz Subject
               </label>
               
               {loading ? (
@@ -102,15 +106,15 @@ export default function HomePage() {
                 </div>
               ) : (
                 <select
-                  id="category-select"
+                  id="subject-select"
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 outline-none bg-white"
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
                 >
-                  <option value="">Any Category (Random)</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
+                  <option value="">All Subjects (Random)</option>
+                  {subjects.map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
                     </option>
                   ))}
                 </select>
@@ -201,7 +205,7 @@ export default function HomePage() {
         </div>
 
         <div className="text-center mt-8 text-gray-500 text-sm">
-          <p>Powered by Open Trivia Database</p>
+          <p>Pakistan Textbook Based Quiz App</p>
         </div>
       </div>
     </div>
