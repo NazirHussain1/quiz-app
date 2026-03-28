@@ -244,7 +244,7 @@ function QuizContent() {
       // Save back to localStorage
       localStorage.setItem("leaderboard", JSON.stringify(topEntries));
     }
-  }, [finished, storageKey, categoryName, subjectName, adaptiveDifficulty, questions.length, soundEnabled, playComplete, category, subject]);
+  }, [finished, storageKey, categoryName, subjectName, adaptiveDifficulty, questions.length, soundEnabled, playComplete, subject]);
 
   // Timer effect - resets when question changes
   useEffect(() => {
