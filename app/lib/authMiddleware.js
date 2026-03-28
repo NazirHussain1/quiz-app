@@ -64,3 +64,21 @@ export function requireAdmin(handler) {
     return handler(request, context);
   };
 }
+
+export async function verifyAdmin(request) {
+  try {
+    const user = await verifyAuth(request);
+    
+    if (!user) {
+      return { authorized: false, user: null };
+    }
+    
+    if (user.role !== 'admin') {
+      return { authorized: false, user: null };
+    }
+    
+    return { authorized: true, user };
+  } catch (error) {
+    return { authorized: false, user: null };
+  }
+}

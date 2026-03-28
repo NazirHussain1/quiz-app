@@ -27,7 +27,7 @@ export default function AdminLayout({ children, user }) {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin", exact: true },
-    { icon: FileQuestion, label: "Questions", href: "/admin", exact: true },
+    { icon: FileQuestion, label: "Questions", href: "/admin/questions", exact: false },
     { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
     { icon: Users, label: "Users", href: "/admin/users" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },
