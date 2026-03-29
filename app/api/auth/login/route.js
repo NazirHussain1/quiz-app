@@ -58,6 +58,19 @@ export async function POST(request) {
         { status: 401 }
       );
     }
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Please verify your email before logging in. Check your inbox for the verification link.',
+          needsVerification: true,
+          email: user.email
+        },
+        { status: 403 }
+      );
+    }
     
     // Generate JWT with expiry
     const token = await new SignJWT({

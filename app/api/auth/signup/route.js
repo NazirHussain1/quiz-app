@@ -3,6 +3,8 @@ import { createUser } from '@/app/lib/auth';
 import { generateToken } from '@/app/lib/jwt';
 import { validateEmail, validatePassword, validateUsername } from '@/app/lib/validation';
 import { rateLimitLogin } from '@/app/lib/rateLimit';
+import { sendVerificationEmail } from '@/app/lib/email';
+import { connectToDatabase } from '@/app/lib/mongodb';
 
 export async function POST(request) {
   try {
