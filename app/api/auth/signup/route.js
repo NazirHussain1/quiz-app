@@ -54,17 +54,42 @@ export async function POST(request) {
       usernameValidation.value
     );
 
-    // Generate JWT token with expiry
-    const token = generateToken(user);
+    // Generate verification token (expires in 1 hour)
+    const verificationToken = generateToken(
+      { userId: user.id, email: user.email, type: 'verification' },
+      '1h'
+    );
+
+    // Update user with verification token
+    const { db } = await connectToDatabase();
+    await db.collection('users').updateOne(
+      { email: user.email },
+      {
+        $set: {
+          isVerified: false,
+          verificationToken,
+          verificationTokenExpiry: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+        },
+      }
+    );
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, user.userName, verificationToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail signup if email fails
+    }
 
     return NextResponse.json({
       success: true,
-      token,
+      message: 'Account created successfully! Please check your email to verify your account.',
       user: {
         id: user.id,
         email: user.email,
         userName: user.userName,
-        role: user.role
+        role: user.role,
+        isVerified: false
       }
     }, { status: 201 });
   } catch (error) {
