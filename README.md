@@ -1,8 +1,19 @@
 # 🎯 Quiz App - Pakistan Textbook Based
 
-A modern, production-ready quiz application built with Next.js 16 and React 19. Features adaptive difficulty, real-time analytics, custom quiz creation, admin panel, and a global leaderboard system powered by MongoDB Atlas.
+A modern, production-ready quiz application built with Next.js 16 and React 19. Features email verification, role-based access control (RBAC), adaptive difficulty, real-time analytics, custom quiz creation, admin panel, and a global leaderboard system powered by MongoDB Atlas.
 
 ## ✨ Features
+
+### Authentication & Security
+- **Email Verification**: JWT-based email verification system (1-hour expiry)
+- **Password Reset**: Secure password reset with email tokens
+- **Role-Based Access Control (RBAC)**: 4 roles with granular permissions
+  - Superadmin: Full system access
+  - Admin: Manage users and questions
+  - Moderator: Manage questions only
+  - Student: Take quizzes only
+- **Security Hardening**: Rate limiting, IP throttling, input validation with Zod
+- **JWT Authentication**: Secure token-based authentication with httpOnly cookies
 
 ### Quiz Modes
 - **Regular Mode**: 10 questions with 30-second timer per question
@@ -11,7 +22,7 @@ A modern, production-ready quiz application built with Next.js 16 and React 19. 
 
 ### Smart Learning
 - Adaptive difficulty system that adjusts based on performance
-- 70+ Pakistan textbook-based questions across 7 subjects
+- 70 Pakistan textbook-based questions across 7 subjects
 - Three difficulty levels: Easy (Matric), Medium (FSC), Hard (Higher)
 
 ### Subjects
@@ -24,7 +35,7 @@ A modern, production-ready quiz application built with Next.js 16 and React 19. 
 - Pakistan Studies
 
 ### User Features
-- Secure JWT-based authentication
+- Secure JWT-based authentication with email verification
 - Personal analytics dashboard with visual charts
 - Performance tracking by subject and difficulty
 - Global leaderboard with filtering options
@@ -32,7 +43,7 @@ A modern, production-ready quiz application built with Next.js 16 and React 19. 
 - Responsive design for all devices
 
 ### Admin Panel
-Complete admin dashboard with:
+Complete admin dashboard with role-based access:
 - **Dashboard**: Overview statistics and quick actions
 - **Questions Management**: Full CRUD operations (Add, Edit, Delete)
   - Search questions by text
@@ -41,6 +52,7 @@ Complete admin dashboard with:
   - Color-coded difficulty levels
 - **Users Management**: 
   - View all users with search
+  - Change user roles (superadmin only)
   - Make users admin
   - Delete users
   - User statistics
@@ -60,7 +72,7 @@ Complete admin dashboard with:
 - Adaptive options layout (2-column for short, 1-column for long)
 - Color-coded feedback (dark green for correct, dark red for wrong)
 - No scrolling required during quiz
-- Accessibility compliant
+- Role-based UI rendering
 
 ## 🛠 Tech Stack
 
@@ -76,6 +88,14 @@ Complete admin dashboard with:
 - MongoDB Atlas 7.1.0
 - JWT Authentication (jose 6.2.1)
 - bcryptjs 3.0.3 for password hashing
+- Nodemailer 8.0.4 for email services
+- Zod 4.3.6 for input validation
+
+### Security
+- Rate limiting with IP-based throttling
+- Input validation and sanitization
+- CORS and Helmet for security headers
+- XSS and injection attack prevention
 
 ### State Management
 - Redux Toolkit 2.11.2
@@ -108,17 +128,35 @@ cp .env.local.example .env.local
 
 Edit `.env.local` with your credentials:
 ```env
+# MongoDB Atlas Connection
 MONGODB_URI=mongodb+srv://username:password@cluster0.lkomkrd.mongodb.net/quizapp?retryWrites=true&w=majority
+
+# JWT Configuration
 JWT_SECRET=your-secure-random-string-minimum-32-characters
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secure-random-string-minimum-32-characters
+
+# Application
 NEXT_PUBLIC_APP_NAME=Quiz App
+
+# Email Configuration (for verification and password reset)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-gmail-app-password
+EMAIL_FROM=Quiz App <your-email@gmail.com>
 ```
 
 Generate secure secrets:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+
+For Gmail App Password:
+1. Go to [Google Account Security](https://myaccount.google.com/security)
+2. Enable 2-Step Verification
+3. Generate App Password at [App Passwords](https://myaccount.google.com/apppasswords)
+4. Use the generated password in `EMAIL_PASSWORD`
 
 4. Run the development server:
 ```bash
@@ -150,6 +188,11 @@ Default admin credentials:
 | `JWT_SECRET` | Secret for JWT token signing (32+ chars) | Yes |
 | `NEXTAUTH_URL` | Application URL (http://localhost:3000 for dev) | Yes |
 | `NEXTAUTH_SECRET` | Secret for session encryption (32+ chars) | Yes |
+| `EMAIL_HOST` | SMTP server host (e.g., smtp.gmail.com) | Yes |
+| `EMAIL_PORT` | SMTP server port (587 for TLS, 465 for SSL) | Yes |
+| `EMAIL_USER` | Email account username | Yes |
+| `EMAIL_PASSWORD` | Email account password or app password | Yes |
+| `EMAIL_FROM` | From address for emails | Yes |
 | `NEXT_PUBLIC_APP_NAME` | Application name | No |
 
 ### MongoDB Setup
@@ -165,24 +208,29 @@ Default admin credentials:
 ```
 quiz-app/
 ├── app/
-│   ├── admin/                    # Admin panel
+│   ├── admin/                    # Admin panel (RBAC protected)
 │   │   ├── analytics/           # Admin analytics page
 │   │   ├── components/          # AdminLayout component
-│   │   ├── questions/           # Questions management (NEW)
+│   │   ├── questions/           # Questions management
 │   │   ├── settings/            # Settings page
 │   │   ├── users/               # Users management
 │   │   └── page.js              # Admin dashboard
 │   ├── analytics/               # User analytics
 │   ├── api/                     # API routes
-│   │   ├── admin/              # Admin endpoints
+│   │   ├── admin/              # Admin endpoints (RBAC protected)
 │   │   │   ├── analytics/      # Analytics data
 │   │   │   ├── questions/      # Question CRUD
+│   │   │   ├── roles/          # Role management
 │   │   │   └── users/          # User management
 │   │   ├── auth/               # Authentication
+│   │   │   ├── forgot-password/  # Password reset request
 │   │   │   ├── login/
 │   │   │   ├── logout/
 │   │   │   ├── me/
-│   │   │   └── signup/
+│   │   │   ├── reset-password/   # Password reset
+│   │   │   ├── send-verification/ # Resend verification
+│   │   │   ├── signup/
+│   │   │   └── verify-email/     # Email verification
 │   │   ├── custom-quizzes/     # Custom quiz endpoints
 │   │   ├── questions/          # Question endpoints
 │   │   │   ├── categories/
@@ -195,6 +243,7 @@ quiz-app/
 │   │   ├── QuestionDisplay.js
 │   │   ├── QuizProgress.js
 │   │   ├── QuizResults.js
+│   │   ├── RBACGuard.js        # RBAC guard components
 │   │   ├── SoundToggle.js
 │   │   └── Timer.js
 │   ├── contexts/                # Context providers
@@ -202,9 +251,11 @@ quiz-app/
 │   ├── create-quiz/             # Custom quiz creation
 │   ├── custom-quiz/             # Custom quiz pages
 │   ├── exam/                    # Exam mode
+│   ├── forgot-password/         # Password reset request page
 │   ├── hooks/                   # Custom hooks
 │   │   ├── useLeaderboard.js
 │   │   ├── useQuizState.js
+│   │   ├── useRBAC.js          # RBAC hook
 │   │   └── useTimer.js
 │   ├── leaderboard/             # Global leaderboard
 │   ├── lib/                     # Utilities
@@ -216,13 +267,18 @@ quiz-app/
 │   │   ├── apiResponse.js
 │   │   ├── auth.js
 │   │   ├── authMiddleware.js
+│   │   ├── email.js            # Email service
 │   │   ├── jwt.js
 │   │   ├── mongodb.js
-│   │   ├── rateLimit.js
-│   │   └── validation.js
+│   │   ├── rateLimit.js        # Rate limiting & IP throttling
+│   │   ├── rbac.js             # RBAC configuration
+│   │   ├── rbacMiddleware.js   # RBAC middleware
+│   │   ├── validation.js
+│   │   └── zodSchemas.js       # Zod validation schemas
 │   ├── login/                   # Login page
 │   ├── my-quizzes/              # User's custom quizzes
 │   ├── quiz/                    # Quiz mode
+│   ├── reset-password/          # Password reset page
 │   ├── services/                # Business logic
 │   │   ├── adaptiveDifficultyService.js
 │   │   ├── leaderboardService.js
@@ -238,6 +294,7 @@ quiz-app/
 │   ├── utils/                   # Utility functions
 │   │   ├── shuffle.js
 │   │   └── useSound.js
+│   ├── verify-email/            # Email verification page
 │   ├── globals.css
 │   ├── layout.js
 │   └── page.js                  # Home page
