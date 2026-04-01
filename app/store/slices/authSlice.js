@@ -35,6 +35,15 @@ export const login = createAsyncThunk(
         return data.user;
       }
       
+      // Pass through email verification error with additional data
+      if (data.needsVerification) {
+        return rejectWithValue({
+          error: data.error || 'Email not verified',
+          needsVerification: true,
+          email: data.email
+        });
+      }
+      
       return rejectWithValue(data.error || 'Login failed');
     } catch (error) {
       return rejectWithValue(error.message);
