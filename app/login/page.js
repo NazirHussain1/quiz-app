@@ -45,7 +45,28 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      toast.error(err || "An error occurred");
+      // Check if email verification is needed
+      if (err.needsVerification) {
+        toast.error(err.error || "Please verify your email before logging in");
+        // Show resend verification option
+        if (window.confirm("Would you like to resend the verification email?")) {
+          try {
+            const res = await fetch("/api/auth/send-verification", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: err.email || formData.email }),
+            });
+            const data = await res.json();
+            if (data.success) {
+              toast.success("Verification email sent! Please check your inbox.");
+            }
+          } catch (error) {
+            toast.error("Failed to send verification email");
+          }
+        }
+      } else {
+        toast.error(err || "An error occurred");
+      }
     }
   };
 
@@ -146,6 +167,16 @@ export default function LoginPage() {
                 <p className="text-sm text-gray-500 mt-1">
                   Minimum 6 characters
                 </p>
+              )}
+              {isLogin && (
+                <div className="text-right mt-2">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
               )}
             </div>
 
