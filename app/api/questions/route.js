@@ -10,6 +10,13 @@ import {
   sanitizeString
 } from '@/app/lib/validation';
 import { rateLimitApi } from '@/app/lib/rateLimit';
+import { 
+  getCacheOrFetch, 
+  buildCacheKey, 
+  CACHE_KEYS, 
+  CACHE_TTL,
+  invalidateCache 
+} from '@/app/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,43 +40,59 @@ export async function GET(request) {
     const search = sanitizeString(searchParams.get('search') || '');
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10')));
     
-    const { db } = await connectToDatabase();
-    const collection = db.collection('questions');
-    
-    const matchStage = {};
-    
-    if (category) {
-      matchStage.category = category;
-    }
-    
-    if (subject) {
-      const subjectValidation = validateSubject(subject);
-      if (subjectValidation.valid) {
-        matchStage.subject = subjectValidation.value;
-      }
-    }
-    
-    if (difficulty) {
-      const difficultyValidation = validateDifficulty(difficulty);
-      if (difficultyValidation.valid) {
-        matchStage.difficulty = difficultyValidation.value;
-      }
-    }
-    
-    // Safe text search
-    if (search) {
-      matchStage.question = { $regex: search, $options: 'i' };
-    }
-    
-    const pipeline = [];
-    
-    if (Object.keys(matchStage).length > 0) {
-      pipeline.push({ $match: matchStage });
-    }
-    
-    pipeline.push({ $sample: { size: limit } });
-    
-    const questions = await collection.aggregate(pipeline).toArray();
+    // Build cache key based on query parameters
+    const cacheKey = buildCacheKey(CACHE_KEYS.QUESTIONS, {
+      category,
+      subject,
+      difficulty,
+      search,
+      limit,
+    });
+
+    // Use cache-aside pattern
+    const questions = await getCacheOrFetch(
+      cacheKey,
+      async () => {
+        const { db } = await connectToDatabase();
+        const collection = db.collection('questions');
+        
+        const matchStage = {};
+        
+        if (category) {
+          matchStage.category = category;
+        }
+        
+        if (subject) {
+          const subjectValidation = validateSubject(subject);
+          if (subjectValidation.valid) {
+            matchStage.subject = subjectValidation.value;
+          }
+        }
+        
+        if (difficulty) {
+          const difficultyValidation = validateDifficulty(difficulty);
+          if (difficultyValidation.valid) {
+            matchStage.difficulty = difficultyValidation.value;
+          }
+        }
+        
+        // Safe text search
+        if (search) {
+          matchStage.question = { $regex: search, $options: 'i' };
+        }
+        
+        const pipeline = [];
+        
+        if (Object.keys(matchStage).length > 0) {
+          pipeline.push({ $match: matchStage });
+        }
+        
+        pipeline.push({ $sample: { size: limit } });
+        
+        return await collection.aggregate(pipeline).toArray();
+      },
+      CACHE_TTL.QUESTIONS
+    );
     
     return NextResponse.json({ 
       success: true, 
@@ -77,7 +100,7 @@ export async function GET(request) {
       questions 
     }, {
       headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       }
     });
   } catch (error) {
@@ -173,6 +196,10 @@ export async function POST(request) {
       createdAt: new Date(),
       updatedAt: new Date()
     });
+    
+    // Invalidate questions cache
+    await invalidateCache(CACHE_KEYS.QUESTIONS);
+    console.log('🗑️  Questions cache invalidated');
     
     return NextResponse.json({ 
       success: true, 

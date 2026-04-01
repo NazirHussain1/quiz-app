@@ -13,6 +13,7 @@ import {
   sanitizeString
 } from '@/app/lib/validation';
 import { rateLimitApi } from '@/app/lib/rateLimit';
+import { invalidateCache, CACHE_KEYS } from '@/app/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -180,6 +181,10 @@ export const POST = requireAdmin(async (request) => {
       updatedAt: new Date()
     });
     
+    // Invalidate questions cache
+    await invalidateCache(CACHE_KEYS.QUESTIONS);
+    console.log('🗑️  Questions cache invalidated');
+    
     return NextResponse.json({ 
       success: true, 
       questionId: result.insertedId.toString(),
@@ -318,6 +323,10 @@ export const PUT = requireAdmin(async (request) => {
       );
     }
     
+    // Invalidate questions cache
+    await invalidateCache(CACHE_KEYS.QUESTIONS);
+    console.log('🗑️  Questions cache invalidated');
+    
     return NextResponse.json({ 
       success: true, 
       message: 'Question updated successfully'
@@ -365,6 +374,10 @@ export const DELETE = requireAdmin(async (request) => {
         { status: 404 }
       );
     }
+    
+    // Invalidate questions cache
+    await invalidateCache(CACHE_KEYS.QUESTIONS);
+    console.log('🗑️  Questions cache invalidated');
     
     return NextResponse.json({ 
       success: true, 

@@ -9,6 +9,13 @@ import {
   sanitizeString
 } from '@/app/lib/validation';
 import { rateLimitApi } from '@/app/lib/rateLimit';
+import { 
+  getCacheOrFetch, 
+  buildCacheKey, 
+  CACHE_KEYS, 
+  CACHE_TTL,
+  invalidateCache 
+} from '@/app/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,6 +118,12 @@ export async function POST(request) {
       createdAt: new Date()
     });
     
+    // Invalidate leaderboard and analytics cache
+    await invalidateCache(CACHE_KEYS.LEADERBOARD);
+    await invalidateCache(CACHE_KEYS.ANALYTICS);
+    await invalidateCache(CACHE_KEYS.ADMIN_ANALYTICS);
+    console.log('🗑️  Leaderboard and analytics cache invalidated');
+    
     return NextResponse.json({ 
       success: true, 
       resultId: result.insertedId.toString()
@@ -146,66 +159,84 @@ export async function GET(request) {
     const subject = sanitizeString(searchParams.get('subject') || '');
     const difficulty = sanitizeString(searchParams.get('difficulty') || '');
     
-    const { db } = await connectToDatabase();
-    const collection = db.collection('results');
-    
-    // Ensure indexes exist for optimal query performance
-    await ensureIndexes(collection);
-    
-    // Build safe filter object
-    const filter = {};
-    
-    // Apply filters only if provided
-    if (category && category !== 'all') {
-      filter.category = category;
-    }
-    
-    if (subject && subject !== 'all') {
-      filter.subject = subject;
-    }
-    
-    if (difficulty && difficulty !== 'all') {
-      const difficultyValidation = validateDifficulty(difficulty);
-      if (difficultyValidation.valid) {
-        filter.difficulty = difficultyValidation.value;
-      }
-    }
-    
-    // Get total count for pagination (with filters applied)
-    const totalCount = await collection.countDocuments(filter);
-    const totalPages = Math.ceil(totalCount / limit);
-    const skip = (page - 1) * limit;
-    
-    // Optimized query with projection (return only required fields)
-    const results = await collection
-      .find(filter, {
-        projection: {
-          name: 1,
-          score: 1,
-          totalQuestions: 1,
-          subject: 1,
-          category: 1,
-          difficulty: 1,
-          examMode: 1,
-          timeTaken: 1,
-          createdAt: 1
+    // Build cache key
+    const cacheKey = buildCacheKey(CACHE_KEYS.LEADERBOARD, {
+      limit,
+      page,
+      category,
+      subject,
+      difficulty,
+    });
+
+    // Use cache-aside pattern for leaderboard
+    const leaderboardData = await getCacheOrFetch(
+      cacheKey,
+      async () => {
+        const { db } = await connectToDatabase();
+        const collection = db.collection('results');
+        
+        // Ensure indexes exist for optimal query performance
+        await ensureIndexes(collection);
+        
+        // Build safe filter object
+        const filter = {};
+        
+        // Apply filters only if provided
+        if (category && category !== 'all') {
+          filter.category = category;
         }
-      })
-      .sort({ score: -1, createdAt: 1 }) // Sort by score DESC, then by date ASC (earlier dates first for same score)
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+        
+        if (subject && subject !== 'all') {
+          filter.subject = subject;
+        }
+        
+        if (difficulty && difficulty !== 'all') {
+          const difficultyValidation = validateDifficulty(difficulty);
+          if (difficultyValidation.valid) {
+            filter.difficulty = difficultyValidation.value;
+          }
+        }
+        
+        // Get total count for pagination (with filters applied)
+        const totalCount = await collection.countDocuments(filter);
+        const totalPages = Math.ceil(totalCount / limit);
+        const skip = (page - 1) * limit;
+        
+        // Optimized query with projection (return only required fields)
+        const results = await collection
+          .find(filter, {
+            projection: {
+              name: 1,
+              score: 1,
+              totalQuestions: 1,
+              subject: 1,
+              category: 1,
+              difficulty: 1,
+              examMode: 1,
+              timeTaken: 1,
+              createdAt: 1
+            }
+          })
+          .sort({ score: -1, createdAt: 1 }) // Sort by score DESC, then by date ASC (earlier dates first for same score)
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+        
+        return {
+          success: true,
+          count: results.length,
+          totalCount,
+          totalPages,
+          currentPage: page,
+          results
+        };
+      },
+      CACHE_TTL.LEADERBOARD
+    );
     
-    return NextResponse.json({ 
-      success: true, 
-      count: results.length,
-      totalCount,
-      totalPages,
-      currentPage: page,
-      results 
-    }, {
+    return NextResponse.json(leaderboardData, {
       headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
       }
     });
   } catch (error) {
