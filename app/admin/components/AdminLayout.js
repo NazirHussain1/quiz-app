@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRBAC } from "@/app/hooks/useRBAC";
+import { RoleBadge } from "@/app/components/RBACGuard";
 import { 
   LayoutDashboard, 
   FileQuestion, 
@@ -16,7 +18,8 @@ import {
   Moon,
   Sun,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from "lucide-react";
 
 export default function AdminLayout({ children, user }) {
@@ -24,14 +27,48 @@ export default function AdminLayout({ children, user }) {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { can, PERMISSIONS, userRole } = useRBAC();
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin", exact: true },
-    { icon: FileQuestion, label: "Questions", href: "/admin/questions", exact: false },
-    { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
-    { icon: Users, label: "Users", href: "/admin/users" },
-    { icon: Settings, label: "Settings", href: "/admin/settings" },
+  // Define menu items with required permissions
+  const allMenuItems = [
+    { 
+      icon: LayoutDashboard, 
+      label: "Dashboard", 
+      href: "/admin", 
+      exact: true,
+      permission: null // Everyone with admin access can see dashboard
+    },
+    { 
+      icon: FileQuestion, 
+      label: "Questions", 
+      href: "/admin/questions", 
+      exact: false,
+      permission: PERMISSIONS.MANAGE_QUESTIONS
+    },
+    { 
+      icon: BarChart3, 
+      label: "Analytics", 
+      href: "/admin/analytics",
+      permission: PERMISSIONS.VIEW_ADMIN_ANALYTICS
+    },
+    { 
+      icon: Users, 
+      label: "Users", 
+      href: "/admin/users",
+      permission: PERMISSIONS.MANAGE_USERS
+    },
+    { 
+      icon: Settings, 
+      label: "Settings", 
+      href: "/admin/settings",
+      permission: PERMISSIONS.VIEW_SETTINGS
+    },
   ];
+
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item => 
+    !item.permission || can(item.permission)
+  );
 
   const isActive = (item) => {
     if (item.exact) {
@@ -109,6 +146,19 @@ export default function AdminLayout({ children, user }) {
             </nav>
 
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              {/* User info with role badge */}
+              {!sidebarCollapsed && user && (
+                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-2">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                    {user.userName}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-2">
+                    {user.email}
+                  </p>
+                  <RoleBadge role={userRole} />
+                </div>
+              )}
+              
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}

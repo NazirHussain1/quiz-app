@@ -1,5 +1,6 @@
 import { connectToDatabase } from './mongodb';
 import bcrypt from 'bcryptjs';
+import { getDefaultRole } from './rbac';
 
 export async function hashPassword(password) {
   const salt = await bcrypt.genSalt(10);
@@ -20,12 +21,13 @@ export async function createUser(email, password, userName) {
   }
   
   const hashedPassword = await hashPassword(password);
+  const defaultRole = getDefaultRole();
   
   const result = await usersCollection.insertOne({
     email,
     password: hashedPassword,
     userName,
-    role: 'student',
+    role: defaultRole,
     createdAt: new Date(),
     updatedAt: new Date()
   });
@@ -34,7 +36,7 @@ export async function createUser(email, password, userName) {
     id: result.insertedId.toString(),
     email,
     userName,
-    role: 'student'
+    role: defaultRole
   };
 }
 
@@ -48,14 +50,15 @@ export async function findUserByEmail(email) {
     return null;
   }
   
-  const role = user.role || 'student';
+  const role = user.role || getDefaultRole();
   
   return {
     id: user._id.toString(),
     email: user.email,
     userName: user.userName,
     password: user.password,
-    role: role
+    role: role,
+    isVerified: user.isVerified
   };
 }
 
@@ -70,7 +73,7 @@ export async function findUserById(id) {
     return null;
   }
   
-  const role = user.role || 'student';
+  const role = user.role || getDefaultRole();
   
   return {
     id: user._id.toString(),
