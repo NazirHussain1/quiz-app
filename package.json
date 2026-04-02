@@ -9,7 +9,10 @@
     "lint": "eslint",
     "make-admin": "node scripts/makeAdmin.js",
     "list-users": "node scripts/listUsers.js",
-    "change-role": "node scripts/changeUserRole.js"
+    "change-role": "node scripts/changeUserRole.js",
+    "logs": "node scripts/viewLogs.js",
+    "logs:error": "node scripts/viewLogs.js -t error",
+    "logs:api": "node scripts/viewLogs.js -t api"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
