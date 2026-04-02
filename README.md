@@ -304,15 +304,19 @@ quiz-app/
 │       ├── correct.mp3
 │       └── wrong.mp3
 ├── scripts/                     # Utility scripts
+│   ├── addEmailVerificationFields.js  # Migration script
+│   ├── changeUserRole.js       # Change user role (RBAC)
 │   ├── createAdmin.js          # Create admin user
 │   ├── createIndexes.js        # Create DB indexes
 │   ├── listUsers.js            # List all users
 │   ├── makeAdmin.js            # Make user admin
 │   ├── resetPassword.js        # Reset user password
 │   ├── seed70Questions.js      # Seed 70 questions (10 per subject)
+│   ├── seedProperQuestions.js  # Alternative seed script
 │   └── updateUsername.js       # Update username
 ├── .env.local.example          # Environment template
 ├── .gitignore
+├── EMAIL_VERIFICATION_GUIDE.md # Email setup guide
 ├── eslint.config.mjs
 ├── next.config.ts
 ├── package.json
@@ -325,10 +329,14 @@ quiz-app/
 ## 🔌 API Documentation
 
 ### Authentication
-- `POST /api/auth/signup` - Register new user
-- `POST /api/auth/login` - Login user
+- `POST /api/auth/signup` - Register new user (sends verification email)
+- `POST /api/auth/login` - Login user (requires verified email)
 - `POST /api/auth/logout` - Logout user
 - `GET /api/auth/me` - Get current user info
+- `POST /api/auth/send-verification` - Resend verification email
+- `POST /api/auth/verify-email` - Verify email with token
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with token
 
 ### Questions
 - `GET /api/questions` - Fetch questions (filterable by subject, difficulty, category)
@@ -345,15 +353,16 @@ quiz-app/
 - `GET /api/custom-quizzes/[id]` - Get specific quiz
 - `DELETE /api/custom-quizzes?id=[id]` - Delete custom quiz
 
-### Admin (Protected - Admin Only)
+### Admin (Protected - Role-Based)
 - `GET /api/admin/questions` - List all questions (with pagination, search, filters)
-- `POST /api/admin/questions` - Add new question
-- `PUT /api/admin/questions` - Update existing question
-- `DELETE /api/admin/questions?id=[id]` - Delete question
-- `GET /api/admin/analytics` - Get admin analytics data
-- `GET /api/admin/users` - List all users
-- `POST /api/admin/users/make-admin` - Make user admin
-- `DELETE /api/admin/users/delete?id=[id]` - Delete user
+- `POST /api/admin/questions` - Add new question (admin, moderator)
+- `PUT /api/admin/questions` - Update existing question (admin, moderator)
+- `DELETE /api/admin/questions?id=[id]` - Delete question (admin, moderator)
+- `GET /api/admin/analytics` - Get admin analytics data (admin only)
+- `GET /api/admin/users` - List all users (admin only)
+- `POST /api/admin/roles` - Change user role (superadmin only)
+- `POST /api/admin/users/make-admin` - Make user admin (admin only)
+- `DELETE /api/admin/users/delete?id=[id]` - Delete user (admin only)
 
 ### Analytics
 - `GET /api/analytics` - Get user analytics data
@@ -367,10 +376,15 @@ quiz-app/
 ```javascript
 {
   _id: ObjectId,
-  email: String (unique),
+  email: String (unique, lowercase),
   password: String (hashed with bcrypt),
   userName: String,
-  role: String (student|admin),
+  role: String (superadmin|admin|moderator|student),
+  isVerified: Boolean (default: false),
+  verificationToken: String (nullable),
+  verificationTokenExpiry: Date (nullable),
+  resetPasswordToken: String (nullable),
+  resetPasswordExpiry: Date (nullable),
   createdAt: Date,
   updatedAt: Date
 }
@@ -386,7 +400,7 @@ quiz-app/
   difficulty: String (easy|medium|hard),
   question: String (unique),
   options: [String] (4 options),
-  correctAnswer: Number (0-3 index),
+  correctAnswer: String (the correct option text),
   createdAt: Date,
   updatedAt: Date
 }
@@ -423,7 +437,7 @@ quiz-app/
   questions: [{
     question: String,
     options: [String],
-    correctAnswer: Number
+    correctAnswer: String
   }],
   isPublic: Boolean,
   createdAt: Date,
@@ -441,8 +455,9 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 
 # User Management
-npm run make-admin   # Make user admin (requires email)
-npm run list-users   # List all users
+npm run make-admin <email>      # Make user admin
+npm run change-role <email> <role>  # Change user role (superadmin|admin|moderator|student)
+npm run list-users              # List all users
 
 # Database
 node scripts/seed70Questions.js      # Seed 70 questions (10 per subject)
@@ -450,13 +465,20 @@ node scripts/createIndexes.js        # Create database indexes
 node scripts/createAdmin.js          # Create admin user
 node scripts/resetPassword.js        # Reset user password
 node scripts/updateUsername.js       # Update username
+node scripts/addEmailVerificationFields.js  # Add email verification fields (migration)
 ```
 
-### Admin Scripts Examples
+### Script Examples
 
 Make a user admin:
 ```bash
 npm run make-admin nh534392@gmail.com
+```
+
+Change user role:
+```bash
+npm run change-role user@example.com moderator
+npm run change-role admin@example.com superadmin
 ```
 
 List all users:
@@ -469,20 +491,26 @@ Seed database with 70 questions:
 node scripts/seed70Questions.js
 ```
 
+Reset user password:
+```bash
+node scripts/resetPassword.js user@example.com newPassword123
+```
+
 ## 🎮 Usage Guide
 
 ### For Students
 
 1. **Sign Up**: Create account at `/login`
-2. **Select Subject**: Choose from 7 subjects
-3. **Choose Mode**: 
+2. **Verify Email**: Check your email and click verification link
+3. **Select Subject**: Choose from 7 subjects
+4. **Choose Mode**: 
    - Regular Quiz (10 questions, 30s each)
    - Exam Mode (30 questions, 30 min total)
-4. **Take Quiz**: Answer questions with fixed bottom action bar
-5. **View Results**: See score, correct answers, and performance
-6. **Check Analytics**: View personal statistics and charts
-7. **Leaderboard**: Compare with other students
-8. **Create Custom Quiz**: Make your own quizzes
+5. **Take Quiz**: Answer questions with fixed bottom action bar
+6. **View Results**: See score, correct answers, and performance
+7. **Check Analytics**: View personal statistics and charts
+8. **Leaderboard**: Compare with other students
+9. **Create Custom Quiz**: Make your own quizzes
 
 ### For Admins
 
@@ -500,6 +528,13 @@ node scripts/seed70Questions.js
    - Delete users
 6. **View Analytics**: Check system-wide statistics at `/admin/analytics`
 7. **Settings**: Configure system at `/admin/settings`
+
+### For Superadmins
+
+All admin features plus:
+- **Change User Roles**: Promote/demote users to any role
+- **Full System Control**: Access to all features and settings
+- **Role Management**: Assign superadmin, admin, moderator, or student roles
 
 ## 🚀 Deployment
 
@@ -529,6 +564,11 @@ git push -u origin main
    | `JWT_SECRET` | Generate with crypto (32+ chars) | Yes |
    | `NEXTAUTH_URL` | `https://your-app.vercel.app` | Yes |
    | `NEXTAUTH_SECRET` | Generate with crypto (32+ chars) | Yes |
+   | `EMAIL_HOST` | `smtp.gmail.com` | Yes |
+   | `EMAIL_PORT` | `587` | Yes |
+   | `EMAIL_USER` | Your Gmail address | Yes |
+   | `EMAIL_PASSWORD` | Gmail App Password | Yes |
+   | `EMAIL_FROM` | `Quiz App <your-email@gmail.com>` | Yes |
    | `NEXT_PUBLIC_APP_NAME` | `Quiz App` | No |
 
    Generate secrets:
@@ -560,13 +600,20 @@ git push -u origin main
    npm run make-admin your-email@example.com
    ```
 
+3. Test email verification:
+   - Sign up with a new account
+   - Check email for verification link
+   - Verify email and login
+
 ### Troubleshooting
 
 - **Build fails**: Check environment variables are set
 - **Runtime MongoDB error**: Verify `MONGODB_URI` is correct in Vercel
 - **Connection timeout**: Check MongoDB Atlas IP whitelist (0.0.0.0/0)
 - **JWT errors**: Verify `JWT_SECRET` and `NEXTAUTH_SECRET` are set (32+ chars)
+- **Email not sending**: Verify Gmail App Password and SMTP settings
 - **Port issues**: App runs on port 3000 by default
+- **Email verification not working**: Check `NEXTAUTH_URL` matches your domain
 
 ## 🎨 UI Features
 
@@ -612,3 +659,78 @@ Nazir Hussain
 ---
 
 Built with ❤️ using Next.js 16.1.7 and React 19.2.0 | Production-ready | Pakistan Textbook Based
+
+
+## 🔒 Security Features
+
+### Authentication & Authorization
+- JWT-based authentication with secure token handling
+- Email verification system (1-hour token expiry)
+- Password reset with secure tokens
+- Role-Based Access Control (RBAC) with 4 roles
+- bcrypt password hashing (10 rounds)
+
+### Rate Limiting & Throttling
+- IP-based throttling (max 5 requests/minute per IP)
+- Login rate limiting (5 attempts/minute)
+- Signup rate limiting (3 attempts/hour)
+- API rate limiting with configurable limits
+- Automatic cleanup to prevent memory leaks
+
+### Input Validation
+- Zod schema validation for all inputs
+- Email, password, username validation
+- MongoDB ObjectId validation
+- Subject, difficulty, role validation
+- XSS prevention through input sanitization
+
+### Security Headers
+- CORS configuration
+- Helmet security headers
+- Content Security Policy (CSP)
+- XSS protection headers
+
+### Database Security
+- MongoDB connection with authentication
+- NoSQL injection prevention
+- Parameterized queries
+- Input sanitization
+
+### Deployment Security
+- Environment variable validation
+- Secure secret generation
+- IP whitelisting for MongoDB Atlas
+- HTTPS enforcement in production
+
+## 🎯 Key Features Summary
+
+### For Students
+✅ Email verification required
+✅ Take quizzes with adaptive difficulty
+✅ Track personal analytics
+✅ Create custom quizzes
+✅ View global leaderboard
+✅ Sound effects and animations
+
+### For Moderators
+✅ All student features
+✅ Manage questions (CRUD)
+✅ Filter and search questions
+✅ View question analytics
+
+### For Admins
+✅ All moderator features
+✅ Manage users
+✅ View system analytics
+✅ Delete users
+✅ Access admin dashboard
+
+### For Superadmins
+✅ All admin features
+✅ Change user roles
+✅ Full system control
+✅ Role management
+
+---
+
+**Version**: 2.0.0 | **Status**: Production Ready | **Security**: Hardened | **RBAC**: Enabled

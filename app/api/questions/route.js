@@ -17,100 +17,105 @@ import {
   CACHE_TTL,
   invalidateCache 
 } from '@/app/lib/cache';
+import { logDB, logSecurity } from '@/app/lib/logger';
+import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request) {
-  try {
-    // Rate limiting
-    const rateLimit = rateLimitApi(request);
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { success: false, error: "Too many requests. Please try again later." },
-        { status: 429 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    
-    // Sanitize and validate parameters
-    const category = sanitizeString(searchParams.get('category') || '');
-    const subject = sanitizeString(searchParams.get('subject') || '');
-    const difficulty = sanitizeString(searchParams.get('difficulty') || '');
-    const search = sanitizeString(searchParams.get('search') || '');
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10')));
-    
-    // Build cache key based on query parameters
-    const cacheKey = buildCacheKey(CACHE_KEYS.QUESTIONS, {
-      category,
-      subject,
-      difficulty,
-      search,
-      limit,
+export const GET = withErrorHandling(async (request) => {
+  // Rate limiting
+  const rateLimit = rateLimitApi(request);
+  if (!rateLimit.allowed) {
+    logSecurity('Rate limit exceeded', 'low', {
+      event: 'questions_rate_limit',
+      ip: request.headers.get('x-forwarded-for') || 'unknown',
     });
-
-    // Use cache-aside pattern
-    const questions = await getCacheOrFetch(
-      cacheKey,
-      async () => {
-        const { db } = await connectToDatabase();
-        const collection = db.collection('questions');
-        
-        const matchStage = {};
-        
-        if (category) {
-          matchStage.category = category;
-        }
-        
-        if (subject) {
-          const subjectValidation = validateSubject(subject);
-          if (subjectValidation.valid) {
-            matchStage.subject = subjectValidation.value;
-          }
-        }
-        
-        if (difficulty) {
-          const difficultyValidation = validateDifficulty(difficulty);
-          if (difficultyValidation.valid) {
-            matchStage.difficulty = difficultyValidation.value;
-          }
-        }
-        
-        // Safe text search
-        if (search) {
-          matchStage.question = { $regex: search, $options: 'i' };
-        }
-        
-        const pipeline = [];
-        
-        if (Object.keys(matchStage).length > 0) {
-          pipeline.push({ $match: matchStage });
-        }
-        
-        pipeline.push({ $sample: { size: limit } });
-        
-        return await collection.aggregate(pipeline).toArray();
-      },
-      CACHE_TTL.QUESTIONS
-    );
-    
-    return NextResponse.json({ 
-      success: true, 
-      count: questions.length,
-      questions 
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching questions:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch questions' },
-      { status: 500 }
-    );
+    throw new AppError('Too many requests. Please try again later.', 429);
   }
-}
+
+  const { searchParams } = new URL(request.url);
+  
+  // Sanitize and validate parameters
+  const category = sanitizeString(searchParams.get('category') || '');
+  const subject = sanitizeString(searchParams.get('subject') || '');
+  const difficulty = sanitizeString(searchParams.get('difficulty') || '');
+  const search = sanitizeString(searchParams.get('search') || '');
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10')));
+  
+  // Build cache key based on query parameters
+  const cacheKey = buildCacheKey(CACHE_KEYS.QUESTIONS, {
+    category,
+    subject,
+    difficulty,
+    search,
+    limit,
+  });
+
+  const startTime = Date.now();
+
+  // Use cache-aside pattern
+  const questions = await getCacheOrFetch(
+    cacheKey,
+    async () => {
+      const { db } = await connectToDatabase();
+      const collection = db.collection('questions');
+      
+      const matchStage = {};
+      
+      if (category) {
+        matchStage.category = category;
+      }
+      
+      if (subject) {
+        const subjectValidation = validateSubject(subject);
+        if (subjectValidation.valid) {
+          matchStage.subject = subjectValidation.value;
+        }
+      }
+      
+      if (difficulty) {
+        const difficultyValidation = validateDifficulty(difficulty);
+        if (difficultyValidation.valid) {
+          matchStage.difficulty = difficultyValidation.value;
+        }
+      }
+      
+      // Safe text search
+      if (search) {
+        matchStage.question = { $regex: search, $options: 'i' };
+      }
+      
+      const pipeline = [];
+      
+      if (Object.keys(matchStage).length > 0) {
+        pipeline.push({ $match: matchStage });
+      }
+      
+      pipeline.push({ $sample: { size: limit } });
+      
+      return await collection.aggregate(pipeline).toArray();
+    },
+    CACHE_TTL.QUESTIONS
+  );
+  
+  const duration = Date.now() - startTime;
+  
+  // Log database operation
+  logDB('fetch', 'questions', true, duration, {
+    count: questions.length,
+    filters: { category, subject, difficulty, search, limit },
+  });
+  
+  return NextResponse.json({ 
+    success: true, 
+    count: questions.length,
+    questions 
+  }, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+    }
+  });
+});
 
 export async function POST(request) {
   try {
