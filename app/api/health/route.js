@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
+import { connectToDatabase } from '@/app/lib/database/connection';
 import { logInfo, logDB } from '@/app/lib/logger';
 import { withErrorHandling, successResponse } from '@/app/lib/errorHandler';
 

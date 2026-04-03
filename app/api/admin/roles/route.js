@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
-import { requireRole } from '@/app/lib/authMiddleware';
+import { connectToDatabase } from '@/app/lib/database/connection';
+import { requireRole } from '@/app/lib/middleware';
 import { ROLES, isValidRole, ROLE_PERMISSIONS } from '@/app/lib/rbac';
 import { ObjectId } from 'mongodb';
 

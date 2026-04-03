@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
+import { connectToDatabase } from '@/app/lib/database/connection';
 import { generateToken } from '@/app/lib/jwt';
 import { sendPasswordResetEmail } from '@/app/lib/email';
 import { rateLimitApi } from '@/app/lib/rateLimit';

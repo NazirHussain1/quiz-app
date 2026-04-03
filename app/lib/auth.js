@@ -1,4 +1,4 @@
-import { connectToDatabase } from './mongodb';
+import { connectToDatabase } from './database/connection';
 import bcrypt from 'bcryptjs';
 import { getDefaultRole } from './rbac';
 

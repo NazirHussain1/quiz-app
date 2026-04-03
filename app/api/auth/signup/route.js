@@ -4,7 +4,7 @@ import { generateToken } from '@/app/lib/jwt';
 import { validateEmail, validatePassword, validateUsername } from '@/app/lib/validation';
 import { rateLimitLogin } from '@/app/lib/rateLimit';
 import { sendVerificationEmail } from '@/app/lib/email';
-import { connectToDatabase } from '@/app/lib/mongodb';
+import { connectToDatabase } from '@/app/lib/database/connection';
 import { logAuth, logEmail, logSecurity } from '@/app/lib/logger';
 import { withErrorHandling, ValidationError, AppError } from '@/app/lib/errorHandler';
 

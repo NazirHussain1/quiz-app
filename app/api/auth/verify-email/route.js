@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
+import { connectToDatabase } from '@/app/lib/database/connection';
 import { verifyToken } from '@/app/lib/jwt';
 import { rateLimitApi } from '@/app/lib/rateLimit';
 

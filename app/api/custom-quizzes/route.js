@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
-import { requireAuth } from '@/app/lib/authMiddleware';
+import { connectToDatabase } from '@/app/lib/database/connection';
+import { requireAuth } from '@/app/lib/middleware';
 import { ObjectId } from 'mongodb';
 import {
   validateSubject,

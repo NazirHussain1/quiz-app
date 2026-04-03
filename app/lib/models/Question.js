@@ -1,4 +1,4 @@
-import { connectToDatabase } from '../mongodb';
+import { connectToDatabase } from '../database/connection';
 
 const COLLECTION_NAME = 'questions';
 

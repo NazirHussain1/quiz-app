@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
-import { verifyAuth } from '@/app/lib/authMiddleware';
+import { connectToDatabase } from '@/app/lib/database/connection';
+import { verifyAuth } from '@/app/lib/middleware';
 import { ObjectId } from 'mongodb';
 import { validateObjectId } from '@/app/lib/validation';
 import { rateLimitApi } from '@/app/lib/rateLimit';

@@ -1,4 +1,4 @@
-import { connectToDatabase } from '../mongodb';
+import { connectToDatabase } from '../database/connection';
 import { sampleQuestions } from './sampleQuestions';
 
 export async function seedQuestions() {

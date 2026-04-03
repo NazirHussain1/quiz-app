@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase } from '@/app/lib/mongodb';
+import { connectToDatabase } from '@/app/lib/database/connection';
 import { ObjectId } from 'mongodb';
-import { requireAdmin } from '@/app/lib/authMiddleware';
+import { requireAdmin } from '@/app/lib/middleware';
 import {
   validateSubject,
   validateDifficulty,

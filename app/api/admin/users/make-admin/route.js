@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { verifyAdmin } from '@/app/lib/authMiddleware';
-import { connectToDatabase } from '@/app/lib/mongodb';
+import { verifyAdmin } from '@/app/lib/middleware';
+import { connectToDatabase } from '@/app/lib/database/connection';
 import { ObjectId } from 'mongodb';
 
 export async function POST(request) {
