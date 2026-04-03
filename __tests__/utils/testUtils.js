@@ -1,173 +1,180 @@
 /**
  * Test Utilities
- * Common utilities and helpers for testing
+ * Helper functions for testing
  */
 
-import { ObjectId } from 'mongodb';
-
-/**
- * Create a mock user object
- */
-export function createMockUser(overrides = {}) {
-  return {
-    _id: new ObjectId(),
-    id: new ObjectId().toString(),
-    email: 'test@example.com',
-    userName: 'TestUser',
-    password: '$2a$10$hashedpassword',
-    role: 'student',
-    isVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
+// Mock MongoDB client
+export const mockMongoClient = {
+  connect: jest.fn().mockResolvedValue(true),
+  close: jest.fn().mockResolvedValue(true),
+  db: jest.fn(() => mockDb),
 }
 
-/**
- * Create a mock question object
- */
-export function createMockQuestion(overrides = {}) {
-  return {
-    _id: new ObjectId(),
-    id: new ObjectId().toString(),
-    category: 'Mathematics',
-    subject: 'Algebra',
-    difficulty: 'easy',
-    question: 'What is 2 + 2?',
-    options: ['3', '4', '5', '6'],
-    correctAnswer: '4',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
+// Mock MongoDB database
+export const mockDb = {
+  collection: jest.fn((name) => mockCollection),
+  admin: jest.fn(() => ({
+    ping: jest.fn().mockResolvedValue(true),
+  })),
 }
 
-/**
- * Create a mock quiz result object
- */
-export function createMockResult(overrides = {}) {
-  return {
-    _id: new ObjectId(),
-    id: new ObjectId().toString(),
-    userId: new ObjectId().toString(),
-    name: 'TestUser',
-    category: 'Mathematics',
-    subject: 'Algebra',
-    score: 8,
-    totalQuestions: 10,
-    difficulty: 'easy',
-    timeTaken: 120,
-    examMode: false,
-    createdAt: new Date(),
-    ...overrides,
-  };
+// Mock MongoDB collection
+export const mockCollection = {
+  findOne: jest.fn(),
+  find: jest.fn(() => ({
+    toArray: jest.fn().mockResolvedValue([]),
+    limit: jest.fn().mockReturnThis(),
+    sort: jest.fn().mockReturnThis(),
+  })),
+  insertOne: jest.fn(),
+  insertMany: jest.fn(),
+  updateOne: jest.fn(),
+  updateMany: jest.fn(),
+  deleteOne: jest.fn(),
+  deleteMany: jest.fn(),
+  aggregate: jest.fn(() => ({
+    toArray: jest.fn().mockResolvedValue([]),
+  })),
+  countDocuments: jest.fn().mockResolvedValue(0),
 }
 
-/**
- * Create a mock request object
- */
-export function createMockRequest(options = {}) {
+// Reset all mocks
+export const resetMocks = () => {
+  jest.clearAllMocks()
+  mockCollection.findOne.mockReset()
+  mockCollection.find.mockReturnValue({
+    toArray: jest.fn().mockResolvedValue([]),
+    limit: jest.fn().mockReturnThis(),
+    sort: jest.fn().mockReturnThis(),
+  })
+  mockCollection.insertOne.mockReset()
+  mockCollection.updateOne.mockReset()
+  mockCollection.deleteOne.mockReset()
+  mockCollection.aggregate.mockReturnValue({
+    toArray: jest.fn().mockResolvedValue([]),
+  })
+}
+
+// Mock user data
+export const mockUser = {
+  _id: '507f1f77bcf86cd799439011',
+  id: '507f1f77bcf86cd799439011',
+  email: 'test@example.com',
+  userName: 'TestUser',
+  password: '$2a$10$abcdefghijklmnopqrstuvwxyz', // bcrypt hash
+  role: 'student',
+  isVerified: true,
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+}
+
+// Mock admin user
+export const mockAdmin = {
+  ...mockUser,
+  id: '507f1f77bcf86cd799439012',
+  email: 'admin@example.com',
+  userName: 'AdminUser',
+  role: 'admin',
+}
+
+// Mock question data
+export const mockQuestion = {
+  _id: '507f1f77bcf86cd799439013',
+  category: 'Mathematics',
+  subject: 'Algebra',
+  difficulty: 'easy',
+  question: 'What is 2 + 2?',
+  options: ['3', '4', '5', '6'],
+  correctAnswer: '4',
+  createdAt: new Date('2024-01-01'),
+  updatedAt: new Date('2024-01-01'),
+}
+
+// Mock quiz result
+export const mockResult = {
+  _id: '507f1f77bcf86cd799439014',
+  userId: mockUser.id,
+  name: mockUser.userName,
+  category: 'Mathematics',
+  subject: 'Algebra',
+  score: 8,
+  totalQuestions: 10,
+  difficulty: 'easy',
+  timeTaken: 300,
+  examMode: false,
+  createdAt: new Date('2024-01-01'),
+}
+
+// Create mock request
+export const createMockRequest = (options = {}) => {
   const {
     method = 'GET',
     url = 'http://localhost:3000/api/test',
     headers = {},
     body = null,
     cookies = {},
-  } = options;
-
-  const headersMap = new Map(Object.entries(headers));
+  } = options
 
   return {
     method,
     url,
-    headers: {
-      get: (key) => headersMap.get(key.toLowerCase()),
-      has: (key) => headersMap.has(key.toLowerCase()),
-      entries: () => headersMap.entries(),
-    },
-    json: async () => body,
-    cookies: {
-      get: (key) => cookies[key],
-      set: jest.fn(),
-      delete: jest.fn(),
-    },
-  };
+    headers: new Map(Object.entries(headers)),
+    cookies: new Map(Object.entries(cookies)),
+    json: jest.fn().mockResolvedValue(body),
+    text: jest.fn().mockResolvedValue(JSON.stringify(body)),
+  }
 }
 
-/**
- * Create a mock MongoDB collection
- */
-export function createMockCollection() {
-  return {
-    find: jest.fn().mockReturnThis(),
-    findOne: jest.fn(),
-    insertOne: jest.fn(),
-    insertMany: jest.fn(),
-    updateOne: jest.fn(),
-    updateMany: jest.fn(),
-    deleteOne: jest.fn(),
-    deleteMany: jest.fn(),
-    aggregate: jest.fn().mockReturnThis(),
-    toArray: jest.fn(),
-    countDocuments: jest.fn(),
-    createIndex: jest.fn(),
-  };
-}
-
-/**
- * Create a mock MongoDB database
- */
-export function createMockDb() {
-  const collections = new Map();
+// Create mock response
+export const createMockResponse = () => {
+  const response = {
+    status: 200,
+    headers: new Map(),
+    cookies: new Map(),
+    json: null,
+  }
 
   return {
-    collection: jest.fn((name) => {
-      if (!collections.has(name)) {
-        collections.set(name, createMockCollection());
-      }
-      return collections.get(name);
+    ...response,
+    status: jest.fn((code) => {
+      response.status = code
+      return response
     }),
-    admin: jest.fn(() => ({
-      ping: jest.fn().mockResolvedValue({}),
-    })),
-  };
-}
-
-/**
- * Wait for async operations
- */
-export function waitFor(ms = 0) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-/**
- * Mock successful MongoDB connection
- */
-export function mockMongoConnection() {
-  const mockDb = createMockDb();
-  
-  jest.mock('@/app/lib/mongodb', () => ({
-    connectToDatabase: jest.fn().mockResolvedValue({
-      db: mockDb,
-      client: {
-        close: jest.fn(),
-      },
+    json: jest.fn((data) => {
+      response.json = data
+      return response
     }),
-  }));
-
-  return mockDb;
+  }
 }
 
-/**
- * Clear all mocks
- */
-export function clearAllMocks() {
-  jest.clearAllMocks();
+// Wait for async operations
+export const waitFor = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// Mock fetch
+export const mockFetch = (response) => {
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(response),
+      text: () => Promise.resolve(JSON.stringify(response)),
+    })
+  )
 }
 
-/**
- * Reset all mocks
- */
-export function resetAllMocks() {
-  jest.resetAllMocks();
+// Mock localStorage
+export const mockLocalStorage = () => {
+  const store = {}
+  return {
+    getItem: jest.fn((key) => store[key] || null),
+    setItem: jest.fn((key, value) => {
+      store[key] = value.toString()
+    }),
+    removeItem: jest.fn((key) => {
+      delete store[key]
+    }),
+    clear: jest.fn(() => {
+      Object.keys(store).forEach((key) => delete store[key])
+    }),
+  }
 }
