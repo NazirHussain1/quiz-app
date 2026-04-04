@@ -45,11 +45,28 @@ function ExamContent() {
         if (difficulty) params.append('difficulty', difficulty);
         params.append('limit', '30');
         
-        const apiUrl = `/api/questions?${params.toString()}`;
-        const res = await fetch(apiUrl);
+        let apiUrl = `/api/questions?${params.toString()}`;
+        let res = await fetch(apiUrl);
         
         if (res.ok) {
-          const data = await res.json();
+          let data = await res.json();
+
+          // If no questions found with specific difficulty, try without difficulty filter
+          if (data.success && (!data.questions || data.questions.length === 0) && difficulty) {
+            console.log(`No questions found for difficulty: ${difficulty}, trying without difficulty filter...`);
+            
+            const fallbackParams = new URLSearchParams();
+            if (category) fallbackParams.append('category', category);
+            if (subject) fallbackParams.append('subject', subject);
+            fallbackParams.append('limit', '30');
+            
+            apiUrl = `/api/questions?${fallbackParams.toString()}`;
+            res = await fetch(apiUrl);
+            
+            if (res.ok) {
+              data = await res.json();
+            }
+          }
 
           if (data.success && data.questions && data.questions.length > 0) {
             const formatted = data.questions.map((q) => ({
@@ -67,6 +84,7 @@ function ExamContent() {
           }
         }
         
+        // Fallback to OpenTDB API
         let triviaUrl = "https://opentdb.com/api.php?amount=30&type=multiple";
         if (difficulty) triviaUrl += `&difficulty=${difficulty}`;
         

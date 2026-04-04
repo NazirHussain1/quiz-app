@@ -109,32 +109,63 @@ function QuizContent() {
         }
         params.append('limit', '10');
         
-        const apiUrl = `/api/questions?${params.toString()}`;
+        let apiUrl = `/api/questions?${params.toString()}`;
         
-        const res = await fetch(apiUrl);
+        let res = await fetch(apiUrl);
         
         if (!res.ok) {
           throw new Error("Failed to fetch questions from server");
         }
         
-        const data = await res.json();
+        let data = await res.json();
 
         if (!data.success) {
           throw new Error(data.error || "Failed to load questions");
         }
 
+        // If no questions found with specific difficulty, try without difficulty filter
         if (!data.questions || data.questions.length === 0) {
-          throw new Error("No questions available for the selected subject and difficulty. Please try different options or contact admin to add questions.");
+          console.log(`No questions found for difficulty: ${adaptiveDifficulty}, trying without difficulty filter...`);
+          
+          const fallbackParams = new URLSearchParams();
+          if (subject) {
+            fallbackParams.append('subject', subject);
+          }
+          fallbackParams.append('limit', '10');
+          
+          apiUrl = `/api/questions?${fallbackParams.toString()}`;
+          res = await fetch(apiUrl);
+          
+          if (res.ok) {
+            data = await res.json();
+          }
+        }
+
+        if (!data.questions || data.questions.length === 0) {
+          throw new Error("No questions available for the selected subject. Please try a different subject or contact admin to add questions.");
         }
 
         // MongoDB has questions - use them
-        const formatted = data.questions.map((q) => ({
-          question: q.question,
-          correct: q.options[q.correctAnswer],
-          options: shuffleArray([...q.options]),
-          category: q.category || q.subject,
-          subject: q.subject,
-        }));
+        const formatted = data.questions.map((q) => {
+          // correctAnswer can be either an index (number) or the actual answer (string)
+          let correctAnswerText;
+          
+          if (typeof q.correctAnswer === 'number') {
+            // If it's a number, use it as index
+            correctAnswerText = q.options[q.correctAnswer];
+          } else {
+            // If it's a string, it's the actual answer
+            correctAnswerText = q.correctAnswer;
+          }
+          
+          return {
+            question: q.question,
+            correct: correctAnswerText,
+            options: shuffleArray([...q.options]),
+            category: q.category || q.subject,
+            subject: q.subject,
+          };
+        });
 
         setQuestions(formatted);
         setAnswers(new Array(formatted.length).fill(null));
@@ -648,10 +679,9 @@ function QuizContent() {
                 let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 cursor-pointer ";
                 
                 if (isLocked) {
-                  if (isCorrect) {
-                    buttonClass += "bg-green-600 border-green-700 text-white font-bold shadow-lg transform scale-105";
-                  } else if (isSelected && !isCorrect) {
-                    buttonClass += "bg-red-600 border-red-700 text-white font-bold shadow-lg transform scale-105";
+                  // Don't show correct/incorrect answers - just show selected state
+                  if (isSelected) {
+                    buttonClass += "bg-blue-500 border-blue-600 text-white shadow-lg";
                   } else {
                     buttonClass += "bg-gray-50 border-gray-200 text-gray-500 opacity-60";
                   }
