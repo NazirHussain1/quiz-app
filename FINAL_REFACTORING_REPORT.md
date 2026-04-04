@@ -286,6 +286,10 @@ npm start
 - [x] All duplicate files removed
 - [x] All imports updated
 - [x] Dependencies cleaned
+- [x] Database seeded with 70 questions
+- [x] Login toast notifications working
+- [x] Email verification flow complete
+- [x] API endpoints returning 200 (no 500 errors)
 - [ ] Run `npm install`
 - [ ] Run `npm run build`
 - [ ] Run `npm run test:ci`

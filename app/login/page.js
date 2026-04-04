@@ -39,7 +39,7 @@ export default function LoginPage() {
         const result = await dispatch(signup(formData)).unwrap();
         
         if (result.success) {
-          toast.success("Account created successfully! Please login.");
+          toast.success("Account created successfully! Please check your email to verify your account.");
           setIsLogin(true);
           setFormData({ email: formData.email, password: "", userName: "" });
         }
@@ -47,25 +47,42 @@ export default function LoginPage() {
     } catch (err) {
       // Check if email verification is needed
       if (err.needsVerification) {
-        toast.error(err.error || "Please verify your email before logging in");
-        // Show resend verification option
-        if (window.confirm("Would you like to resend the verification email?")) {
-          try {
-            const res = await fetch("/api/auth/send-verification", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: err.email || formData.email }),
-            });
-            const data = await res.json();
-            if (data.success) {
-              toast.success("Verification email sent! Please check your inbox.");
-            }
-          } catch (error) {
-            toast.error("Failed to send verification email");
+        const userEmail = err.email || formData.email;
+        
+        toast.error(
+          <div>
+            <p className="font-semibold mb-2">Email not verified</p>
+            <p className="text-sm mb-3">Please verify your email before logging in.</p>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/auth/send-verification", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: userEmail }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    toast.success("Verification email sent! Please check your inbox.");
+                  } else {
+                    toast.error(data.error || "Failed to send verification email");
+                  }
+                } catch (error) {
+                  toast.error("Failed to send verification email");
+                }
+              }}
+              className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+            >
+              Resend Verification Email
+            </button>
+          </div>,
+          {
+            autoClose: 10000,
+            closeButton: true,
           }
-        }
+        );
       } else {
-        toast.error(err || "An error occurred");
+        toast.error(err.error || err.message || "An error occurred");
       }
     }
   };
