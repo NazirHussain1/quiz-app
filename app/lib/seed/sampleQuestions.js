@@ -59,4 +59,5 @@ export const sampleQuestions = [
     question: "sin(90°) کی قدر کیا ہے؟",
     options: ["1", "0", "-1", "0.5"],
     correctAnswer: "1"
-  },
+  }
+];
