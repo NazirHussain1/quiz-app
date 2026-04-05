@@ -2,6 +2,8 @@
 
 A modern, production-ready quiz application built with Next.js 16 and React 19. Features email verification, role-based access control (RBAC), adaptive difficulty, real-time analytics, custom quiz creation, admin panel, and a global leaderboard system powered by MongoDB Atlas.
 
+> 📚 **For complete documentation, see [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)**
+
 ## ✨ Features
 
 ### Authentication & Security
@@ -316,7 +318,9 @@ quiz-app/
 │   └── updateUsername.js       # Update username
 ├── .env.local.example          # Environment template
 ├── .gitignore
-├── EMAIL_VERIFICATION_GUIDE.md # Email setup guide
+├── CHANGELOG.md                # Version history & changes
+├── PROJECT_DOCUMENTATION.md    # Complete documentation
+├── SUMMARY.md                  # Quick reference guide
 ├── eslint.config.mjs
 ├── next.config.ts
 ├── package.json
