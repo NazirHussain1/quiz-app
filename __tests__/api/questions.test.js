@@ -8,7 +8,7 @@ import { createMockRequest, mockQuestion, mockDb, mockCollection, resetMocks } f
 
 // Mock dependencies
 jest.mock('@/app/lib/rateLimit');
-jest.mock('@/app/lib/mongodb', () => ({
+jest.mock('@/app/lib/database/connection', () => ({
   connectToDatabase: jest.fn(() =>
     Promise.resolve({
       db: mockDb,

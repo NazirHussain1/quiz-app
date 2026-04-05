@@ -14,12 +14,12 @@ import {
 import { createMockUser, createMockDb } from '../utils/testUtils';
 
 // Mock dependencies
-jest.mock('@/app/lib/mongodb');
+jest.mock('@/app/lib/database/connection');
 jest.mock('@/app/lib/rbac', () => ({
   getDefaultRole: jest.fn(() => 'student'),
 }));
 
-const { connectToDatabase } = require('@/app/lib/mongodb');
+const { connectToDatabase } = require('@/app/lib/database/connection');
 
 describe('Auth Functions', () => {
   let mockDb;

@@ -15,7 +15,7 @@ jest.mock('@/app/lib/email');
 jest.mock('@/app/lib/jwt', () => ({
   generateToken: jest.fn(() => 'mock-token-123'),
 }));
-jest.mock('@/app/lib/mongodb', () => ({
+jest.mock('@/app/lib/database/connection', () => ({
   connectToDatabase: jest.fn(() =>
     Promise.resolve({
       db: {
