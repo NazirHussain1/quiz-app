@@ -15,29 +15,10 @@ import {
 } from '@/app/lib/validation/schemas';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@/app/lib/email';
 import { logAuth, logEmail } from '@/app/lib/logger';
-import { SignJWT } from 'jose';
+import { generateToken } from '@/app/lib/jwt';
 import { AuthenticationError, AppError } from '@/app/lib/errorHandler';
 import { getCollection } from './shared/database';
 import { generateVerificationToken, generatePasswordResetToken, clearTokenFields } from './shared/tokens';
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-in-production'
-);
-
-/**
- * Generate JWT token for user
- */
-async function generateUserToken(user) {
-  return await new SignJWT({
-    userId: user.id,
-    email: user.email,
-    userName: user.userName,
-    role: user.role
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('1d')
-    .sign(JWT_SECRET);
-}
 
 /**
  * Login user
@@ -69,7 +50,7 @@ export async function loginUser(email, password) {
     };
   }
   
-  const token = await generateUserToken(user);
+  const token = await generateToken(user);
   
   logAuth('login_success', user.id, user.email, true, { role: user.role });
 

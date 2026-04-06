@@ -29,8 +29,15 @@ import { NextResponse } from 'next/server';
 /**
  * Success response
  */
-export function success(data, options = {}) {
-  const { message, meta, status = 200 } = options;
+export function success(data, messageOrOptions = null) {
+  // Handle both old signature (data, message) and new signature (data, options)
+  let message, meta, status = 200;
+  
+  if (typeof messageOrOptions === 'string') {
+    message = messageOrOptions;
+  } else if (messageOrOptions && typeof messageOrOptions === 'object') {
+    ({ message, meta, status = 200 } = messageOrOptions);
+  }
   
   const response = {
     success: true,
@@ -170,23 +177,12 @@ export function rateLimit(message = 'Too many requests. Please try again later.'
 /**
  * Internal server error response
  */
-export function serverError(message = 'Internal server error', additionalData = null) {
-  const errorObj = {
+export function serverError(message = 'Internal server error') {
+  return error({
     code: 'INTERNAL_ERROR',
     message,
-    statusCode: 503
-  };
-  
-  const response = error(errorObj);
-  
-  // Add additional data if provided (for health checks, etc.)
-  if (additionalData) {
-    const body = JSON.parse(response.body);
-    Object.assign(body, additionalData);
-    return NextResponse.json(body, { status: 503 });
-  }
-  
-  return response;
+    statusCode: 500
+  });
 }
 
 /**

@@ -1,17 +1,25 @@
-import { success, unauthorized } from '@/app/lib/responses';
+import { success } from '@/app/lib/responses';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
-import { verifyAdmin } from '@/app/lib/middleware';
+import { requireAdmin } from '@/app/lib/middleware';
+import { rateLimitApi } from '@/app/lib/rateLimit';
+import { RateLimitError, ValidationError } from '@/app/lib/errors';
 import { makeUserAdmin } from '@/app/services/userService';
 
-export const POST = withErrorHandler(async (request) => {
-  const authResult = await verifyAdmin(request);
-  if (!authResult.authorized) {
-    return unauthorized();
+export const dynamic = 'force-dynamic';
+
+export const POST = requireAdmin(withErrorHandler(async (request) => {
+  const rateLimit = rateLimitApi(request);
+  if (!rateLimit.allowed) {
+    throw new RateLimitError();
   }
 
   const { userId } = await request.json();
   
+  if (!userId) {
+    throw new ValidationError('User ID is required');
+  }
+  
   const result = await makeUserAdmin(userId);
 
-  return success(null, { message: result.message });
-});
+  return success(null, result.message);
+}));

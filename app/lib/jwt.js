@@ -3,6 +3,11 @@ import { SignJWT, jwtVerify } from "jose";
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRY = "1d";
 
+// Validate JWT_SECRET on module load
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be set and at least 32 characters long');
+}
+
 export async function generateToken(user) {
   const secret = new TextEncoder().encode(JWT_SECRET);
   
@@ -14,6 +19,8 @@ export async function generateToken(user) {
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime(JWT_EXPIRY)
     .setIssuedAt()
+    .setIssuer('quiz-app')
+    .setAudience('quiz-app-users')
     .sign(secret);
   
   return token;
@@ -21,8 +28,15 @@ export async function generateToken(user) {
 
 export async function verifyToken(token) {
   try {
+    if (!token || typeof token !== 'string') {
+      return null;
+    }
+    
     const secret = new TextEncoder().encode(JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret, {
+      issuer: 'quiz-app',
+      audience: 'quiz-app-users'
+    });
     
     if (!payload.userId || !payload.email) {
       return null;

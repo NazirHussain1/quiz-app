@@ -21,7 +21,14 @@ export async function getAllUsers() {
           userName: 1,
           email: 1,
           role: 1,
-          createdAt: 1
+          isVerified: 1,
+          createdAt: 1,
+          // Explicitly exclude sensitive fields
+          password: 0,
+          verificationToken: 0,
+          verificationTokenExpiry: 0,
+          resetPasswordToken: 0,
+          resetPasswordExpiry: 0
         }
       }
     )
@@ -33,6 +40,7 @@ export async function getAllUsers() {
     userName: user.userName,
     email: user.email,
     role: user.role,
+    isVerified: user.isVerified || false,
     createdAt: user.createdAt
   }));
 }

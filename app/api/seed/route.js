@@ -1,8 +1,11 @@
 import { success } from '@/app/lib/responses';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
+import { requireAdmin } from '@/app/lib/middleware';
 import { seedQuestions } from '@/app/lib/seed/seedDatabase';
 
-export const POST = withErrorHandler(async () => {
+export const dynamic = 'force-dynamic';
+
+export const POST = requireAdmin(withErrorHandler(async () => {
   const result = await seedQuestions();
   
   if (result) {
@@ -13,4 +16,4 @@ export const POST = withErrorHandler(async () => {
   }
   
   return success(null, 'Database already seeded');
-});
+}));

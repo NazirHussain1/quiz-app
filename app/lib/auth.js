@@ -1,10 +1,12 @@
 import { connectToDatabase } from './database/connection';
 import bcrypt from 'bcryptjs';
 import { getDefaultRole } from './rbac';
+import { ObjectId } from 'mongodb';
+
+const SALT_ROUNDS = 12; // Increased from 10 for better security
 
 export async function hashPassword(password) {
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
+  return await bcrypt.hash(password, SALT_ROUNDS);
 }
 
 export async function verifyPassword(password, hashedPassword) {
@@ -28,6 +30,7 @@ export async function createUser(email, password, userName) {
     password: hashedPassword,
     userName,
     role: defaultRole,
+    isVerified: false,
     createdAt: new Date(),
     updatedAt: new Date()
   });
@@ -36,7 +39,8 @@ export async function createUser(email, password, userName) {
     id: result.insertedId.toString(),
     email,
     userName,
-    role: defaultRole
+    role: defaultRole,
+    isVerified: false
   };
 }
 
@@ -56,18 +60,35 @@ export async function findUserByEmail(email) {
     id: user._id.toString(),
     email: user.email,
     userName: user.userName,
-    password: user.password,
+    password: user.password, // Only used for authentication
     role: role,
-    isVerified: user.isVerified
+    isVerified: user.isVerified || false
   };
 }
 
 export async function findUserById(id) {
   const { db } = await connectToDatabase();
   const usersCollection = db.collection('users');
-  const { ObjectId } = require('mongodb');
   
-  const user = await usersCollection.findOne({ _id: new ObjectId(id) });
+  let objectId;
+  try {
+    objectId = new ObjectId(id);
+  } catch (error) {
+    return null;
+  }
+  
+  const user = await usersCollection.findOne(
+    { _id: objectId },
+    { 
+      projection: { 
+        password: 0, // Never expose password
+        verificationToken: 0,
+        verificationTokenExpiry: 0,
+        resetPasswordToken: 0,
+        resetPasswordExpiry: 0
+      } 
+    }
+  );
   
   if (!user) {
     return null;
@@ -79,6 +100,7 @@ export async function findUserById(id) {
     id: user._id.toString(),
     email: user.email,
     userName: user.userName,
-    role: role
+    role: role,
+    isVerified: user.isVerified || false
   };
 }

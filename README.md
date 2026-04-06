@@ -1,8 +1,6 @@
 # 🎯 Quiz App - Pakistan Textbook Based
 
-A modern, production-ready quiz application built with Next.js 16 and React 19. Features email verification, role-based access control (RBAC), adaptive difficulty, real-time analytics, custom quiz creation, admin panel, and a global leaderboard system powered by MongoDB Atlas.
-
-> 📚 **For complete documentation, see [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)**
+A modern, production-ready quiz application built with Next.js 16 and React 19. Features email verification, role-based access control, adaptive difficulty, real-time analytics, custom quiz creation, admin panel, and global leaderboard powered by MongoDB Atlas.
 
 ## ✨ Features
 
@@ -88,16 +86,20 @@ Complete admin dashboard with role-based access:
 
 ### Backend
 - MongoDB Atlas 7.1.0
-- JWT Authentication (jose 6.2.1)
-- bcryptjs 3.0.3 for password hashing
+- JWT Authentication (jose 6.2.1) with enhanced security
+- bcryptjs 3.0.3 (12 salt rounds)
 - Nodemailer 8.0.4 for email services
 - Zod 4.3.6 for input validation
+- Redis (ioredis 5.10.1) for caching
+- Winston 3.19.0 for logging
 
 ### Security
+- JWT with issuer/audience validation (32+ char secret required)
 - Rate limiting with IP-based throttling
-- Input validation and sanitization
-- CORS and Helmet for security headers
-- XSS and injection attack prevention
+- Input validation and sanitization with Zod
+- Password hashing with bcrypt (12 rounds)
+- Sensitive data exclusion from queries
+- XSS and NoSQL injection prevention
 
 ### State Management
 - Redux Toolkit 2.11.2
@@ -440,6 +442,15 @@ The application follows a clean, layered architecture for better maintainability
 
 ## 🗄 Database Schema
 
+### Indexes
+The application uses comprehensive database indexes for optimal performance:
+- **users**: email (unique), role, createdAt, verification/reset tokens
+- **questions**: subject, category, difficulty, text search
+- **results**: score, subject, difficulty, createdAt (for leaderboard)
+- **customQuizzes**: userId, createdAt
+
+Run `node scripts/createIndexes.js` to create all indexes.
+
 ### users
 ```javascript
 {
@@ -732,11 +743,13 @@ Built with ❤️ using Next.js 16.1.7 and React 19.2.0 | Production-ready | Pak
 ## 🔒 Security Features
 
 ### Authentication & Authorization
-- JWT-based authentication with secure token handling
-- Email verification system (1-hour token expiry)
+- JWT with issuer/audience validation
+- Minimum 32-character secret enforcement
+- Email verification (1-hour token expiry)
 - Password reset with secure tokens
-- Role-Based Access Control (RBAC) with 4 roles
-- bcrypt password hashing (10 rounds)
+- Role-Based Access Control with 4 roles
+- bcrypt password hashing (12 rounds)
+- Sensitive data exclusion from all queries
 
 ### Rate Limiting & Throttling
 - IP-based throttling (max 5 requests/minute per IP)
@@ -750,7 +763,8 @@ Built with ❤️ using Next.js 16.1.7 and React 19.2.0 | Production-ready | Pak
 - Email, password, username validation
 - MongoDB ObjectId validation
 - Subject, difficulty, role validation
-- XSS prevention through input sanitization
+- XSS prevention through sanitization
+- NoSQL injection prevention
 
 ### Security Headers
 - CORS configuration
@@ -801,4 +815,4 @@ Built with ❤️ using Next.js 16.1.7 and React 19.2.0 | Production-ready | Pak
 
 ---
 
-**Version**: 2.0.0 | **Status**: Production Ready | **Security**: Hardened | **RBAC**: Enabled
+**Version**: 2.0.0 | **Status**: Production Ready | **Security**: Hardened | **Performance**: Optimized
