@@ -1,29 +1,32 @@
-import { NextResponse } from 'next/server';
+import { success, created } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAuth } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { getUserQuizzes, createCustomQuiz, deleteCustomQuiz } from '@/app/services/customQuizService';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = requireAuth(withErrorHandling(async (request) => {
+export const GET = requireAuth(withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const user = request.user;
   const result = await getUserQuizzes(user.userId);
   
-  return NextResponse.json(result);
+  return success(result.quizzes, {
+    meta: { count: result.count }
+  });
 }));
 
-export const POST = requireAuth(withErrorHandling(async (request) => {
+export const POST = requireAuth(withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const user = request.user;
@@ -31,14 +34,14 @@ export const POST = requireAuth(withErrorHandling(async (request) => {
   
   const result = await createCustomQuiz(user.userId, user.userName, body);
   
-  return NextResponse.json(result, { status: 201 });
+  return created({ quizId: result.quizId }, result.message);
 }));
 
-export const DELETE = requireAuth(withErrorHandling(async (request) => {
+export const DELETE = requireAuth(withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const user = request.user;
@@ -47,5 +50,5 @@ export const DELETE = requireAuth(withErrorHandling(async (request) => {
   
   const result = await deleteCustomQuiz(id, user.userId);
   
-  return NextResponse.json(result);
+  return success(null, { message: result.message });
 }));

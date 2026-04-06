@@ -22,6 +22,13 @@ export {
   requireModerator
 } from './rbac';
 
+// Error handling
+export {
+  handleError,
+  withErrorHandler,
+  withErrorHandling
+} from './errorHandler';
+
 // Utilities
 export {
   getClientIP,

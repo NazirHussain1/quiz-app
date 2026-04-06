@@ -1,20 +1,17 @@
-import { NextResponse } from 'next/server';
+import { success, unauthorized } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { verifyAdmin } from '@/app/lib/middleware';
-import { withErrorHandling } from '@/app/lib/errorHandler';
 import { makeUserAdmin } from '@/app/services/userService';
 
-export const POST = withErrorHandling(async (request) => {
+export const POST = withErrorHandler(async (request) => {
   const authResult = await verifyAdmin(request);
   if (!authResult.authorized) {
-    return NextResponse.json(
-      { success: false, error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return unauthorized();
   }
 
   const { userId } = await request.json();
   
   const result = await makeUserAdmin(userId);
 
-  return NextResponse.json(result);
+  return success(null, { message: result.message });
 });

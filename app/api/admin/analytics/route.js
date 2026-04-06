@@ -1,19 +1,20 @@
-import { NextResponse } from 'next/server';
+import { success } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAdmin } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { getAdminAnalytics } from '@/app/services/analyticsService';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = requireAdmin(withErrorHandling(async (request) => {
+export const GET = requireAdmin(withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const result = await getAdminAnalytics();
 
-  return NextResponse.json(result);
+  return success(result.data);
 }));

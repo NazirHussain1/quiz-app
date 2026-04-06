@@ -1,29 +1,30 @@
-import { NextResponse } from 'next/server';
+import { success, created } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { saveQuizResult, getLeaderboard } from '@/app/services/quizResultService';
 
 export const dynamic = 'force-dynamic';
 
-export const POST = withErrorHandling(async (request) => {
+export const POST = withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const body = await request.json();
   
   const result = await saveQuizResult(body);
   
-  return NextResponse.json(result, { status: 201 });
+  return created({ resultId: result.resultId }, 'Result saved successfully');
 });
 
-export const GET = withErrorHandling(async (request) => {
+export const GET = withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const { searchParams } = new URL(request.url);
@@ -36,9 +37,16 @@ export const GET = withErrorHandling(async (request) => {
     difficulty: searchParams.get('difficulty')
   });
   
-  return NextResponse.json(result, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+  const response = success(result.results, {
+    meta: {
+      page: result.currentPage,
+      limit: parseInt(searchParams.get('limit') || '50'),
+      total: result.totalCount,
+      totalPages: result.totalPages
     }
   });
+  
+  response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+  
+  return response;
 });

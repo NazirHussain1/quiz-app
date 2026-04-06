@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server';
+import { success, created } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitApi } from '@/app/lib/rateLimit';
 import { logSecurity } from '@/app/lib/logger';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { getQuestions, createQuestion } from '@/app/services/questionService';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = withErrorHandling(async (request) => {
+export const GET = withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
@@ -14,7 +15,7 @@ export const GET = withErrorHandling(async (request) => {
       event: 'questions_rate_limit',
       ip: request.headers.get('x-forwarded-for') || 'unknown',
     });
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const { searchParams } = new URL(request.url);
@@ -27,23 +28,25 @@ export const GET = withErrorHandling(async (request) => {
     limit: searchParams.get('limit') || '10'
   });
   
-  return NextResponse.json(result, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-    }
+  const response = success(result.questions, {
+    meta: { count: result.count }
   });
+  
+  response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+  
+  return response;
 });
 
-export const POST = withErrorHandling(async (request) => {
+export const POST = withErrorHandler(async (request) => {
   // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const body = await request.json();
   
   const result = await createQuestion(body);
   
-  return NextResponse.json(result, { status: 201 });
+  return created({ questionId: result.questionId }, 'Question created successfully');
 });
