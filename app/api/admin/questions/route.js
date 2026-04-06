@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { success, created } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAdmin } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { 
   getQuestionsForAdmin, 
   createQuestion, 
@@ -11,10 +12,10 @@ import {
 
 export const dynamic = 'force-dynamic';
 
-export const GET = requireAdmin(withErrorHandling(async (request) => {
+export const GET = requireAdmin(withErrorHandler(async (request) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const { searchParams } = new URL(request.url);
@@ -28,42 +29,42 @@ export const GET = requireAdmin(withErrorHandling(async (request) => {
     limit: searchParams.get('limit') || '20'
   });
   
-  return NextResponse.json(result);
+  return success(result);
 }));
 
-export const POST = requireAdmin(withErrorHandling(async (request) => {
+export const POST = requireAdmin(withErrorHandler(async (request) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const body = await request.json();
   
   const result = await createQuestion(body);
   
-  return NextResponse.json({ 
-    ...result,
-    message: 'Question added successfully'
-  }, { status: 201 });
+  return created(
+    { questionId: result.questionId },
+    'Question added successfully'
+  );
 }));
 
-export const PUT = requireAdmin(withErrorHandling(async (request) => {
+export const PUT = requireAdmin(withErrorHandler(async (request) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const body = await request.json();
   
   const result = await updateQuestion(body._id, body);
   
-  return NextResponse.json(result);
+  return success(null, result.message);
 }));
 
-export const DELETE = requireAdmin(withErrorHandling(async (request) => {
+export const DELETE = requireAdmin(withErrorHandler(async (request) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const { searchParams } = new URL(request.url);
@@ -71,5 +72,5 @@ export const DELETE = requireAdmin(withErrorHandling(async (request) => {
   
   const result = await deleteQuestion(id);
   
-  return NextResponse.json(result);
+  return success(null, result.message);
 }));

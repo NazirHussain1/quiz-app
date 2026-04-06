@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
+import { success, serverError } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { connectToDatabase } from '@/app/lib/database/connection';
 import { logInfo, logDB } from '@/app/lib/logger';
-import { withErrorHandling, successResponse } from '@/app/lib/errorHandler';
 
 /**
  * Health Check Endpoint
  * Tests database connectivity and logs system health
  */
-export const GET = withErrorHandling(async () => {
+export const GET = withErrorHandler(async () => {
   const startTime = Date.now();
   
-  // Test database connection
   try {
     const { db } = await connectToDatabase();
     await db.admin().ping();
@@ -27,7 +26,7 @@ export const GET = withErrorHandling(async () => {
       memory: process.memoryUsage(),
     });
     
-    return successResponse({
+    return success({
       status: 'healthy',
       database: 'connected',
       uptime: process.uptime(),
@@ -41,11 +40,10 @@ export const GET = withErrorHandling(async () => {
       error: error.message,
     });
     
-    return NextResponse.json({
-      success: false,
+    return serverError('Database connection failed', {
       status: 'unhealthy',
       database: 'disconnected',
       error: error.message,
-    }, { status: 503 });
+    });
   }
 });

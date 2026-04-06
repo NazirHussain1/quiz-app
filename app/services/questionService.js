@@ -21,7 +21,6 @@ import {
 import { logDB } from '@/app/lib/logger';
 import { AppError } from '@/app/lib/errorHandler';
 import { getCollection, validateAndConvertId, paginateQuery } from './shared/database';
-import { ObjectId } from 'mongodb';
 
 /**
  * Build question filter from params
@@ -131,7 +130,11 @@ export async function createQuestion(questionData) {
     updatedAt: new Date()
   });
   
-  await invalidateCache(CACHE_KEYS.QUESTIONS);
+  await Promise.all([
+    invalidateCache(CACHE_KEYS.QUESTIONS),
+    invalidateCache(CACHE_KEYS.CATEGORIES),
+    invalidateCache(CACHE_KEYS.SUBJECTS)
+  ]);
   
   return {
     success: true,
@@ -143,26 +146,42 @@ export async function createQuestion(questionData) {
  * Get question categories
  */
 export async function getCategories() {
-  const collection = await getCollection('questions');
-  const categories = await collection.distinct('category');
+  const cacheKey = buildCacheKey(CACHE_KEYS.CATEGORIES);
   
-  return {
-    success: true,
-    categories
-  };
+  return await getCacheOrFetch(
+    cacheKey,
+    async () => {
+      const collection = await getCollection('questions');
+      const categories = await collection.distinct('category');
+      
+      return {
+        success: true,
+        categories
+      };
+    },
+    CACHE_TTL.CATEGORIES
+  );
 }
 
 /**
  * Get question subjects
  */
 export async function getSubjects() {
-  const collection = await getCollection('questions');
-  const subjects = await collection.distinct('subject');
+  const cacheKey = buildCacheKey(CACHE_KEYS.SUBJECTS);
   
-  return {
-    success: true,
-    subjects
-  };
+  return await getCacheOrFetch(
+    cacheKey,
+    async () => {
+      const collection = await getCollection('questions');
+      const subjects = await collection.distinct('subject');
+      
+      return {
+        success: true,
+        subjects
+      };
+    },
+    CACHE_TTL.SUBJECTS
+  );
 }
 
 /**
@@ -245,7 +264,11 @@ export async function updateQuestion(questionId, updateData) {
     throw new AppError('Question not found', 404);
   }
   
-  await invalidateCache(CACHE_KEYS.QUESTIONS);
+  await Promise.all([
+    invalidateCache(CACHE_KEYS.QUESTIONS),
+    invalidateCache(CACHE_KEYS.CATEGORIES),
+    invalidateCache(CACHE_KEYS.SUBJECTS)
+  ]);
   
   return {
     success: true,
@@ -266,7 +289,11 @@ export async function deleteQuestion(questionId) {
     throw new AppError('Question not found', 404);
   }
   
-  await invalidateCache(CACHE_KEYS.QUESTIONS);
+  await Promise.all([
+    invalidateCache(CACHE_KEYS.QUESTIONS),
+    invalidateCache(CACHE_KEYS.CATEGORIES),
+    invalidateCache(CACHE_KEYS.SUBJECTS)
+  ]);
   
   return {
     success: true,

@@ -1,23 +1,22 @@
-import { NextResponse } from 'next/server';
+import { success } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAuth } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { getUserAnalytics } from '@/app/services/analyticsService';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = requireAuth(withErrorHandling(async (request) => {
-  // Rate limiting
+export const GET = requireAuth(withErrorHandler(async (request) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const result = await getUserAnalytics();
 
-  return NextResponse.json(result, {
-    headers: {
-      'Cache-Control': 'private, s-maxage=300, stale-while-revalidate=600',
-    }
-  });
+  const response = success(result.data);
+  response.headers.set('Cache-Control', 'private, s-maxage=300, stale-while-revalidate=600');
+  
+  return response;
 }));

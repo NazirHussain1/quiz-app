@@ -4,9 +4,8 @@
  */
 
 import { validate } from '@/app/lib/validation';
-import { updateRoleSchema, makeAdminSchema, deleteUserSchema, roleSchema } from '@/app/lib/validation/schemas';
+import { updateRoleSchema, makeAdminSchema, deleteUserSchema } from '@/app/lib/validation/schemas';
 import { ROLES } from '@/app/lib/rbac';
-import { AppError } from '@/app/lib/errorHandler';
 import { getCollection, updateById, deleteById } from './shared/database';
 
 /**
@@ -15,7 +14,17 @@ import { getCollection, updateById, deleteById } from './shared/database';
 export async function getAllUsers() {
   const users = await getCollection('users');
   const userList = await users
-    .find({})
+    .find(
+      {},
+      {
+        projection: {
+          userName: 1,
+          email: 1,
+          role: 1,
+          createdAt: 1
+        }
+      }
+    )
     .sort({ createdAt: -1 })
     .toArray();
 

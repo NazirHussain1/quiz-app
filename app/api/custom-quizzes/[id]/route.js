@@ -1,18 +1,18 @@
-import { NextResponse } from 'next/server';
+import { success } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { withErrorHandling, AppError } from '@/app/lib/errorHandler';
+import { RateLimitError } from '@/app/lib/errors';
 import { getQuizById } from '@/app/services/customQuizService';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = withErrorHandling(async (request, { params }) => {
-  // Rate limiting
+export const GET = withErrorHandler(async (request, { params }) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    throw new AppError('Too many requests. Please try again later.', 429);
+    throw new RateLimitError();
   }
 
   const result = await getQuizById(params.id);
   
-  return NextResponse.json(result);
+  return success(result.quiz);
 });

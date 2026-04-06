@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
+import { success } from '@/app/lib/responses';
+import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireRole } from '@/app/lib/middleware';
-import { ROLES } from '@/app/lib/rbac';
-import { withErrorHandling } from '@/app/lib/errorHandler';
+import { ROLES, ROLE_PERMISSIONS } from '@/app/lib/rbac';
+import { ValidationError, NotFoundError } from '@/app/lib/errors';
 import { updateUserRole } from '@/app/services/userService';
 import { connectToDatabase } from '@/app/lib/database/connection';
-import { ROLE_PERMISSIONS } from '@/app/lib/rbac';
 import { ObjectId } from 'mongodb';
 
 export const dynamic = 'force-dynamic';
 
-export const GET = requireRole([ROLES.ADMIN, ROLES.SUPERADMIN])(withErrorHandling(async (request) => {
+export const GET = requireRole([ROLES.ADMIN, ROLES.SUPERADMIN])(withErrorHandler(async (request) => {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
 
@@ -18,45 +18,34 @@ export const GET = requireRole([ROLES.ADMIN, ROLES.SUPERADMIN])(withErrorHandlin
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('User not found');
     }
 
-    return NextResponse.json({
-      success: true,
+    return success({
       role: user.role,
       permissions: ROLE_PERMISSIONS[user.role] || []
     });
   }
 
-  return NextResponse.json({
-    success: true,
+  return success({
     roles: Object.values(ROLES),
     rolePermissions: ROLE_PERMISSIONS
   });
 }));
 
-export const PUT = requireRole([ROLES.SUPERADMIN])(withErrorHandling(async (request) => {
+export const PUT = requireRole([ROLES.SUPERADMIN])(withErrorHandler(async (request) => {
   const { userId, newRole } = await request.json();
 
   if (!userId || !newRole) {
-    return NextResponse.json(
-      { success: false, error: 'User ID and new role are required' },
-      { status: 400 }
-    );
+    throw new ValidationError('User ID and new role are required');
   }
 
   // Prevent changing own role
   if (request.user.userId === userId) {
-    return NextResponse.json(
-      { success: false, error: 'Cannot change your own role' },
-      { status: 400 }
-    );
+    throw new ValidationError('Cannot change your own role');
   }
 
   const result = await updateUserRole(userId, newRole);
 
-  return NextResponse.json(result);
+  return success(result, 'User role updated successfully');
 }));

@@ -7,7 +7,6 @@ import { validate } from '@/app/lib/validation';
 import { customQuizSchema, updateCustomQuizSchema } from '@/app/lib/validation/schemas';
 import { AppError } from '@/app/lib/errorHandler';
 import { getCollection, findById, validateAndConvertId } from './shared/database';
-import { ObjectId } from 'mongodb';
 
 /**
  * Get user's custom quizzes
@@ -16,7 +15,21 @@ export async function getUserQuizzes(userId) {
   const collection = await getCollection('customQuizzes');
   
   const quizzes = await collection
-    .find({ userId })
+    .find(
+      { userId },
+      {
+        projection: {
+          title: 1,
+          subject: 1,
+          difficulty: 1,
+          description: 1,
+          isPublic: 1,
+          questions: 1,
+          createdAt: 1,
+          updatedAt: 1
+        }
+      }
+    )
     .sort({ createdAt: -1 })
     .toArray();
   
@@ -98,15 +111,6 @@ export async function updateCustomQuiz(quizId, userId, updateData) {
   
   const objectId = validateAndConvertId(quizId);
   const collection = await getCollection('customQuizzes');
-
-  const quiz = await collection.findOne({
-    _id: objectId,
-    userId
-  });
-
-  if (!quiz) {
-    throw new AppError('Quiz not found or unauthorized', 404);
-  }
 
   const updates = { 
     ...validated,

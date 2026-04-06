@@ -170,12 +170,23 @@ export function rateLimit(message = 'Too many requests. Please try again later.'
 /**
  * Internal server error response
  */
-export function serverError(message = 'Internal server error') {
-  return error({
+export function serverError(message = 'Internal server error', additionalData = null) {
+  const errorObj = {
     code: 'INTERNAL_ERROR',
     message,
-    statusCode: 500
-  });
+    statusCode: 503
+  };
+  
+  const response = error(errorObj);
+  
+  // Add additional data if provided (for health checks, etc.)
+  if (additionalData) {
+    const body = JSON.parse(response.body);
+    Object.assign(body, additionalData);
+    return NextResponse.json(body, { status: 503 });
+  }
+  
+  return response;
 }
 
 /**

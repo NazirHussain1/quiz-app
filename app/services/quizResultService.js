@@ -15,39 +15,12 @@ import {
 import { getCollection } from './shared/database';
 
 /**
- * Ensure database indexes exist
- */
-async function ensureIndexes(collection) {
-  try {
-    const existingIndexes = await collection.indexes();
-    const indexNames = existingIndexes.map(idx => idx.name);
-    
-    const indexes = [
-      { key: { score: -1, createdAt: 1 }, name: 'leaderboard_score_date' },
-      { key: { subject: 1 }, name: 'subject_1' },
-      { key: { difficulty: 1 }, name: 'difficulty_1' },
-      { key: { category: 1 }, name: 'category_1' },
-      { key: { subject: 1, difficulty: 1, score: -1, createdAt: 1 }, name: 'filtered_leaderboard' }
-    ];
-    
-    for (const index of indexes) {
-      if (!indexNames.includes(index.name)) {
-        await collection.createIndex(index.key, { name: index.name, background: true });
-      }
-    }
-  } catch (error) {
-    console.error('Error ensuring indexes:', error);
-  }
-}
-
-/**
  * Save quiz result
  */
 export async function saveQuizResult(resultData) {
   const validated = validate(quizResultSchema, resultData);
   
   const collection = await getCollection('results');
-  await ensureIndexes(collection);
   
   const result = await collection.insertOne({
     ...validated,
@@ -91,7 +64,6 @@ export async function getLeaderboard(params) {
     cacheKey,
     async () => {
       const collection = await getCollection('results');
-      await ensureIndexes(collection);
       
       const filter = {};
       
