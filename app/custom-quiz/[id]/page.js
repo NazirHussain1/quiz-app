@@ -159,6 +159,7 @@ export default function CustomQuizPage() {
   }
 
   if (finished) {
+    const score = calculateScore();
     const percentage = Math.round((score / questions.length) * 100);
     
     return (
@@ -204,6 +205,7 @@ export default function CustomQuizPage() {
 
   const current = questions[index];
   const isLocked = !!answers[index];
+  const progressPercent = ((index + 1) / questions.length) * 100;
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
@@ -287,6 +289,7 @@ export default function CustomQuizPage() {
             </div>
           </motion.div>
         </AnimatePresence>
+        </div>
       </div>
 
       {/* Fixed Bottom Action Bar */}

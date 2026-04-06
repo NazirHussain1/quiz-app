@@ -183,7 +183,6 @@ export const POST = requireAdmin(async (request) => {
     
     // Invalidate questions cache
     await invalidateCache(CACHE_KEYS.QUESTIONS);
-    console.log('🗑️  Questions cache invalidated');
     
     return NextResponse.json({ 
       success: true, 
@@ -325,7 +324,6 @@ export const PUT = requireAdmin(async (request) => {
     
     // Invalidate questions cache
     await invalidateCache(CACHE_KEYS.QUESTIONS);
-    console.log('🗑️  Questions cache invalidated');
     
     return NextResponse.json({ 
       success: true, 
@@ -377,7 +375,6 @@ export const DELETE = requireAdmin(async (request) => {
     
     // Invalidate questions cache
     await invalidateCache(CACHE_KEYS.QUESTIONS);
-    console.log('🗑️  Questions cache invalidated');
     
     return NextResponse.json({ 
       success: true, 

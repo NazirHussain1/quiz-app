@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileText, Plus, Edit, Trash2, Search, Filter, RefreshCw, X } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Search, RefreshCw, X } from "lucide-react";
 import AdminLayout from "../components/AdminLayout";
 
 export default function AdminQuestionsPage() {

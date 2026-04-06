@@ -125,8 +125,6 @@ export function asyncHandler(handler) {
 export function withErrorHandling(handler) {
   return async (req, context) => {
     const startTime = Date.now();
-    const method = req.method;
-    const url = req.url;
 
     try {
       const response = await handler(req, context);
@@ -134,10 +132,6 @@ export function withErrorHandling(handler) {
       // Log successful request
       const duration = Date.now() - startTime;
       const statusCode = response?.status || 200;
-      
-      if (process.env.NODE_ENV !== 'production' || statusCode >= 400) {
-        console.log(`[${method}] ${url} - ${statusCode} (${duration}ms)`);
-      }
 
       return response;
     } catch (error) {

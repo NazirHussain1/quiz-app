@@ -53,8 +53,6 @@ function ExamContent() {
 
           // If no questions found with specific difficulty, try without difficulty filter
           if (data.success && (!data.questions || data.questions.length === 0) && difficulty) {
-            console.log(`No questions found for difficulty: ${difficulty}, trying without difficulty filter...`);
-            
             const fallbackParams = new URLSearchParams();
             if (category) fallbackParams.append('category', category);
             if (subject) fallbackParams.append('subject', subject);
@@ -476,6 +474,7 @@ function ExamContent() {
             </div>
           </motion.div>
         </AnimatePresence>
+        </div>
       </div>
 
       {/* Fixed Bottom Action Bar */}

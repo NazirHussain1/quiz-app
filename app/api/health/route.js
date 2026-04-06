@@ -7,7 +7,7 @@ import { withErrorHandling, successResponse } from '@/app/lib/errorHandler';
  * Health Check Endpoint
  * Tests database connectivity and logs system health
  */
-export const GET = withErrorHandling(async (request) => {
+export const GET = withErrorHandling(async () => {
   const startTime = Date.now();
   
   // Test database connection

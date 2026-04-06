@@ -18,8 +18,7 @@ import {
   Moon,
   Sun,
   ChevronLeft,
-  ChevronRight,
-  Shield
+  ChevronRight
 } from "lucide-react";
 
 export default function AdminLayout({ children, user }) {

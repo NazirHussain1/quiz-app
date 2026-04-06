@@ -122,7 +122,6 @@ export async function POST(request) {
     await invalidateCache(CACHE_KEYS.LEADERBOARD);
     await invalidateCache(CACHE_KEYS.ANALYTICS);
     await invalidateCache(CACHE_KEYS.ADMIN_ANALYTICS);
-    console.log('🗑️  Leaderboard and analytics cache invalidated');
     
     return NextResponse.json({ 
       success: true, 
@@ -264,7 +263,6 @@ async function ensureIndexes(collection) {
         { score: -1, createdAt: 1 },
         { name: 'leaderboard_score_date', background: true }
       );
-      console.log('Created index: leaderboard_score_date');
     }
     
     // Create index for subject filtering
@@ -273,7 +271,6 @@ async function ensureIndexes(collection) {
         { subject: 1 },
         { name: 'subject_1', background: true }
       );
-      console.log('Created index: subject_1');
     }
     
     // Create index for difficulty filtering
@@ -282,7 +279,6 @@ async function ensureIndexes(collection) {
         { difficulty: 1 },
         { name: 'difficulty_1', background: true }
       );
-      console.log('Created index: difficulty_1');
     }
     
     // Create index for category filtering
@@ -291,7 +287,6 @@ async function ensureIndexes(collection) {
         { category: 1 },
         { name: 'category_1', background: true }
       );
-      console.log('Created index: category_1');
     }
     
     // Create compound index for filtered leaderboard queries
@@ -300,7 +295,6 @@ async function ensureIndexes(collection) {
         { subject: 1, difficulty: 1, score: -1, createdAt: 1 },
         { name: 'filtered_leaderboard', background: true }
       );
-      console.log('Created index: filtered_leaderboard');
     }
     
   } catch (error) {

@@ -16,10 +16,8 @@ export async function seedQuestions() {
       }));
       
       const result = await collection.insertMany(questionsWithTimestamps);
-      console.log(`${result.insertedCount} questions inserted successfully`);
       return result;
     } else {
-      console.log('Database already contains questions. Skipping seed.');
       return null;
     }
   } catch (error) {

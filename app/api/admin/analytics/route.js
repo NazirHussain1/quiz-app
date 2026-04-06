@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/app/lib/database/connection';
 import { requireAdmin } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { 
-  getCacheOrFetch, 
-  CACHE_KEYS, 
-  CACHE_TTL 
-} from '@/app/lib/cache';
 
 export const dynamic = 'force-dynamic';
 

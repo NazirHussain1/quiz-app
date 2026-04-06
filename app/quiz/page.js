@@ -125,8 +125,6 @@ function QuizContent() {
 
         // If no questions found with specific difficulty, try without difficulty filter
         if (!data.questions || data.questions.length === 0) {
-          console.log(`No questions found for difficulty: ${adaptiveDifficulty}, trying without difficulty filter...`);
-          
           const fallbackParams = new URLSearchParams();
           if (subject) {
             fallbackParams.append('subject', subject);
@@ -249,13 +247,6 @@ function QuizContent() {
         }),
       })
         .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            console.log('Result saved to MongoDB:', data.resultId);
-          } else {
-            console.error('Failed to save result to MongoDB:', data.error);
-          }
-        })
         .catch(err => {
           console.error('Error saving result to MongoDB:', err);
         });

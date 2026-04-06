@@ -12,7 +12,7 @@ export const mockMongoClient = {
 
 // Mock MongoDB database
 export const mockDb = {
-  collection: jest.fn((name) => mockCollection),
+  collection: jest.fn(() => mockCollection),
   admin: jest.fn(() => ({
     ping: jest.fn().mockResolvedValue(true),
   })),

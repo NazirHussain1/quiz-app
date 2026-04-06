@@ -204,7 +204,6 @@ export async function POST(request) {
     
     // Invalidate questions cache
     await invalidateCache(CACHE_KEYS.QUESTIONS);
-    console.log('🗑️  Questions cache invalidated');
     
     return NextResponse.json({ 
       success: true, 
