@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FileText, Plus, Edit, Trash2, Search, RefreshCw, X } from "lucide-react";
-import AdminLayout from "../components/AdminLayout";
+import AdminLayout from "@/app/admin/components/AdminLayout";
 
 export default function AdminQuestionsPage() {
   const { user, loading: authLoading } = useSelector((state) => state.auth);

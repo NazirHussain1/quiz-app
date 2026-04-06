@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminLayout from "../components/AdminLayout";
+import AdminLayout from "@/app/admin/components/AdminLayout";
 import { Users, Shield, Trash2, Search, UserCheck } from "lucide-react";
 import { toast } from "react-toastify";
 

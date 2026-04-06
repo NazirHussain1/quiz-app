@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { login, signup, clearError } from "../store/slices/authSlice";
+import { login, signup, clearError } from "@/app/store/slices/authSlice";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import { LogIn, UserPlus, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";

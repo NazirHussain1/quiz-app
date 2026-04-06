@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../store/slices/authSlice";
+import { logout } from "@/app/store/slices/authSlice";
 import { Home, Trophy, BarChart3, BookOpen, Plus, Settings, LogOut, User, Menu, X } from "lucide-react";
 import { useState } from "react";
 

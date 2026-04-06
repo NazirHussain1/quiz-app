@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { Search, Edit2, Trash2, ChevronLeft, ChevronRight, Loader2, X, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import AdminLayout from "./components/AdminLayout";
+import AdminLayout from "@/app/admin/components/AdminLayout";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useSelector((state) => state.auth);

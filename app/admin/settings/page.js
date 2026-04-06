@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminLayout from "../components/AdminLayout";
-import { Settings, Save, Database, Bell, Globe } from "lucide-react";
+import AdminLayout from "@/app/admin/components/AdminLayout";
+import { Settings, Save, Database, Bell, Globe, Shield } from "lucide-react";
 import { toast } from "react-toastify";
 
 export default function AdminSettingsPage() {

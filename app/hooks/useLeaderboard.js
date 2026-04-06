@@ -4,7 +4,7 @@ import {
   saveScore, 
   clearLeaderboard as clearLeaderboardService,
   getTopScores 
-} from "../services/leaderboardService";
+} from "@/app/services/leaderboardService";
 
 export function useLeaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);

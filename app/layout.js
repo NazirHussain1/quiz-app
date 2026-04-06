@@ -2,8 +2,8 @@
 
 import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
-import { ReduxProvider } from "./store/ReduxProvider";
-import Navbar from "./components/Navbar";
+import { ReduxProvider } from "@/app/store/ReduxProvider";
+import Navbar from "@/app/components/Navbar";
 import { ToastContainer } from "react-toastify";
 
 export default function RootLayout({ children }) {

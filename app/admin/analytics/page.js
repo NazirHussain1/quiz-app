@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Users, FileText, Target, Clock, TrendingUp, Award, RefreshCw } from "lucide-react";
-import AdminLayout from "../components/AdminLayout";
+import AdminLayout from "@/app/admin/components/AdminLayout";
 import {
   Chart as ChartJS,
   CategoryScale,

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { shuffleArray } from "../../utils/shuffle";
+import { shuffleArray } from "@/app/utils/shuffle";
 
 export default function CustomQuizPage() {
   const params = useParams();

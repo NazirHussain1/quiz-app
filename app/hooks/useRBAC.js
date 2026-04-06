@@ -6,7 +6,7 @@ import {
   getRolePermissions,
   ROLES,
   PERMISSIONS 
-} from '../lib/rbac';
+} from '@/app/lib/rbac';
 
 /**
  * Custom hook for Role-Based Access Control

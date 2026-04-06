@@ -4,9 +4,9 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { shuffleArray } from "../utils/shuffle";
-import { useSound } from "../utils/useSound";
-import { adaptiveDifficultyService } from "../services/adaptiveDifficultyService";
+import { shuffleArray } from "@/app/utils/shuffle";
+import { useSound } from "@/app/utils/useSound";
+import { adaptiveDifficultyService } from "@/app/services/adaptiveDifficultyService";
 
 function QuizContent() {
   const searchParams = useSearchParams();

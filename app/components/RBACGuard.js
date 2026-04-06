@@ -1,6 +1,6 @@
 "use client";
 
-import { useRBAC } from '../hooks/useRBAC';
+import { useRBAC } from '@/app/hooks/useRBAC';
 
 /**
  * Component to conditionally render based on permission
