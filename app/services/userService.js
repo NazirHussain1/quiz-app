@@ -3,23 +3,23 @@
  * Handles user management business logic
  */
 
-import { connectToDatabase } from '@/app/lib/database/connection';
-import { validateObjectId } from '@/app/lib/validation';
+import { validate } from '@/app/lib/validation';
+import { updateRoleSchema, makeAdminSchema, deleteUserSchema, roleSchema } from '@/app/lib/validation/schemas';
 import { ROLES } from '@/app/lib/rbac';
-import { ObjectId } from 'mongodb';
 import { AppError } from '@/app/lib/errorHandler';
+import { getCollection, updateById, deleteById } from './shared/database';
 
 /**
  * Get all users (admin only)
  */
 export async function getAllUsers() {
-  const { db } = await connectToDatabase();
-  const users = await db.collection('users')
+  const users = await getCollection('users');
+  const userList = await users
     .find({})
     .sort({ createdAt: -1 })
     .toArray();
 
-  return users.map(user => ({
+  return userList.map(user => ({
     _id: user._id.toString(),
     userName: user.userName,
     email: user.email,
@@ -32,27 +32,9 @@ export async function getAllUsers() {
  * Make user admin
  */
 export async function makeUserAdmin(userId) {
-  const idValidation = validateObjectId(userId);
-  if (!idValidation.valid) {
-    throw new AppError(idValidation.error, 400);
-  }
-
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
-
-  const result = await usersCollection.updateOne(
-    { _id: new ObjectId(idValidation.value) },
-    {
-      $set: {
-        role: ROLES.ADMIN,
-        updatedAt: new Date()
-      }
-    }
-  );
-
-  if (result.matchedCount === 0) {
-    throw new AppError('User not found', 404);
-  }
+  validate(makeAdminSchema, { userId });
+  
+  await updateById('users', userId, { role: ROLES.ADMIN });
 
   return {
     success: true,
@@ -64,21 +46,9 @@ export async function makeUserAdmin(userId) {
  * Delete user
  */
 export async function deleteUser(userId) {
-  const idValidation = validateObjectId(userId);
-  if (!idValidation.valid) {
-    throw new AppError(idValidation.error, 400);
-  }
-
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
-
-  const result = await usersCollection.deleteOne({
-    _id: new ObjectId(idValidation.value)
-  });
-
-  if (result.deletedCount === 0) {
-    throw new AppError('User not found', 404);
-  }
+  validate(deleteUserSchema, { userId });
+  
+  await deleteById('users', userId);
 
   return {
     success: true,
@@ -90,32 +60,9 @@ export async function deleteUser(userId) {
  * Update user role
  */
 export async function updateUserRole(userId, role) {
-  const idValidation = validateObjectId(userId);
-  if (!idValidation.valid) {
-    throw new AppError(idValidation.error, 400);
-  }
+  const validated = validate(updateRoleSchema, { userId, newRole: role });
 
-  const validRoles = Object.values(ROLES);
-  if (!validRoles.includes(role)) {
-    throw new AppError('Invalid role', 400);
-  }
-
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
-
-  const result = await usersCollection.updateOne(
-    { _id: new ObjectId(idValidation.value) },
-    {
-      $set: {
-        role,
-        updatedAt: new Date()
-      }
-    }
-  );
-
-  if (result.matchedCount === 0) {
-    throw new AppError('User not found', 404);
-  }
+  await updateById('users', validated.userId, { role: validated.newRole });
 
   return {
     success: true,

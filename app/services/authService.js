@@ -4,68 +4,31 @@
  */
 
 import { findUserByEmail, verifyPassword, createUser } from '@/app/lib/auth';
-import { validateEmail, validatePassword, validateUsername } from '@/app/lib/validation';
-import { generateToken } from '@/app/lib/jwt';
+import { validate } from '@/app/lib/validation';
+import { 
+  loginSchema, 
+  signupSchema, 
+  verifyEmailSchema,
+  resendVerificationSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
+} from '@/app/lib/validation/schemas';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@/app/lib/email';
-import { connectToDatabase } from '@/app/lib/database/connection';
 import { logAuth, logEmail } from '@/app/lib/logger';
 import { SignJWT } from 'jose';
-import { ValidationError, AuthenticationError, AppError } from '@/app/lib/errorHandler';
+import { AuthenticationError, AppError } from '@/app/lib/errorHandler';
+import { getCollection } from './shared/database';
+import { generateVerificationToken, generatePasswordResetToken, clearTokenFields } from './shared/tokens';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 );
 
 /**
- * Login user
+ * Generate JWT token for user
  */
-export async function loginUser(email, password) {
-  // Validate email
-  const emailValidation = validateEmail(email);
-  if (!emailValidation.valid) {
-    throw new ValidationError(emailValidation.error);
-  }
-
-  // Validate password exists
-  if (!password || typeof password !== 'string') {
-    throw new ValidationError('Password is required');
-  }
-  
-  // Find user with sanitized email
-  const user = await findUserByEmail(emailValidation.value);
-  
-  if (!user) {
-    logAuth('login_failed', null, emailValidation.value, false, {
-      reason: 'user_not_found',
-    });
-    throw new AuthenticationError('Invalid credentials');
-  }
-  
-  // Verify password
-  const isValid = await verifyPassword(password, user.password);
-  
-  if (!isValid) {
-    logAuth('login_failed', user.id, user.email, false, {
-      reason: 'invalid_password',
-    });
-    throw new AuthenticationError('Invalid credentials');
-  }
-
-  // Check if email is verified
-  if (!user.isVerified) {
-    logAuth('login_failed', user.id, user.email, false, {
-      reason: 'email_not_verified',
-    });
-    return {
-      success: false,
-      needsVerification: true,
-      email: user.email,
-      message: 'Please verify your email before logging in. Check your inbox for the verification link.'
-    };
-  }
-  
-  // Generate JWT with expiry
-  const token = await new SignJWT({
+async function generateUserToken(user) {
+  return await new SignJWT({
     userId: user.id,
     email: user.email,
     userName: user.userName,
@@ -74,11 +37,41 @@ export async function loginUser(email, password) {
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('1d')
     .sign(JWT_SECRET);
+}
+
+/**
+ * Login user
+ */
+export async function loginUser(email, password) {
+  const { email: validEmail, password: validPassword } = validate(loginSchema, { email, password });
   
-  // Log successful login
-  logAuth('login_success', user.id, user.email, true, {
-    role: user.role,
-  });
+  const user = await findUserByEmail(validEmail);
+  
+  if (!user) {
+    logAuth('login_failed', null, validEmail, false, { reason: 'user_not_found' });
+    throw new AuthenticationError('Invalid credentials');
+  }
+  
+  const isValid = await verifyPassword(validPassword, user.password);
+  
+  if (!isValid) {
+    logAuth('login_failed', user.id, user.email, false, { reason: 'invalid_password' });
+    throw new AuthenticationError('Invalid credentials');
+  }
+
+  if (!user.isVerified) {
+    logAuth('login_failed', user.id, user.email, false, { reason: 'email_not_verified' });
+    return {
+      success: false,
+      needsVerification: true,
+      email: user.email,
+      message: 'Please verify your email before logging in. Check your inbox for the verification link.'
+    };
+  }
+  
+  const token = await generateUserToken(user);
+  
+  logAuth('login_success', user.id, user.email, true, { role: user.role });
 
   return {
     success: true,
@@ -96,79 +89,41 @@ export async function loginUser(email, password) {
  * Register new user
  */
 export async function registerUser(email, password, userName) {
-  // Validate email
-  const emailValidation = validateEmail(email);
-  if (!emailValidation.valid) {
-    throw new ValidationError(emailValidation.error);
-  }
+  const validated = validate(signupSchema, { email, password, userName });
 
-  // Validate password
-  const passwordValidation = validatePassword(password);
-  if (!passwordValidation.valid) {
-    throw new ValidationError(passwordValidation.error);
-  }
-
-  // Validate username
-  const usernameValidation = validateUsername(userName);
-  if (!usernameValidation.valid) {
-    throw new ValidationError(usernameValidation.error);
-  }
-
-  // Create user with sanitized inputs
   let user;
   try {
-    user = await createUser(
-      emailValidation.value,
-      passwordValidation.value,
-      usernameValidation.value
-    );
+    user = await createUser(validated.email, validated.password, validated.userName);
   } catch (error) {
     if (error.message === 'User already exists') {
-      logAuth('signup_failed', null, emailValidation.value, false, {
-        reason: 'user_exists',
-      });
+      logAuth('signup_failed', null, validated.email, false, { reason: 'user_exists' });
       throw new AppError(error.message, 409);
     }
     throw error;
   }
 
-  // Generate verification token (expires in 1 hour)
-  const verificationToken = generateToken(
-    { userId: user.id, email: user.email, type: 'verification' },
-    '1h'
-  );
+  const { token, expiry } = generateVerificationToken(user.id, user.email);
 
-  // Update user with verification token
-  const { db } = await connectToDatabase();
-  await db.collection('users').updateOne(
+  const usersCollection = await getCollection('users');
+  await usersCollection.updateOne(
     { email: user.email },
     {
       $set: {
         isVerified: false,
-        verificationToken,
-        verificationTokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
-      },
+        verificationToken: token,
+        verificationTokenExpiry: expiry
+      }
     }
   );
 
-  // Send verification email
   try {
-    await sendVerificationEmail(user.email, user.userName, verificationToken);
-    logEmail('verification', user.email, true, {
-      userId: user.id,
-    });
+    await sendVerificationEmail(user.email, user.userName, token);
+    logEmail('verification', user.email, true, { userId: user.id });
   } catch (emailError) {
-    logEmail('verification', user.email, false, {
-      userId: user.id,
-      error: emailError.message,
-    });
+    logEmail('verification', user.email, false, { userId: user.id, error: emailError.message });
   }
 
-  // Log successful signup
-  logAuth('signup_success', user.id, user.email, true, {
-    userName: user.userName,
-    role: user.role,
-  });
+  logAuth('signup_success', user.id, user.email, true, { userName: user.userName, role: user.role });
 
   return {
     success: true,
@@ -187,15 +142,12 @@ export async function registerUser(email, password, userName) {
  * Verify email with token
  */
 export async function verifyEmail(token) {
-  if (!token) {
-    throw new ValidationError('Verification token is required');
-  }
+  const { token: validToken } = validate(verifyEmailSchema, { token });
 
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
+  const usersCollection = await getCollection('users');
 
   const user = await usersCollection.findOne({
-    verificationToken: token,
+    verificationToken: validToken,
     verificationTokenExpiry: { $gt: new Date() }
   });
 
@@ -206,14 +158,8 @@ export async function verifyEmail(token) {
   await usersCollection.updateOne(
     { _id: user._id },
     {
-      $set: {
-        isVerified: true,
-        updatedAt: new Date()
-      },
-      $unset: {
-        verificationToken: '',
-        verificationTokenExpiry: ''
-      }
+      $set: { isVerified: true, updatedAt: new Date() },
+      $unset: clearTokenFields('verification')
     }
   );
 
@@ -226,18 +172,13 @@ export async function verifyEmail(token) {
 }
 
 /**
- * Send verification email
+ * Resend verification email
  */
 export async function resendVerificationEmail(email) {
-  const emailValidation = validateEmail(email);
-  if (!emailValidation.valid) {
-    throw new ValidationError(emailValidation.error);
-  }
+  const { email: validEmail } = validate(resendVerificationSchema, { email });
 
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
-
-  const user = await usersCollection.findOne({ email: emailValidation.value });
+  const usersCollection = await getCollection('users');
+  const user = await usersCollection.findOne({ email: validEmail });
 
   if (!user) {
     return {
@@ -250,29 +191,24 @@ export async function resendVerificationEmail(email) {
     throw new AppError('Email is already verified', 400);
   }
 
-  const verificationToken = generateToken(
-    { userId: user._id.toString(), email: user.email, type: 'verification' },
-    '1h'
-  );
+  const { token, expiry } = generateVerificationToken(user._id.toString(), user.email);
 
   await usersCollection.updateOne(
     { _id: user._id },
     {
       $set: {
-        verificationToken,
-        verificationTokenExpiry: new Date(Date.now() + 60 * 60 * 1000),
+        verificationToken: token,
+        verificationTokenExpiry: expiry,
         updatedAt: new Date()
       }
     }
   );
 
   try {
-    await sendVerificationEmail(user.email, user.userName, verificationToken);
+    await sendVerificationEmail(user.email, user.userName, token);
     logEmail('verification_resend', user.email, true);
   } catch (emailError) {
-    logEmail('verification_resend', user.email, false, {
-      error: emailError.message
-    });
+    logEmail('verification_resend', user.email, false, { error: emailError.message });
   }
 
   return {
@@ -285,16 +221,11 @@ export async function resendVerificationEmail(email) {
  * Request password reset
  */
 export async function requestPasswordReset(email) {
-  if (!email) {
-    throw new ValidationError('Email is required');
-  }
+  const { email: validEmail } = validate(forgotPasswordSchema, { email });
 
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
+  const usersCollection = await getCollection('users');
+  const user = await usersCollection.findOne({ email: validEmail });
 
-  const user = await usersCollection.findOne({ email: email.toLowerCase() });
-
-  // Always return success to prevent email enumeration
   if (!user) {
     return {
       success: true,
@@ -302,24 +233,21 @@ export async function requestPasswordReset(email) {
     };
   }
 
-  const resetToken = generateToken(
-    { userId: user._id.toString(), email: user.email, type: 'password-reset' },
-    '1h'
-  );
+  const { token, expiry } = generatePasswordResetToken(user._id.toString(), user.email);
 
   await usersCollection.updateOne(
     { _id: user._id },
     {
       $set: {
-        resetPasswordToken: resetToken,
-        resetPasswordExpiry: new Date(Date.now() + 60 * 60 * 1000),
-        updatedAt: new Date(),
-      },
+        resetPasswordToken: token,
+        resetPasswordExpiry: expiry,
+        updatedAt: new Date()
+      }
     }
   );
 
   try {
-    await sendPasswordResetEmail(user.email, user.userName, resetToken);
+    await sendPasswordResetEmail(user.email, user.userName, token);
   } catch (emailError) {
     console.error('Failed to send password reset email:', emailError);
   }
@@ -334,20 +262,12 @@ export async function requestPasswordReset(email) {
  * Reset password with token
  */
 export async function resetPassword(token, newPassword) {
-  if (!token) {
-    throw new ValidationError('Reset token is required');
-  }
+  const validated = validate(resetPasswordSchema, { token, password: newPassword });
 
-  const passwordValidation = validatePassword(newPassword);
-  if (!passwordValidation.valid) {
-    throw new ValidationError(passwordValidation.error);
-  }
-
-  const { db } = await connectToDatabase();
-  const usersCollection = db.collection('users');
+  const usersCollection = await getCollection('users');
 
   const user = await usersCollection.findOne({
-    resetPasswordToken: token,
+    resetPasswordToken: validated.token,
     resetPasswordExpiry: { $gt: new Date() }
   });
 
@@ -356,19 +276,13 @@ export async function resetPassword(token, newPassword) {
   }
 
   const bcrypt = require('bcryptjs');
-  const hashedPassword = await bcrypt.hash(passwordValidation.value, 10);
+  const hashedPassword = await bcrypt.hash(validated.password, 10);
 
   await usersCollection.updateOne(
     { _id: user._id },
     {
-      $set: {
-        password: hashedPassword,
-        updatedAt: new Date()
-      },
-      $unset: {
-        resetPasswordToken: '',
-        resetPasswordExpiry: ''
-      }
+      $set: { password: hashedPassword, updatedAt: new Date() },
+      $unset: clearTokenFields('reset')
     }
   );
 

@@ -3,16 +3,14 @@
  * Handles question management business logic
  */
 
-import { connectToDatabase } from '@/app/lib/database/connection';
-import {
-  validateSubject,
-  validateDifficulty,
-  validateCategory,
-  validateQuestion,
-  validateOptions,
-  validateCorrectAnswer,
-  sanitizeString
-} from '@/app/lib/validation';
+import { validate, sanitizeString } from '@/app/lib/validation';
+import { 
+  questionSchema,
+  updateQuestionSchema,
+  questionQuerySchema,
+  subjectSchema,
+  difficultySchema
+} from '@/app/lib/validation/schemas';
 import { 
   getCacheOrFetch, 
   buildCacheKey, 
@@ -22,25 +20,60 @@ import {
 } from '@/app/lib/cache';
 import { logDB } from '@/app/lib/logger';
 import { AppError } from '@/app/lib/errorHandler';
+import { getCollection, validateAndConvertId, paginateQuery } from './shared/database';
+import { ObjectId } from 'mongodb';
+
+/**
+ * Build question filter from params
+ */
+function buildQuestionFilter(params) {
+  const { category, subject, difficulty, search } = params;
+  const matchStage = {};
+  
+  if (category) {
+    matchStage.category = category;
+  }
+  
+  if (subject) {
+    try {
+      matchStage.subject = validate(subjectSchema, subject);
+    } catch {
+      // Skip invalid subject
+    }
+  }
+  
+  if (difficulty) {
+    try {
+      matchStage.difficulty = validate(difficultySchema, difficulty);
+    } catch {
+      // Skip invalid difficulty
+    }
+  }
+  
+  if (search) {
+    matchStage.question = { $regex: search, $options: 'i' };
+  }
+  
+  return matchStage;
+}
 
 /**
  * Get questions with filters
  */
-export async function getQuestions({ category, subject, difficulty, search, limit = 10 }) {
-  // Sanitize inputs
-  const sanitizedCategory = sanitizeString(category || '');
-  const sanitizedSubject = sanitizeString(subject || '');
-  const sanitizedDifficulty = sanitizeString(difficulty || '');
-  const sanitizedSearch = sanitizeString(search || '');
-  const safeLimit = Math.min(100, Math.max(1, parseInt(limit)));
+export async function getQuestions(params) {
+  const validated = validate(questionQuerySchema, params);
   
-  // Build cache key
+  const sanitizedCategory = sanitizeString(validated.category || '');
+  const sanitizedSubject = sanitizeString(validated.subject || '');
+  const sanitizedDifficulty = sanitizeString(validated.difficulty || '');
+  const sanitizedSearch = sanitizeString(validated.search || '');
+  
   const cacheKey = buildCacheKey(CACHE_KEYS.QUESTIONS, {
     category: sanitizedCategory,
     subject: sanitizedSubject,
     difficulty: sanitizedDifficulty,
     search: sanitizedSearch,
-    limit: safeLimit,
+    limit: validated.limit,
   });
 
   const startTime = Date.now();
@@ -48,32 +81,14 @@ export async function getQuestions({ category, subject, difficulty, search, limi
   const questions = await getCacheOrFetch(
     cacheKey,
     async () => {
-      const { db } = await connectToDatabase();
-      const collection = db.collection('questions');
+      const collection = await getCollection('questions');
       
-      const matchStage = {};
-      
-      if (sanitizedCategory) {
-        matchStage.category = sanitizedCategory;
-      }
-      
-      if (sanitizedSubject) {
-        const subjectValidation = validateSubject(sanitizedSubject);
-        if (subjectValidation.valid) {
-          matchStage.subject = subjectValidation.value;
-        }
-      }
-      
-      if (sanitizedDifficulty) {
-        const difficultyValidation = validateDifficulty(sanitizedDifficulty);
-        if (difficultyValidation.valid) {
-          matchStage.difficulty = difficultyValidation.value;
-        }
-      }
-      
-      if (sanitizedSearch) {
-        matchStage.question = { $regex: sanitizedSearch, $options: 'i' };
-      }
+      const matchStage = buildQuestionFilter({
+        category: sanitizedCategory,
+        subject: sanitizedSubject,
+        difficulty: sanitizedDifficulty,
+        search: sanitizedSearch
+      });
       
       const pipeline = [];
       
@@ -81,7 +96,7 @@ export async function getQuestions({ category, subject, difficulty, search, limi
         pipeline.push({ $match: matchStage });
       }
       
-      pipeline.push({ $sample: { size: safeLimit } });
+      pipeline.push({ $sample: { size: validated.limit } });
       
       return await collection.aggregate(pipeline).toArray();
     },
@@ -92,7 +107,7 @@ export async function getQuestions({ category, subject, difficulty, search, limi
   
   logDB('fetch', 'questions', true, duration, {
     count: questions.length,
-    filters: { category: sanitizedCategory, subject: sanitizedSubject, difficulty: sanitizedDifficulty, search: sanitizedSearch, limit: safeLimit },
+    filters: { category: sanitizedCategory, subject: sanitizedSubject, difficulty: sanitizedDifficulty, search: sanitizedSearch, limit: validated.limit },
   });
   
   return {
@@ -106,61 +121,16 @@ export async function getQuestions({ category, subject, difficulty, search, limi
  * Create new question
  */
 export async function createQuestion(questionData) {
-  // Validate category
-  const categoryValidation = validateCategory(questionData.category);
-  if (!categoryValidation.valid) {
-    throw new AppError(categoryValidation.error, 400);
-  }
+  const validated = validate(questionSchema, questionData);
   
-  // Validate subject
-  const subjectValidation = validateSubject(questionData.subject);
-  if (!subjectValidation.valid) {
-    throw new AppError(subjectValidation.error, 400);
-  }
-  
-  // Validate difficulty
-  const difficultyValidation = validateDifficulty(questionData.difficulty || 'medium');
-  if (!difficultyValidation.valid) {
-    throw new AppError(difficultyValidation.error, 400);
-  }
-  
-  // Validate question
-  const questionValidation = validateQuestion(questionData.question);
-  if (!questionValidation.valid) {
-    throw new AppError(questionValidation.error, 400);
-  }
-  
-  // Validate options
-  const optionsValidation = validateOptions(questionData.options);
-  if (!optionsValidation.valid) {
-    throw new AppError(optionsValidation.error, 400);
-  }
-  
-  // Validate correct answer
-  const correctAnswerValidation = validateCorrectAnswer(
-    questionData.correctAnswer,
-    optionsValidation.value
-  );
-  if (!correctAnswerValidation.valid) {
-    throw new AppError(correctAnswerValidation.error, 400);
-  }
-  
-  const { db } = await connectToDatabase();
-  const collection = db.collection('questions');
+  const collection = await getCollection('questions');
   
   const result = await collection.insertOne({
-    category: categoryValidation.value,
-    subject: subjectValidation.value,
-    topic: questionData.topic ? sanitizeString(questionData.topic) : '',
-    difficulty: difficultyValidation.value,
-    question: questionValidation.value,
-    options: optionsValidation.value,
-    correctAnswer: correctAnswerValidation.value,
+    ...validated,
     createdAt: new Date(),
     updatedAt: new Date()
   });
   
-  // Invalidate questions cache
   await invalidateCache(CACHE_KEYS.QUESTIONS);
   
   return {
@@ -173,9 +143,7 @@ export async function createQuestion(questionData) {
  * Get question categories
  */
 export async function getCategories() {
-  const { db } = await connectToDatabase();
-  const collection = db.collection('questions');
-  
+  const collection = await getCollection('questions');
   const categories = await collection.distinct('category');
   
   return {
@@ -188,9 +156,7 @@ export async function getCategories() {
  * Get question subjects
  */
 export async function getSubjects() {
-  const { db } = await connectToDatabase();
-  const collection = db.collection('questions');
-  
+  const collection = await getCollection('questions');
   const subjects = await collection.distinct('subject');
   
   return {
@@ -202,16 +168,15 @@ export async function getSubjects() {
 /**
  * Get questions for admin (with pagination)
  */
-export async function getQuestionsForAdmin({ category, subject, difficulty, search, page = 1, limit = 20 }) {
+export async function getQuestionsForAdmin(params) {
+  const { category, subject, difficulty, search, page = 1, limit = 20 } = params;
+  
   const sanitizedCategory = sanitizeString(category || '');
   const sanitizedSubject = sanitizeString(subject || '');
   const sanitizedDifficulty = sanitizeString(difficulty || '');
   const sanitizedSearch = sanitizeString(search || '');
-  const safePage = Math.max(1, parseInt(page));
-  const safeLimit = Math.min(100, Math.max(1, parseInt(limit)));
   
-  const { db } = await connectToDatabase();
-  const collection = db.collection('questions');
+  const collection = await getCollection('questions');
   
   const filter = {};
   
@@ -220,16 +185,18 @@ export async function getQuestionsForAdmin({ category, subject, difficulty, sear
   }
   
   if (sanitizedSubject && sanitizedSubject !== 'all') {
-    const subjectValidation = validateSubject(sanitizedSubject);
-    if (subjectValidation.valid) {
-      filter.subject = subjectValidation.value;
+    try {
+      filter.subject = validate(subjectSchema, sanitizedSubject);
+    } catch {
+      // Skip invalid subject
     }
   }
   
   if (sanitizedDifficulty && sanitizedDifficulty !== 'all') {
-    const difficultyValidation = validateDifficulty(sanitizedDifficulty);
-    if (difficultyValidation.valid) {
-      filter.difficulty = difficultyValidation.value;
+    try {
+      filter.difficulty = validate(difficultySchema, sanitizedDifficulty);
+    } catch {
+      // Skip invalid difficulty
     }
   }
   
@@ -237,24 +204,12 @@ export async function getQuestionsForAdmin({ category, subject, difficulty, sear
     filter.question = { $regex: sanitizedSearch, $options: 'i' };
   }
   
-  const totalCount = await collection.countDocuments(filter);
-  const totalPages = Math.ceil(totalCount / safeLimit);
-  const skip = (safePage - 1) * safeLimit;
-  
-  const questions = await collection
-    .find(filter)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(safeLimit)
-    .toArray();
+  const result = await paginateQuery(collection, filter, { page, limit });
   
   return {
     success: true,
-    count: questions.length,
-    totalCount,
-    totalPages,
-    currentPage: safePage,
-    questions
+    ...result,
+    questions: result.documents
   };
 }
 
@@ -262,78 +217,18 @@ export async function getQuestionsForAdmin({ category, subject, difficulty, sear
  * Update question
  */
 export async function updateQuestion(questionId, updateData) {
-  const { validateObjectId } = await import('@/app/lib/validation');
-  const { ObjectId } = await import('mongodb');
+  const validated = validate(updateQuestionSchema, { _id: questionId, ...updateData });
   
-  const idValidation = validateObjectId(questionId);
-  if (!idValidation.valid) {
-    throw new AppError(idValidation.error, 400);
-  }
+  const objectId = validateAndConvertId(validated._id);
+  const collection = await getCollection('questions');
   
-  const updateFields = { updatedAt: new Date() };
-  
-  if (updateData.category) {
-    const categoryValidation = validateCategory(updateData.category);
-    if (!categoryValidation.valid) {
-      throw new AppError(categoryValidation.error, 400);
-    }
-    updateFields.category = categoryValidation.value;
-  }
-  
-  if (updateData.subject) {
-    const subjectValidation = validateSubject(updateData.subject);
-    if (!subjectValidation.valid) {
-      throw new AppError(subjectValidation.error, 400);
-    }
-    updateFields.subject = subjectValidation.value;
-  }
-  
-  if (updateData.difficulty) {
-    const difficultyValidation = validateDifficulty(updateData.difficulty);
-    if (!difficultyValidation.valid) {
-      throw new AppError(difficultyValidation.error, 400);
-    }
-    updateFields.difficulty = difficultyValidation.value;
-  }
-  
-  if (updateData.question) {
-    const questionValidation = validateQuestion(updateData.question);
-    if (!questionValidation.valid) {
-      throw new AppError(questionValidation.error, 400);
-    }
-    updateFields.question = questionValidation.value;
-  }
-  
-  if (updateData.options) {
-    const optionsValidation = validateOptions(updateData.options);
-    if (!optionsValidation.valid) {
-      throw new AppError(optionsValidation.error, 400);
-    }
-    updateFields.options = optionsValidation.value;
-    
-    if (updateData.correctAnswer) {
-      const correctAnswerValidation = validateCorrectAnswer(
-        updateData.correctAnswer,
-        optionsValidation.value
-      );
-      if (!correctAnswerValidation.valid) {
-        throw new AppError(correctAnswerValidation.error, 400);
-      }
-      updateFields.correctAnswer = correctAnswerValidation.value;
-    }
-  }
-  
-  if (updateData.topic) {
-    updateFields.topic = sanitizeString(updateData.topic);
-  }
-  
-  const { db } = await connectToDatabase();
-  const collection = db.collection('questions');
+  const { _id, ...updateFields } = validated;
+  updateFields.updatedAt = new Date();
   
   if (updateFields.question) {
     const existingQuestion = await collection.findOne({ 
       question: updateFields.question,
-      _id: { $ne: new ObjectId(idValidation.value) }
+      _id: { $ne: objectId }
     });
     
     if (existingQuestion) {
@@ -342,7 +237,7 @@ export async function updateQuestion(questionId, updateData) {
   }
   
   const result = await collection.updateOne(
-    { _id: new ObjectId(idValidation.value) },
+    { _id: objectId },
     { $set: updateFields }
   );
   
@@ -362,20 +257,10 @@ export async function updateQuestion(questionId, updateData) {
  * Delete question
  */
 export async function deleteQuestion(questionId) {
-  const { validateObjectId } = await import('@/app/lib/validation');
-  const { ObjectId } = await import('mongodb');
+  const objectId = validateAndConvertId(questionId);
+  const collection = await getCollection('questions');
   
-  const idValidation = validateObjectId(questionId);
-  if (!idValidation.valid) {
-    throw new AppError(idValidation.error, 400);
-  }
-  
-  const { db } = await connectToDatabase();
-  const collection = db.collection('questions');
-  
-  const result = await collection.deleteOne({ 
-    _id: new ObjectId(idValidation.value) 
-  });
+  const result = await collection.deleteOne({ _id: objectId });
   
   if (result.deletedCount === 0) {
     throw new AppError('Question not found', 404);
