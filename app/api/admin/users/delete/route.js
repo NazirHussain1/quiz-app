@@ -1,57 +1,20 @@
 import { NextResponse } from 'next/server';
 import { verifyAdmin } from '@/app/lib/middleware';
-import { connectToDatabase } from '@/app/lib/database/connection';
-import { ObjectId } from 'mongodb';
+import { withErrorHandling } from '@/app/lib/errorHandler';
+import { deleteUser } from '@/app/services/userService';
 
-export async function DELETE(request) {
-  try {
-    const authResult = await verifyAdmin(request);
-    if (!authResult.authorized) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { userId } = await request.json();
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const { db } = await connectToDatabase();
-    
-    // Check if user is trying to delete themselves
-    if (userId === authResult.user.userId) {
-      return NextResponse.json(
-        { success: false, error: 'Cannot delete your own account' },
-        { status: 400 }
-      );
-    }
-
-    const result = await db.collection('users').deleteOne(
-      { _id: new ObjectId(userId) }
-    );
-
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'User deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete user error:', error);
+export const DELETE = withErrorHandling(async (request) => {
+  const authResult = await verifyAdmin(request);
+  if (!authResult.authorized) {
     return NextResponse.json(
-      { success: false, error: 'Failed to delete user' },
-      { status: 500 }
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
     );
   }
-}
+
+  const { userId } = await request.json();
+  
+  const result = await deleteUser(userId);
+
+  return NextResponse.json(result);
+});

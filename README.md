@@ -218,7 +218,7 @@ quiz-app/
 │   │   ├── users/               # Users management
 │   │   └── page.js              # Admin dashboard
 │   ├── analytics/               # User analytics
-│   ├── api/                     # API routes
+│   ├── api/                     # API routes (thin controllers)
 │   │   ├── admin/              # Admin endpoints (RBAC protected)
 │   │   │   ├── analytics/      # Analytics data
 │   │   │   ├── questions/      # Question CRUD
@@ -260,32 +260,46 @@ quiz-app/
 │   │   ├── useRBAC.js          # RBAC hook
 │   │   └── useTimer.js
 │   ├── leaderboard/             # Global leaderboard
-│   ├── lib/                     # Utilities
+│   ├── lib/                     # Core utilities
+│   │   ├── database/           # Database layer
+│   │   │   ├── BaseRepository.js
+│   │   │   ├── connection.js
+│   │   │   └── schemas.js
+│   │   ├── middleware/         # Middleware modules
+│   │   │   ├── auth.js        # Authentication middleware
+│   │   │   ├── rbac.js        # RBAC middleware
+│   │   │   ├── utils.js       # Utility functions
+│   │   │   └── index.js       # Centralized exports
 │   │   ├── models/             # MongoDB models
 │   │   │   └── Question.js
 │   │   ├── seed/               # Seed data
 │   │   │   ├── sampleQuestions.js
 │   │   │   └── seedDatabase.js
-│   │   ├── apiResponse.js
 │   │   ├── auth.js
-│   │   ├── authMiddleware.js
+│   │   ├── cache.js
 │   │   ├── email.js            # Email service
+│   │   ├── errorHandler.js
 │   │   ├── jwt.js
-│   │   ├── mongodb.js
+│   │   ├── logger.js
+│   │   ├── middleware.js       # Legacy exports (backward compatibility)
 │   │   ├── rateLimit.js        # Rate limiting & IP throttling
 │   │   ├── rbac.js             # RBAC configuration
-│   │   ├── rbacMiddleware.js   # RBAC middleware
 │   │   ├── validation.js
 │   │   └── zodSchemas.js       # Zod validation schemas
 │   ├── login/                   # Login page
 │   ├── my-quizzes/              # User's custom quizzes
 │   ├── quiz/                    # Quiz mode
 │   ├── reset-password/          # Password reset page
-│   ├── services/                # Business logic
+│   ├── services/                # Business logic layer
 │   │   ├── adaptiveDifficultyService.js
+│   │   ├── analyticsService.js      # Analytics business logic
+│   │   ├── authService.js           # Auth business logic
+│   │   ├── customQuizService.js     # Custom quiz business logic
 │   │   ├── leaderboardService.js
-│   │   ├── quizService.js
-│   │   └── storageService.js
+│   │   ├── questionService.js       # Question business logic
+│   │   ├── quizResultService.js     # Quiz result business logic
+│   │   ├── storageService.js
+│   │   └── userService.js           # User management business logic
 │   ├── store/                   # Redux store
 │   │   ├── slices/
 │   │   │   ├── authSlice.js
@@ -329,6 +343,56 @@ quiz-app/
 ├── tsconfig.json
 └── README.md
 ```
+
+## 🏗 Architecture
+
+### Clean Architecture Pattern
+
+The application follows a clean, layered architecture for better maintainability:
+
+**API Routes (Controllers)** → **Services (Business Logic)** → **Database Layer**
+
+#### Layers
+
+1. **API Routes** (`app/api/**/route.js`)
+   - Thin controllers handling HTTP requests/responses
+   - Request validation and rate limiting
+   - Minimal logic - delegates to services
+   - Consistent error handling
+
+2. **Services** (`app/services/`)
+   - Business logic layer
+   - Reusable across different routes
+   - Independent of HTTP concerns
+   - Easy to test and maintain
+   
+   Services:
+   - `authService.js` - Authentication & authorization
+   - `userService.js` - User management
+   - `questionService.js` - Question CRUD operations
+   - `quizResultService.js` - Quiz results & leaderboard
+   - `customQuizService.js` - Custom quiz management
+   - `analyticsService.js` - Analytics & statistics
+
+3. **Middleware** (`app/lib/middleware/`)
+   - Modular middleware components
+   - `auth.js` - Authentication verification
+   - `rbac.js` - Role-based access control
+   - `utils.js` - Utility functions
+   - `index.js` - Centralized exports
+
+4. **Database Layer** (`app/lib/database/`)
+   - Connection management
+   - Schema definitions
+   - Base repository pattern
+
+### Benefits
+
+- **Separation of Concerns**: Each layer has a single responsibility
+- **Reusability**: Services can be used by multiple routes
+- **Testability**: Business logic isolated from HTTP layer
+- **Maintainability**: Changes in one layer don't affect others
+- **Consistency**: Standardized patterns across the codebase
 
 ## 🔌 API Documentation
 

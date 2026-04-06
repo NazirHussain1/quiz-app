@@ -1,40 +1,21 @@
 import { NextResponse } from 'next/server';
 import { verifyAdmin } from '@/app/lib/middleware';
-import { connectToDatabase } from '@/app/lib/database/connection';
+import { withErrorHandling } from '@/app/lib/errorHandler';
+import { getAllUsers } from '@/app/services/userService';
 
-export async function GET(request) {
-  try {
-    const authResult = await verifyAdmin(request);
-    if (!authResult.authorized) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { db } = await connectToDatabase();
-    const users = await db.collection('users')
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
-
-    const formattedUsers = users.map(user => ({
-      _id: user._id.toString(),
-      userName: user.userName,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt
-    }));
-
-    return NextResponse.json({
-      success: true,
-      users: formattedUsers
-    });
-  } catch (error) {
-    console.error('Fetch users error:', error);
+export const GET = withErrorHandling(async (request) => {
+  const authResult = await verifyAdmin(request);
+  if (!authResult.authorized) {
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch users' },
-      { status: 500 }
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
     );
   }
-}
+
+  const users = await getAllUsers();
+
+  return NextResponse.json({
+    success: true,
+    users
+  });
+});

@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getCategories } from '@/app/lib/models/Question';
 import { withErrorHandling } from '@/app/lib/errorHandler';
 import { logError } from '@/app/lib/logger';
+import { getCategories } from '@/app/services/questionService';
 
 export const GET = withErrorHandling(async (request) => {
   try {
-    const categories = await getCategories();
+    const result = await getCategories();
     
-    // If no categories found, return empty array instead of error
-    if (!categories || categories.length === 0) {
+    if (!result.categories || result.categories.length === 0) {
       return NextResponse.json({ 
         success: true, 
         categories: [],
@@ -16,7 +15,7 @@ export const GET = withErrorHandling(async (request) => {
       });
     }
     
-    const limitedCategories = categories.slice(0, 10);
+    const limitedCategories = result.categories.slice(0, 10);
     
     return NextResponse.json({ 
       success: true, 
@@ -27,7 +26,6 @@ export const GET = withErrorHandling(async (request) => {
       route: '/api/questions/categories',
     });
     
-    // Return more helpful error message
     return NextResponse.json(
       { 
         success: false, 

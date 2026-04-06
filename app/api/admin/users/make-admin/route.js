@@ -1,55 +1,20 @@
 import { NextResponse } from 'next/server';
 import { verifyAdmin } from '@/app/lib/middleware';
-import { connectToDatabase } from '@/app/lib/database/connection';
-import { ObjectId } from 'mongodb';
+import { withErrorHandling } from '@/app/lib/errorHandler';
+import { makeUserAdmin } from '@/app/services/userService';
 
-export async function POST(request) {
-  try {
-    const authResult = await verifyAdmin(request);
-    if (!authResult.authorized) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { userId } = await request.json();
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const { db } = await connectToDatabase();
-    
-    const result = await db.collection('users').updateOne(
-      { _id: new ObjectId(userId) },
-      { 
-        $set: { 
-          role: 'admin',
-          updatedAt: new Date()
-        } 
-      }
-    );
-
-    if (result.modifiedCount === 0) {
-      return NextResponse.json(
-        { success: false, error: 'User not found or already admin' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'User promoted to admin successfully'
-    });
-  } catch (error) {
-    console.error('Make admin error:', error);
+export const POST = withErrorHandling(async (request) => {
+  const authResult = await verifyAdmin(request);
+  if (!authResult.authorized) {
     return NextResponse.json(
-      { success: false, error: 'Failed to make admin' },
-      { status: 500 }
+      { success: false, error: 'Unauthorized' },
+      { status: 401 }
     );
   }
-}
+
+  const { userId } = await request.json();
+  
+  const result = await makeUserAdmin(userId);
+
+  return NextResponse.json(result);
+});
