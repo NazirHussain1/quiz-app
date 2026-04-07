@@ -17,8 +17,9 @@ export const GET = requireAuth(withErrorHandler(async (request) => {
   const user = request.user;
   const result = await getUserQuizzes(user.userId);
   
-  return success(result.quizzes, {
-    meta: { count: result.count }
+  return success({
+    quizzes: result.quizzes,
+    count: result.count
   });
 }));
 

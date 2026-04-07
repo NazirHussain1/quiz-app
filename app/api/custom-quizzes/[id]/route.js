@@ -15,5 +15,5 @@ export const GET = requireAuth(withErrorHandler(async (request, { params }) => {
 
   const result = await getQuizById(params.id);
   
-  return success(result.quiz);
+  return success({ quiz: result.quiz });
 }));

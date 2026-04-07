@@ -26,7 +26,7 @@ export const POST = withErrorHandler(async (request) => {
     return forbidden(result.message);
   }
 
-  const response = success(result.user, { message: 'Login successful' });
+  const response = success({ user: result.user }, 'Login successful');
   
   // Set secure cookie
   response.cookies.set('auth-token', result.token, {

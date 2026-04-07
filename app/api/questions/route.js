@@ -8,7 +8,6 @@ import { getQuestions, createQuestion } from '@/app/services/questionService';
 export const dynamic = 'force-dynamic';
 
 export const GET = withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     logSecurity('Rate limit exceeded', 'low', {
@@ -28,8 +27,9 @@ export const GET = withErrorHandler(async (request) => {
     limit: searchParams.get('limit') || '10'
   });
   
-  const response = success(result.questions, {
-    meta: { count: result.count }
+  const response = success({
+    questions: result.questions,
+    count: result.count
   });
   
   response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');

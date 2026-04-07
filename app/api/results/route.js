@@ -37,13 +37,12 @@ export const GET = withErrorHandler(async (request) => {
     difficulty: searchParams.get('difficulty')
   });
   
-  const response = success(result.results, {
-    meta: {
-      page: result.currentPage,
-      limit: parseInt(searchParams.get('limit') || '50'),
-      total: result.totalCount,
-      totalPages: result.totalPages
-    }
+  const response = success({
+    results: result.results,
+    count: result.count,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+    currentPage: result.currentPage
   });
   
   response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
