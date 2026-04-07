@@ -1,4 +1,4 @@
-import { success } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAuth } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
@@ -15,5 +15,8 @@ export const GET = requireAuth(withErrorHandler(async (request, { params }) => {
 
   const result = await getQuizById(params.id);
   
-  return success({ quiz: result.quiz });
+  return NextResponse.json({
+    success: true,
+    quiz: result.quiz
+  });
 }));

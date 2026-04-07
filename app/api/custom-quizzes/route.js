@@ -1,4 +1,4 @@
-import { success, created } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAuth } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
@@ -8,7 +8,6 @@ import { getUserQuizzes, createCustomQuiz, deleteCustomQuiz } from '@/app/servic
 export const dynamic = 'force-dynamic';
 
 export const GET = requireAuth(withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     throw new RateLimitError();
@@ -17,14 +16,14 @@ export const GET = requireAuth(withErrorHandler(async (request) => {
   const user = request.user;
   const result = await getUserQuizzes(user.userId);
   
-  return success({
+  return NextResponse.json({
+    success: true,
     quizzes: result.quizzes,
     count: result.count
   });
 }));
 
 export const POST = requireAuth(withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     throw new RateLimitError();
@@ -35,11 +34,14 @@ export const POST = requireAuth(withErrorHandler(async (request) => {
   
   const result = await createCustomQuiz(user.userId, user.userName, body);
   
-  return created({ quizId: result.quizId }, result.message);
+  return NextResponse.json({
+    success: true,
+    quizId: result.quizId,
+    message: result.message
+  }, { status: 201 });
 }));
 
 export const DELETE = requireAuth(withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     throw new RateLimitError();
@@ -51,5 +53,8 @@ export const DELETE = requireAuth(withErrorHandler(async (request) => {
   
   const result = await deleteCustomQuiz(id, user.userId);
   
-  return success(null, { message: result.message });
+  return NextResponse.json({
+    success: true,
+    message: result.message
+  });
 }));

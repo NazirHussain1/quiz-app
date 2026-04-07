@@ -30,11 +30,13 @@ function SubjectSelectionContent() {
           throw new Error("Failed to fetch subjects");
         }
         
-        const data = await res.json();
+        const response = await res.json();
         
-        if (!data.success) {
-          throw new Error(data.error || "Failed to load subjects");
+        if (!response.success) {
+          throw new Error(response.error?.message || "Failed to load subjects");
         }
+        
+        const data = response.data;
         
         if (!data.subjects || data.subjects.length === 0) {
           throw new Error("No subjects available for this category");

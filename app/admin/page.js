@@ -128,9 +128,9 @@ export default function AdminPanel() {
   const fetchCategories = async () => {
     try {
       const res = await fetch("/api/questions/categories");
-      const data = await res.json();
-      if (data.success) {
-        setCategories(data.categories);
+      const response = await res.json();
+      if (response.success && response.data) {
+        setCategories(response.data.categories || []);
       }
     } catch (err) {
       console.error("Error fetching categories:", err);
@@ -140,9 +140,9 @@ export default function AdminPanel() {
   const fetchSubjects = async () => {
     try {
       const res = await fetch("/api/questions/subjects");
-      const data = await res.json();
-      if (data.success) {
-        setSubjects(data.subjects);
+      const response = await res.json();
+      if (response.success && response.data) {
+        setSubjects(response.data.subjects || []);
       }
     } catch (err) {
       console.error("Error fetching subjects:", err);

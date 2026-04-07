@@ -1,5 +1,6 @@
-import { success, created } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
+import { requireAuth } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
 import { RateLimitError } from '@/app/lib/errors';
 import { saveQuizResult, getLeaderboard } from '@/app/services/quizResultService';
@@ -7,7 +8,6 @@ import { saveQuizResult, getLeaderboard } from '@/app/services/quizResultService
 export const dynamic = 'force-dynamic';
 
 export const POST = withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     throw new RateLimitError();
@@ -17,11 +17,14 @@ export const POST = withErrorHandler(async (request) => {
   
   const result = await saveQuizResult(body);
   
-  return created({ resultId: result.resultId }, 'Result saved successfully');
+  return NextResponse.json({
+    success: true,
+    resultId: result.resultId,
+    message: 'Result saved successfully'
+  }, { status: 201 });
 });
 
 export const GET = withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     throw new RateLimitError();
@@ -37,7 +40,8 @@ export const GET = withErrorHandler(async (request) => {
     difficulty: searchParams.get('difficulty')
   });
   
-  const response = success({
+  const response = NextResponse.json({
+    success: true,
     results: result.results,
     count: result.count,
     totalCount: result.totalCount,

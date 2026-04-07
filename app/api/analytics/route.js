@@ -1,4 +1,4 @@
-import { success } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { requireAuth } from '@/app/lib/middleware';
 import { rateLimitApi } from '@/app/lib/rateLimit';
@@ -15,7 +15,10 @@ export const GET = requireAuth(withErrorHandler(async (request) => {
 
   const result = await getUserAnalytics();
 
-  const response = success(result.data);
+  const response = NextResponse.json({
+    success: true,
+    ...result
+  });
   response.headers.set('Cache-Control', 'private, s-maxage=300, stale-while-revalidate=600');
   
   return response;

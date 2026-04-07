@@ -1,7 +1,6 @@
-import { success, created } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { logSecurity } from '@/app/lib/logger';
 import { RateLimitError } from '@/app/lib/errors';
 import { getQuestions, createQuestion } from '@/app/services/questionService';
 
@@ -10,10 +9,6 @@ export const dynamic = 'force-dynamic';
 export const GET = withErrorHandler(async (request) => {
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
-    logSecurity('Rate limit exceeded', 'low', {
-      event: 'questions_rate_limit',
-      ip: request.headers.get('x-forwarded-for') || 'unknown',
-    });
     throw new RateLimitError();
   }
 
@@ -27,7 +22,8 @@ export const GET = withErrorHandler(async (request) => {
     limit: searchParams.get('limit') || '10'
   });
   
-  const response = success({
+  const response = NextResponse.json({
+    success: true,
     questions: result.questions,
     count: result.count
   });
@@ -38,7 +34,6 @@ export const GET = withErrorHandler(async (request) => {
 });
 
 export const POST = withErrorHandler(async (request) => {
-  // Rate limiting
   const rateLimit = rateLimitApi(request);
   if (!rateLimit.allowed) {
     throw new RateLimitError();
@@ -48,5 +43,9 @@ export const POST = withErrorHandler(async (request) => {
   
   const result = await createQuestion(body);
   
-  return created({ questionId: result.questionId }, 'Question created successfully');
+  return NextResponse.json({
+    success: true,
+    questionId: result.questionId,
+    message: 'Question created successfully'
+  }, { status: 201 });
 });
