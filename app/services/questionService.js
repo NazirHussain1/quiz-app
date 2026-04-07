@@ -7,9 +7,7 @@ import { validate, sanitizeString } from '@/app/lib/validation';
 import { 
   questionSchema,
   updateQuestionSchema,
-  questionQuerySchema,
-  subjectSchema,
-  difficultySchema
+  questionQuerySchema
 } from '@/app/lib/validation/schemas';
 import { 
   getCacheOrFetch, 
@@ -34,19 +32,11 @@ function buildQuestionFilter(params) {
   }
   
   if (subject) {
-    try {
-      matchStage.subject = validate(subjectSchema, subject);
-    } catch {
-      // Skip invalid subject
-    }
+    matchStage.subject = subject;
   }
   
   if (difficulty) {
-    try {
-      matchStage.difficulty = validate(difficultySchema, difficulty);
-    } catch {
-      // Skip invalid difficulty
-    }
+    matchStage.difficulty = difficulty;
   }
   
   if (search) {
@@ -204,19 +194,11 @@ export async function getQuestionsForAdmin(params) {
   }
   
   if (sanitizedSubject && sanitizedSubject !== 'all') {
-    try {
-      filter.subject = validate(subjectSchema, sanitizedSubject);
-    } catch {
-      // Skip invalid subject
-    }
+    filter.subject = sanitizedSubject;
   }
   
   if (sanitizedDifficulty && sanitizedDifficulty !== 'all') {
-    try {
-      filter.difficulty = validate(difficultySchema, sanitizedDifficulty);
-    } catch {
-      // Skip invalid difficulty
-    }
+    filter.difficulty = sanitizedDifficulty;
   }
   
   if (sanitizedSearch) {
