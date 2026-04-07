@@ -6,6 +6,10 @@
 import { z } from 'zod';
 import { ValidationError } from '../errorHandler';
 
+function getFirstZodIssue(error) {
+  return error?.issues?.[0] || error?.errors?.[0] || null;
+}
+
 /**
  * Validate data against a Zod schema
  * @param {z.ZodSchema} schema - Zod schema
@@ -18,9 +22,9 @@ export function validate(schema, data) {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const field = firstError.path.join('.');
-      const message = firstError.message;
+      const firstError = getFirstZodIssue(error);
+      const field = firstError?.path?.join('.') || null;
+      const message = firstError?.message || 'Validation failed';
       throw new ValidationError(field ? `${field}: ${message}` : message);
     }
     throw new ValidationError('Validation failed');
@@ -42,9 +46,9 @@ export function validateSafe(schema, data) {
     };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
-      const field = firstError.path.join('.');
-      const message = firstError.message;
+      const firstError = getFirstZodIssue(error);
+      const field = firstError?.path?.join('.') || null;
+      const message = firstError?.message || 'Validation failed';
       return {
         success: false,
         error: field ? `${field}: ${message}` : message

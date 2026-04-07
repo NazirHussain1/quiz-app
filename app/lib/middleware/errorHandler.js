@@ -14,6 +14,10 @@ import {
 } from '../errors';
 import { ZodError } from 'zod';
 
+function getFirstZodIssue(error) {
+  return error?.issues?.[0] || error?.errors?.[0] || null;
+}
+
 /**
  * Get client IP address
  */
@@ -39,9 +43,9 @@ export function handleError(err, request = null) {
   
   // Convert Zod errors to ValidationError
   if (err instanceof ZodError) {
-    const firstError = err.errors[0];
-    const field = firstError.path.join('.');
-    const message = firstError.message;
+    const firstError = getFirstZodIssue(err);
+    const field = firstError?.path?.join('.') || null;
+    const message = firstError?.message || 'Validation failed';
     error = new ValidationError(
       field ? `${field}: ${message}` : message,
       field || null

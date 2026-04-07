@@ -103,11 +103,32 @@ function getSampleSubjects(category = '') {
   ];
 }
 
+async function getUniqueFieldValues(collection, fieldName, filter = {}) {
+  const pipeline = [];
+  const matchStage = {
+    ...filter,
+    [fieldName]: { $exists: true, $nin: ['', null] },
+  };
+
+  pipeline.push({ $match: matchStage });
+  pipeline.push({ $group: { _id: `$${fieldName}` } });
+  pipeline.push({ $sort: { _id: 1 } });
+
+  const results = await collection.aggregate(pipeline).toArray();
+  return results.map((item) => item._id).filter(Boolean);
+}
+
 /**
  * Get questions with filters
  */
 export async function getQuestions(params) {
-  const validated = validate(questionQuerySchema, params);
+  const validated = validate(questionQuerySchema, {
+    category: params?.category ?? undefined,
+    subject: params?.subject ?? undefined,
+    difficulty: params?.difficulty ?? undefined,
+    search: params?.search ?? undefined,
+    limit: params?.limit ?? undefined,
+  });
   
   const sanitizedCategory = sanitizeString(validated.category || '');
   const sanitizedSubject = sanitizeString(validated.subject || '');
@@ -230,7 +251,7 @@ export async function getCategories() {
       cacheKey,
       async () => {
         const collection = await getCollection('questions');
-        const categories = await collection.distinct('category');
+        const categories = await getUniqueFieldValues(collection, 'category');
         
         return {
           success: true,
@@ -268,7 +289,7 @@ export async function getSubjects(params = {}) {
       async () => {
         const collection = await getCollection('questions');
         const filter = sanitizedCategory ? { category: sanitizedCategory } : {};
-        const subjects = await collection.distinct('subject', filter);
+        const subjects = await getUniqueFieldValues(collection, 'subject', filter);
         
         return {
           success: true,

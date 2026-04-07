@@ -675,13 +675,16 @@ function QuizContent() {
               {current.options.map((option, i) => {
                 const isSelected = option === answers[index];
                 const isCorrect = option === current.correct;
+                const showCorrectState = isLocked && isCorrect;
+                const showWrongState = isLocked && isSelected && !isCorrect;
                 
                 let buttonClass = "w-full text-left px-6 py-4 rounded-xl font-medium transition-all duration-200 border-2 cursor-pointer ";
                 
                 if (isLocked) {
-                  // Don't show correct/incorrect answers - just show selected state
-                  if (isSelected) {
-                    buttonClass += "bg-blue-500 border-blue-600 text-white shadow-lg";
+                  if (showCorrectState) {
+                    buttonClass += "bg-green-500 border-green-600 text-white shadow-lg";
+                  } else if (showWrongState) {
+                    buttonClass += "bg-red-500 border-red-600 text-white shadow-lg";
                   } else {
                     buttonClass += "bg-gray-50 border-gray-200 text-gray-500 opacity-60";
                   }
