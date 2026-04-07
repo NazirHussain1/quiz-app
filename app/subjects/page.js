@@ -36,13 +36,13 @@ function SubjectSelectionContent() {
           throw new Error(response.error?.message || "Failed to load subjects");
         }
         
-        const data = response.data;
-        
-        if (!data.subjects || data.subjects.length === 0) {
+        const availableSubjects = response.subjects || response.data?.subjects || [];
+
+        if (availableSubjects.length === 0) {
           throw new Error("No subjects available for this category");
         }
         
-        setSubjects(data.subjects);
+        setSubjects(availableSubjects);
       } catch (err) {
         setError(err.message);
       } finally {

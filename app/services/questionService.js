@@ -16,8 +16,9 @@ import {
   CACHE_TTL,
   invalidateCache 
 } from '@/app/lib/cache';
-import { logDB } from '@/app/lib/logger';
+import { logDB, logWarning } from '@/app/lib/logger';
 import { AppError } from '@/app/lib/errorHandler';
+import { sampleQuestions } from '@/app/lib/seed/sampleQuestions';
 import { getCollection, validateAndConvertId, paginateQuery } from './shared/database';
 
 /**
@@ -46,6 +47,62 @@ function buildQuestionFilter(params) {
   return matchStage;
 }
 
+function shouldUseSampleFallback(error) {
+  const message = error?.message || '';
+
+  return /(MONGODB_URI|Failed to connect to MongoDB|server selection timed out|getaddrinfo|querySrv|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|topology is closed|MongoNetworkError|MongoServerSelectionError)/i.test(message);
+}
+
+function shuffleQuestions(questions) {
+  const shuffled = [...questions];
+
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+}
+
+function getSampleQuestions(params) {
+  const filtered = sampleQuestions.filter((question) => {
+    if (params.category && question.category !== params.category) {
+      return false;
+    }
+
+    if (params.subject && question.subject !== params.subject) {
+      return false;
+    }
+
+    if (params.difficulty && question.difficulty !== params.difficulty) {
+      return false;
+    }
+
+    if (params.search && !question.question.toLowerCase().includes(params.search.toLowerCase())) {
+      return false;
+    }
+
+    return true;
+  });
+
+  return shuffleQuestions(filtered).slice(0, params.limit);
+}
+
+function getSampleCategories() {
+  return [...new Set(sampleQuestions.map((question) => question.category).filter(Boolean))];
+}
+
+function getSampleSubjects(category = '') {
+  return [
+    ...new Set(
+      sampleQuestions
+        .filter((question) => !category || question.category === category)
+        .map((question) => question.subject)
+        .filter(Boolean)
+    ),
+  ];
+}
+
 /**
  * Get questions with filters
  */
@@ -66,37 +123,67 @@ export async function getQuestions(params) {
   });
 
   const startTime = Date.now();
+  let source = 'mongodb';
 
-  const questions = await getCacheOrFetch(
-    cacheKey,
-    async () => {
-      const collection = await getCollection('questions');
-      
-      const matchStage = buildQuestionFilter({
+  let questions;
+
+  try {
+    questions = await getCacheOrFetch(
+      cacheKey,
+      async () => {
+        const collection = await getCollection('questions');
+        
+        const matchStage = buildQuestionFilter({
+          category: sanitizedCategory,
+          subject: sanitizedSubject,
+          difficulty: sanitizedDifficulty,
+          search: sanitizedSearch
+        });
+        
+        const pipeline = [];
+        
+        if (Object.keys(matchStage).length > 0) {
+          pipeline.push({ $match: matchStage });
+        }
+        
+        pipeline.push({ $sample: { size: validated.limit } });
+        
+        return await collection.aggregate(pipeline).toArray();
+      },
+      CACHE_TTL.QUESTIONS
+    );
+  } catch (error) {
+    if (!shouldUseSampleFallback(error)) {
+      throw error;
+    }
+
+    source = 'sample';
+    questions = getSampleQuestions({
+      category: sanitizedCategory,
+      subject: sanitizedSubject,
+      difficulty: sanitizedDifficulty,
+      search: sanitizedSearch,
+      limit: validated.limit,
+    });
+
+    logWarning('Falling back to bundled sample questions', {
+      error: error.message,
+      filters: {
         category: sanitizedCategory,
         subject: sanitizedSubject,
         difficulty: sanitizedDifficulty,
-        search: sanitizedSearch
-      });
-      
-      const pipeline = [];
-      
-      if (Object.keys(matchStage).length > 0) {
-        pipeline.push({ $match: matchStage });
-      }
-      
-      pipeline.push({ $sample: { size: validated.limit } });
-      
-      return await collection.aggregate(pipeline).toArray();
-    },
-    CACHE_TTL.QUESTIONS
-  );
+        search: sanitizedSearch,
+        limit: validated.limit,
+      },
+    });
+  }
   
   const duration = Date.now() - startTime;
   
   logDB('fetch', 'questions', true, duration, {
     count: questions.length,
     filters: { category: sanitizedCategory, subject: sanitizedSubject, difficulty: sanitizedDifficulty, search: sanitizedSearch, limit: validated.limit },
+    source,
   });
   
   return {
@@ -137,41 +224,74 @@ export async function createQuestion(questionData) {
  */
 export async function getCategories() {
   const cacheKey = buildCacheKey(CACHE_KEYS.CATEGORIES);
-  
-  return await getCacheOrFetch(
-    cacheKey,
-    async () => {
-      const collection = await getCollection('questions');
-      const categories = await collection.distinct('category');
-      
-      return {
-        success: true,
-        categories
-      };
-    },
-    CACHE_TTL.CATEGORIES
-  );
+
+  try {
+    return await getCacheOrFetch(
+      cacheKey,
+      async () => {
+        const collection = await getCollection('questions');
+        const categories = await collection.distinct('category');
+        
+        return {
+          success: true,
+          categories
+        };
+      },
+      CACHE_TTL.CATEGORIES
+    );
+  } catch (error) {
+    if (!shouldUseSampleFallback(error)) {
+      throw error;
+    }
+
+    logWarning('Falling back to bundled sample categories', { error: error.message });
+
+    return {
+      success: true,
+      categories: getSampleCategories(),
+    };
+  }
 }
 
 /**
  * Get question subjects
  */
-export async function getSubjects() {
-  const cacheKey = buildCacheKey(CACHE_KEYS.SUBJECTS);
-  
-  return await getCacheOrFetch(
-    cacheKey,
-    async () => {
-      const collection = await getCollection('questions');
-      const subjects = await collection.distinct('subject');
-      
-      return {
-        success: true,
-        subjects
-      };
-    },
-    CACHE_TTL.SUBJECTS
-  );
+export async function getSubjects(params = {}) {
+  const sanitizedCategory = sanitizeString(params.category || '');
+  const cacheKey = buildCacheKey(CACHE_KEYS.SUBJECTS, {
+    category: sanitizedCategory,
+  });
+
+  try {
+    return await getCacheOrFetch(
+      cacheKey,
+      async () => {
+        const collection = await getCollection('questions');
+        const filter = sanitizedCategory ? { category: sanitizedCategory } : {};
+        const subjects = await collection.distinct('subject', filter);
+        
+        return {
+          success: true,
+          subjects
+        };
+      },
+      CACHE_TTL.SUBJECTS
+    );
+  } catch (error) {
+    if (!shouldUseSampleFallback(error)) {
+      throw error;
+    }
+
+    logWarning('Falling back to bundled sample subjects', {
+      error: error.message,
+      category: sanitizedCategory,
+    });
+
+    return {
+      success: true,
+      subjects: getSampleSubjects(sanitizedCategory),
+    };
+  }
 }
 
 /**

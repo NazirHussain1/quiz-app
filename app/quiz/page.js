@@ -112,15 +112,24 @@ function QuizContent() {
         let apiUrl = `/api/questions?${params.toString()}`;
         
         let res = await fetch(apiUrl);
-        
-        if (!res.ok) {
-          throw new Error("Failed to fetch questions from server");
+        let data = null;
+
+        try {
+          data = await res.json();
+        } catch {
+          data = null;
         }
         
-        let data = await res.json();
+        if (!res.ok) {
+          throw new Error(
+            data?.error?.message ||
+            data?.message ||
+            "Failed to fetch questions from server"
+          );
+        }
 
         if (!data.success) {
-          throw new Error(data.error || "Failed to load questions");
+          throw new Error(data.error?.message || data.error || "Failed to load questions");
         }
 
         // If no questions found with specific difficulty, try without difficulty filter

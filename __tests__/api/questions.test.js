@@ -4,16 +4,14 @@
 
 import { GET } from '@/app/api/questions/route';
 import { rateLimitApi } from '@/app/lib/rateLimit';
-import { createMockRequest, mockQuestion, mockDb, mockCollection, resetMocks } from '../utils/testUtils';
+import { createMockRequest, mockQuestion, mockCollection, resetMocks } from '../utils/testUtils';
 
 // Mock dependencies
 jest.mock('@/app/lib/rateLimit');
-jest.mock('@/app/lib/database/connection', () => ({
-  connectToDatabase: jest.fn(() =>
-    Promise.resolve({
-      db: mockDb,
-    })
-  ),
+jest.mock('@/app/services/shared/database', () => ({
+  getCollection: jest.fn(() => Promise.resolve(mockCollection)),
+  validateAndConvertId: jest.fn(),
+  paginateQuery: jest.fn(),
 }));
 jest.mock('@/app/lib/cache', () => ({
   getCacheOrFetch: jest.fn((key, fetchFn) => fetchFn()),
@@ -24,6 +22,8 @@ jest.mock('@/app/lib/cache', () => ({
 }));
 jest.mock('@/app/lib/logger', () => ({
   logDB: jest.fn(),
+  logError: jest.fn(),
+  logWarning: jest.fn(),
   logSecurity: jest.fn(),
 }));
 
@@ -282,6 +282,25 @@ describe('GET /api/questions', () => {
 
     expect(response.status).toBe(500);
     expect(data.success).toBe(false);
+  });
+
+  it('should fall back to bundled sample questions when MongoDB is unavailable', async () => {
+    mockCollection.aggregate.mockReturnValue({
+      toArray: jest.fn().mockRejectedValue(new Error('server selection timed out after 5000 ms')),
+    });
+
+    const request = createMockRequest({
+      method: 'GET',
+      url: 'http://localhost:3000/api/questions?difficulty=easy&limit=3',
+    });
+
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.questions.length).toBeGreaterThan(0);
+    expect(data.questions.length).toBeLessThanOrEqual(3);
   });
 
   it('should set cache headers', async () => {
