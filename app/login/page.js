@@ -82,7 +82,7 @@ export default function LoginPage() {
                   } else {
                     toast.error(resendError);
                   }
-                } catch (error) {
+                } catch {
                   toast.error("Failed to send verification email");
                 }
               }}

@@ -2,12 +2,6 @@
 import '@testing-library/jest-dom'
 import { TextDecoder, TextEncoder } from 'util'
 import { ReadableStream, TransformStream, WritableStream } from 'stream/web'
-import {
-  fetch,
-  Headers,
-  Request,
-  Response,
-} from 'next/dist/compiled/@edge-runtime/primitives/fetch'
 
 if (typeof global.TextEncoder === 'undefined') {
   global.TextEncoder = TextEncoder
@@ -28,6 +22,14 @@ if (typeof global.TransformStream === 'undefined') {
 if (typeof global.WritableStream === 'undefined') {
   global.WritableStream = WritableStream
 }
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const {
+  fetch,
+  Headers,
+  Request,
+  Response,
+} = require('next/dist/compiled/@edge-runtime/primitives/fetch')
 
 // Mock environment variables
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only'

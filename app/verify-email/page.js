@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
@@ -18,16 +18,7 @@ function VerifyEmailContent() {
   const [email, setEmail] = useState("");
   const [resending, setResending] = useState(false);
 
-  useEffect(() => {
-    if (token) {
-      verifyEmail(token);
-    } else {
-      setStatus("error");
-      setMessage("No verification token provided");
-    }
-  }, [token]);
-
-  const verifyEmail = async (verificationToken) => {
+  const verifyEmail = useCallback(async (verificationToken) => {
     try {
       const res = await fetch("/api/auth/verify-email", {
         method: "POST",
@@ -48,11 +39,20 @@ function VerifyEmailContent() {
         setStatus("error");
         setMessage(getErrorMessage(data.error) || "Failed to verify email.");
       }
-    } catch (error) {
+    } catch {
       setStatus("error");
       setMessage("Failed to verify email. Please try again.");
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      verifyEmail(token);
+    } else {
+      setStatus("error");
+      setMessage("No verification token provided");
+    }
+  }, [token, verifyEmail]);
 
   const handleResendVerification = async () => {
     if (!email) {
@@ -77,7 +77,7 @@ function VerifyEmailContent() {
       } else {
         alert(resendError);
       }
-    } catch (error) {
+    } catch {
       alert("Failed to send verification email. Please try again.");
     } finally {
       setResending(false);

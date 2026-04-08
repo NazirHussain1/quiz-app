@@ -2,24 +2,29 @@
  * Unit Tests for Email Utilities
  */
 
-const mockSendMail = jest.fn();
-const mockCreateTransport = jest.fn(() => ({
-  sendMail: mockSendMail,
-}));
-
 jest.mock('nodemailer', () => ({
   __esModule: true,
   default: {
-    createTransport: mockCreateTransport,
+    createTransport: jest.fn(() => ({
+      sendMail: jest.fn(),
+    })),
   },
 }));
 
 import { sendEmail } from '@/app/lib/email';
 
+const nodemailerMock = jest.requireMock('nodemailer');
+const mockCreateTransport = nodemailerMock.default.createTransport;
+
 describe('email utilities', () => {
+  let mockSendMail;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSendMail.mockResolvedValue({ messageId: 'message-123' });
+    mockSendMail = jest.fn().mockResolvedValue({ messageId: 'message-123' });
+    mockCreateTransport.mockReturnValue({
+      sendMail: mockSendMail,
+    });
   });
 
   it('creates a transport with the configured SMTP settings', async () => {

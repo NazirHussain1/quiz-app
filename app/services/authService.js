@@ -3,6 +3,7 @@
  * Handles authentication business logic
  */
 
+import bcrypt from 'bcryptjs';
 import { findUserByEmail, verifyPassword, createUser } from '@/app/lib/auth';
 import { validate } from '@/app/lib/validation';
 import { 
@@ -311,7 +312,6 @@ export async function resetPassword(token, newPassword) {
     throw new AuthenticationError('Invalid or expired reset token');
   }
 
-  const bcrypt = require('bcryptjs');
   const hashedPassword = await bcrypt.hash(validated.password, 10);
 
   await usersCollection.updateOne(
