@@ -1,4 +1,4 @@
-import { success, forbidden } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitLogin } from '@/app/lib/rateLimit';
 import { logSecurity } from '@/app/lib/logger';
@@ -23,10 +23,22 @@ export const POST = withErrorHandler(async (request) => {
   
   // Handle email verification required
   if (!result.success && result.needsVerification) {
-    return forbidden(result.message);
+    return NextResponse.json(
+      {
+        success: false,
+        error: result.message,
+        needsVerification: true,
+        email: result.email
+      },
+      { status: 403 }
+    );
   }
 
-  const response = success({ user: result.user }, 'Login successful');
+  const response = NextResponse.json({
+    success: true,
+    user: result.user,
+    message: 'Login successful'
+  });
   
   // Set secure cookie
   response.cookies.set('auth-token', result.token, {

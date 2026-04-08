@@ -1,4 +1,4 @@
-import { success, unauthorized, notFound, rateLimit as rateLimitResponse } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { verifyToken } from '@/app/lib/jwt';
 import { findUserById } from '@/app/lib/auth';
@@ -29,7 +29,8 @@ export const GET = withErrorHandler(async (request) => {
     throw new NotFoundError('User not found');
   }
   
-  return success({
+  return NextResponse.json({
+    success: true,
     user: {
       id: user.id,
       email: user.email,

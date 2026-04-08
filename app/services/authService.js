@@ -20,6 +20,10 @@ import { AuthenticationError, AppError } from '@/app/lib/errorHandler';
 import { getCollection } from './shared/database';
 import { generateVerificationToken, generatePasswordResetToken, clearTokenFields } from './shared/tokens';
 
+function getEmailErrorMessage(emailResult, fallbackMessage) {
+  return emailResult?.error || fallbackMessage;
+}
+
 /**
  * Login user
  */
@@ -97,18 +101,36 @@ export async function registerUser(email, password, userName) {
     }
   );
 
+  let verificationEmailSent = false;
+  let message = 'Account created successfully! Please check your email to verify your account.';
+
   try {
-    await sendVerificationEmail(user.email, user.userName, token);
-    logEmail('verification', user.email, true, { userId: user.id });
+    const emailResult = await sendVerificationEmail(user.email, user.userName, token);
+    verificationEmailSent = Boolean(emailResult?.success);
+
+    if (verificationEmailSent) {
+      logEmail('verification', user.email, true, {
+        userId: user.id,
+        messageId: emailResult.messageId
+      });
+    } else {
+      message = 'Account created successfully, but we could not send the verification email. Please try resending it from the login page.';
+      logEmail('verification', user.email, false, {
+        userId: user.id,
+        error: getEmailErrorMessage(emailResult, 'Failed to send verification email')
+      });
+    }
   } catch (emailError) {
     logEmail('verification', user.email, false, { userId: user.id, error: emailError.message });
+    message = 'Account created successfully, but we could not send the verification email. Please try resending it from the login page.';
   }
 
   logAuth('signup_success', user.id, user.email, true, { userName: user.userName, role: user.role });
 
   return {
     success: true,
-    message: 'Account created successfully! Please check your email to verify your account.',
+    message,
+    verificationEmailSent,
     user: {
       id: user.id,
       email: user.email,
@@ -186,10 +208,28 @@ export async function resendVerificationEmail(email) {
   );
 
   try {
-    await sendVerificationEmail(user.email, user.userName, token);
-    logEmail('verification_resend', user.email, true);
+    const emailResult = await sendVerificationEmail(user.email, user.userName, token);
+
+    if (!emailResult?.success) {
+      const errorMessage = getEmailErrorMessage(emailResult, 'Failed to send verification email');
+      logEmail('verification_resend', user.email, false, { error: errorMessage });
+
+      return {
+        success: false,
+        message: 'We could not send the verification email right now. Please try again.',
+        error: errorMessage
+      };
+    }
+
+    logEmail('verification_resend', user.email, true, { messageId: emailResult.messageId });
   } catch (emailError) {
     logEmail('verification_resend', user.email, false, { error: emailError.message });
+
+    return {
+      success: false,
+      message: 'We could not send the verification email right now. Please try again.',
+      error: emailError.message
+    };
   }
 
   return {
@@ -228,9 +268,24 @@ export async function requestPasswordReset(email) {
   );
 
   try {
-    await sendPasswordResetEmail(user.email, user.userName, token);
+    const emailResult = await sendPasswordResetEmail(user.email, user.userName, token);
+
+    if (!emailResult?.success) {
+      logEmail('password_reset', user.email, false, {
+        userId: user._id.toString(),
+        error: getEmailErrorMessage(emailResult, 'Failed to send password reset email')
+      });
+    } else {
+      logEmail('password_reset', user.email, true, {
+        userId: user._id.toString(),
+        messageId: emailResult.messageId
+      });
+    }
   } catch (emailError) {
-    console.error('Failed to send password reset email:', emailError);
+    logEmail('password_reset', user.email, false, {
+      userId: user._id.toString(),
+      error: emailError.message
+    });
   }
 
   return {

@@ -183,7 +183,10 @@ describe('POST /api/auth/signup', () => {
     };
 
     createUser.mockResolvedValue(mockUser);
-    sendVerificationEmail.mockRejectedValue(new Error('Email service down'));
+    sendVerificationEmail.mockResolvedValue({
+      success: false,
+      error: 'Email service down',
+    });
 
     const request = createMockRequest({
       method: 'POST',
@@ -199,6 +202,8 @@ describe('POST /api/auth/signup', () => {
 
     expect(response.status).toBe(201);
     expect(data.success).toBe(true);
+    expect(data.verificationEmailSent).toBe(false);
+    expect(data.message).toContain('could not send the verification email');
   });
 
   it('should reject signup when rate limit exceeded', async () => {

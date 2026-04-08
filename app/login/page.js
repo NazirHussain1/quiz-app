@@ -8,6 +8,9 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import { LogIn, UserPlus, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 
+const getErrorMessage = (error) =>
+  typeof error === "string" ? error : error?.message;
+
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -39,7 +42,16 @@ export default function LoginPage() {
         const result = await dispatch(signup(formData)).unwrap();
         
         if (result.success) {
-          toast.success("Account created successfully! Please check your email to verify your account.");
+          const signupMessage =
+            result.message ||
+            "Account created successfully! Please check your email to verify your account.";
+
+          if (result.verificationEmailSent === false) {
+            toast.info(signupMessage);
+          } else {
+            toast.success(signupMessage);
+          }
+
           setIsLogin(true);
           setFormData({ email: formData.email, password: "", userName: "" });
         }
@@ -62,10 +74,13 @@ export default function LoginPage() {
                     body: JSON.stringify({ email: userEmail }),
                   });
                   const data = await res.json();
+                  const resendError =
+                    getErrorMessage(data.error) || "Failed to send verification email";
+
                   if (data.success) {
-                    toast.success("Verification email sent! Please check your inbox.");
+                    toast.success(data.message || "Verification email sent! Please check your inbox.");
                   } else {
-                    toast.error(data.error || "Failed to send verification email");
+                    toast.error(resendError);
                   }
                 } catch (error) {
                   toast.error("Failed to send verification email");
@@ -82,7 +97,7 @@ export default function LoginPage() {
           }
         );
       } else {
-        toast.error(err.error || err.message || "An error occurred");
+        toast.error(getErrorMessage(err?.error) || getErrorMessage(err) || "An error occurred");
       }
     }
   };

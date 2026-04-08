@@ -1,4 +1,4 @@
-import { created } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitLogin } from '@/app/lib/rateLimit';
 import { logSecurity } from '@/app/lib/logger';
@@ -21,5 +21,13 @@ export const POST = withErrorHandler(async (request) => {
 
   const result = await registerUser(email, password, userName);
 
-  return created(result.user, result.message);
+  return NextResponse.json(
+    {
+      success: true,
+      user: result.user,
+      message: result.message,
+      verificationEmailSent: result.verificationEmailSent
+    },
+    { status: 201 }
+  );
 });

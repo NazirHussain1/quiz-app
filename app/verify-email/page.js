@@ -5,6 +5,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, XCircle, Loader2, Mail } from "lucide-react";
 
+const getErrorMessage = (error) =>
+  typeof error === "string" ? error : error?.message;
+
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -43,7 +46,7 @@ function VerifyEmailContent() {
         }, 3000);
       } else {
         setStatus("error");
-        setMessage(data.error);
+        setMessage(getErrorMessage(data.error) || "Failed to verify email.");
       }
     } catch (error) {
       setStatus("error");
@@ -66,11 +69,13 @@ function VerifyEmailContent() {
       });
 
       const data = await res.json();
+      const resendError =
+        getErrorMessage(data.error) || "Failed to send verification email";
 
       if (data.success) {
-        alert("Verification email sent! Please check your inbox.");
+        alert(data.message || "Verification email sent! Please check your inbox.");
       } else {
-        alert(data.error || "Failed to send verification email");
+        alert(resendError);
       }
     } catch (error) {
       alert("Failed to send verification email. Please try again.");

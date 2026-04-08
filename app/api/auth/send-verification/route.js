@@ -1,4 +1,4 @@
-import { success } from '@/app/lib/responses';
+import { NextResponse } from 'next/server';
 import { withErrorHandler } from '@/app/lib/middleware/errorHandler';
 import { rateLimitApi } from '@/app/lib/rateLimit';
 import { RateLimitError } from '@/app/lib/errors';
@@ -17,5 +17,18 @@ export const POST = withErrorHandler(async (request) => {
   
   const result = await resendVerificationEmail(email);
 
-  return success(null, { message: result.message });
+  if (!result.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: result.message
+      },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: result.message
+  });
 });
