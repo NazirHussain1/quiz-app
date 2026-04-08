@@ -43,7 +43,7 @@ function VerifyEmailContent() {
       setStatus("error");
       setMessage("Failed to verify email. Please try again.");
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (token) {
